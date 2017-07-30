@@ -1,0 +1,150 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+
+<!-- *#__dan__#* application js *#__dan__#* -->
+<script type="text/javascript" src="js/application.js"></script>
+<!-- *#__dan__#* application js *#__dan__#* -->
+<script type="text/javascript">	
+	document.write(objApp.getHeader());
+</script>
+<!-- load all js/css and other stuff -->
+
+<!-- *#__dan__#* live_circuit_util js *#__dan__#* -->
+<script type="text/javascript" src="js/config_content_provider_manager.js"></script>
+<!-- *#__dan__#* live_circuit_util js *#__dan__#* -->
+
+<!-- *#__dan__#* styles *#__dan__#* -->
+	<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+	<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+	<!--[if lt IE 9]>
+	<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+	<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+	<![endif]-->
+<!-- *#__dan__#* styles *#__dan__#* -->
+
+
+<body class="hold-transition skin-blue sidebar-mini">
+
+	<div class="wrapper">
+
+		<!-- Top menu bar with Branding -->
+		<script type="text/javascript">		
+			document.write(objApp.getTopBanner()); 
+		</script>
+		
+		<!-- Content Wrapper. Contains page content -->
+		<div class="content-wrapper">
+			
+			<!-- Content Header (Page header) -->
+			<section class="content-header">
+			  <h1>
+				Content Provider
+				<small>Configuration &#62; Application</small>
+			  </h1>
+			  <ol class="breadcrumb">
+				<li><a href="home"><i class="fa fa-home"></i> Home</a></li>
+				<li><i class="fa fa-bar-chart"></i> Configuration</li>
+				<li><i class="fa fa-bar-chart"></i> Application</li>
+				<li class="active">Content Provider</li>
+			  </ol>
+			</section>
+			
+			<!-- Main content -->
+			<section class="content">
+				
+				<div class="row">
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<div class="box">
+							<div id='flash-msg'></div>
+							<div class="box-header with-border">
+								<h3 class="box-title">Content Provider Configuration</h3>
+							</div>
+							<div class="box-body">
+								<form class="form-horizontal" name="frm_provider" id="frm_provider"> 
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" id="bypass">
+													<label for="bypass" class="col-sm-4 control-label">Bypass Mode <span class="req-fld">*</span></label>
+													<div class="col-sm-8">
+														<select class="form-control select2" placeholder="Bypass Mode" title="Select Bypass Mode" id="bypass_mode">
+															<option selected="selected">No</option>
+															<option>Yes</option>
+														</select>
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" id="blklst">
+													<label for="blklst" class="col-sm-4 control-label">Enable Blacklist <span class="req-fld">*</span></label>
+													<div class="col-sm-8">
+														<select class="form-control select2" placeholder="Enable Blacklist" title="Select Enable Blacklist" id="enable_blacklist">
+															<option selected="selected">Yes</option>
+															<option>No</option>
+														</select>
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label for="glo_key_sub" class="col-sm-4 control-label">Global Keyword Subscribe <br/><i>seperate by new line</i></label>
+													<div class="col-sm-8">
+														<textarea class="form-control" rows="3" placeholder="Global Keyword Subscribe" id="glo_key_sub" name="glo_key_sub" title="Enter Global Keyword Subscribe"></textarea>
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label for="glo_key_unsub" class="col-sm-4 control-label">Global Keyword Unsubscribe <br/><i>seperate by new line</i></label>
+													<div class="col-sm-8">
+														<textarea class="form-control" rows="3" placeholder="Global Keyword Unsubscribe" id="glo_key_unsub" name="glo_key_unsub" title="Enter Global Keyword Unsubscribe"></textarea>
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-12 col-sm-12 col-xs-12">
+												<div class="box-footer"> 
+													<button type="submit" class="btn btn-primary pull-right btnspace" name="create_provider" id="create_provider">Save</button>
+												</div>
+											</div>
+										</div>						
+									</div>
+								</form> 
+							</div>
+						</div>
+					</div>
+				</div>
+				
+			</section>
+			<!-- /.content -->
+			
+		</div>
+		<!-- /.content-wrapper -->
+
+		<script>
+			document.write(objApp.getFooter());
+		</script>
+		<!-- Printing footer -->
+	
+	</div>
+	<!-- ./wrapper -->
+	
+	<script>
+		$(function () {
+			//Initialize Select2 Elements
+			$(".select2").select2();
+		});
+	</script>
+	
+</body>
+</html>

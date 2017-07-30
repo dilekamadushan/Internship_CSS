@@ -1,0 +1,150 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+
+<!-- *#__dan__#* application js *#__dan__#* -->
+<script type="text/javascript" src="js/application.js"></script>
+<!-- *#__dan__#* application js *#__dan__#* -->
+<script type="text/javascript">	
+	document.write(objApp.getHeader());
+</script>
+<!-- load all js/css and other stuff -->
+
+<!-- *#__dan__#* live_circuit_util js *#__dan__#* -->
+<!-- *#__dan__#* live_circuit_util js *#__dan__#* -->
+<script type="text/javascript" src="js/config_operator_manager.js"></script>
+<!-- *#__dan__#* styles *#__dan__#* -->
+	<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+	<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+	<!--[if lt IE 9]>
+	<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+	<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+	<![endif]-->
+<!-- *#__dan__#* styles *#__dan__#* -->
+
+
+<body class="hold-transition skin-blue sidebar-mini">
+
+	<div class="wrapper">
+
+		<!-- Top menu bar with Branding -->
+		<script type="text/javascript">		
+			document.write(objApp.getTopBanner()); 
+		</script>
+		
+		<!-- Content Wrapper. Contains page content -->
+		<div class="content-wrapper">
+			
+			<!-- Content Header (Page header) -->
+			<section class="content-header">
+			  <h1>
+				Create Operator
+				<small>Configuration &#62; Application</small>
+			  </h1>
+			  <ol class="breadcrumb">
+				<li><a href="home"><i class="fa fa-home"></i> Home</a></li>
+				<li><i class="fa fa-bar-chart"></i> Configuration</li>
+				<li><i class="fa fa-bar-chart"></i> Application</li>
+				<li class="active">Create Operator</li>
+			  </ol>
+			</section>
+			
+			<!-- Main content -->
+			<section class="content">
+				
+				<div class="row">
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<div class="box">
+							<div id='flash-msg'></div>
+							<div class="box-header with-border">
+								<h3 class="box-title">Operator Detail</h3>
+							</div>
+							<div class="box-body">
+								<form class="form-horizontal" name="frm_operator" id="frm_operator"> 
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" id="div_operator_name">
+													<label for="operator_name" class="col-sm-4 control-label">Operator Name <span class="req-fld">*</span></label>
+													<div class="col-sm-8">
+														<input type="text" class="form-control" placeholder="Operator Name" id="operator_name" name="operator_name" title="Enter Operator Name" data-validation-engine="validate[required]"> 
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" id="div_cdb_value">
+													<label for="cdb_value" class="col-sm-4 control-label">CDB Value <span class="req-fld">*</span></label>
+													<div class="col-sm-8">
+														<input type="text" class="form-control" placeholder="CDB Value" id="cdb_value" name="cdb_value" title="Enter CDB Value" data-validation-engine="validate[required]"> 
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" >
+													<label for="sms_platform" class="col-sm-4 control-label">SMS Platform</label>
+													<div class="col-sm-8">
+														<select class="form-control select2" placeholder="SMS Platform" title="Select SMS Platform" id="sms_platform">
+															<option selected="selected">Platform_01</option>
+															<option>Platform_02</option>
+															<option>Platform_03</option>
+															<option>Platform_04</option>
+															<option>Srv_Plat_05</option>
+															<option>Srv_Plat_06</option>
+														</select>
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" id="opr_desc">
+													<label for="opr_desc" class="col-sm-4 control-label">Description</label>
+													<div class="col-sm-8">
+														<textarea class="form-control" rows="3" placeholder="Description" id="description" name="opr_desc" title="Enter Description"></textarea>
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-12 col-sm-12 col-xs-12">
+												<div class="box-footer"> 
+													<button type="submit" class="btn btn-primary pull-right btnspace" name="create_provider" id="operator_create">Save</button>
+												</div>
+											</div>
+										</div>						
+									</div>
+								</form> 
+							</div>
+						</div>
+					</div>
+				</div>
+				
+			</section>
+			<!-- /.content -->
+			
+		</div>
+		<!-- /.content-wrapper -->
+
+		<script>
+			document.write(objApp.getFooter());
+		</script>
+		<!-- Printing footer -->
+	
+	</div>
+	<!-- ./wrapper -->
+	
+	<script>
+		$(function () {
+			//Initialize Select2 Elements
+			$(".select2").select2();
+		});
+	</script>
+	
+</body>
+</html>

@@ -1,0 +1,301 @@
+<erl module=access_code_manager>
+-export([out/1, access_code/3]).
+
+-include("ivr_conf.hrl"). 
+
+out(Arg) ->
+   Method = method(Arg), 
+   handle(Method, Arg). 
+
+%get request method type
+method(Arg) ->
+   Rec = Arg#arg.req,
+   Rec#http_request.method.
+   
+handle('GET', Arg) ->
+   error_logger:info_msg("~p:~p Enter into GET method~n",[?MODULE, ?LINE]);   
+
+handle('POST', Arg) ->
+	{ok,[RequestData|[SessionData]],_} = rfc4627:decode(Arg#arg.clidata),   
+	Action = binary_to_list(rfc4627:get_field(RequestData, "action", <<>>)),  
+  
+	RecSessionData = #session_data
+	{
+		username = ivr_common:toString(ivr_session:get_sess("name", Arg)),
+		uniqid   = ivr_common:toString(ivr_session:get_sess("uniqid", Arg))
+	},
+	
+% Logging request data
+	%ivr_logger:debug(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Request:" ++ binary_to_list(Arg#arg.clidata)),
+	error_logger:error_msg("~p",[RequestData]),
+	access_code(Action, RequestData, RecSessionData).
+
+%% Create AccessCode
+access_code("CREATE_ACCESS_CODE", RequestData, RecSessionData) ->
+	
+	AccessNumber= binary_to_list(rfc4627:get_field(RequestData, "acc_num", <<>>)),
+	AppType 	= list_to_atom(binary_to_list(rfc4627:get_field(RequestData, "app_type", <<>>))),
+	CallControlType	= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "cc_type", <<>>))),
+	AdjcType	= list_to_atom(binary_to_list(rfc4627:get_field(RequestData, "adjc_type", <<>>))),
+	LoginUrl	= binary_to_list(rfc4627:get_field(RequestData, "login_url", <<>>)),
+	LogoutUrl	= binary_to_list(rfc4627:get_field(RequestData, "logout_url", <<>>)),
+	DciData		= binary_to_list(rfc4627:get_field(RequestData, "dci_data", <<>>)),
+	VideoCodec	= binary_to_list(rfc4627:get_field(RequestData, "video_cdc_lst", <<>>)),
+	AudioCdcLst	= binary_to_list(rfc4627:get_field(RequestData, "audio_cdc_lst", <<>>)),   %till add licen for video codecs
+	DtmfVal		= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "dtmf", <<>>))),
+	DtmfPyld	= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "dtmf_pyld", <<>>))),
+	AudioAmrWb	= case catch list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "audio_amr", <<>>))) of
+					{'EXIT', _} ->
+							0;
+						TemVal1 ->
+							TemVal1
+						end,
+	AudioAmrNb	= case catch list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "audio_namr", <<>>))) of
+					{'EXIT', _} ->
+							0;
+						TemVal4 ->
+							TemVal4
+						end,		
+	ALaw		= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "a_law", <<>>))),	
+	MuLaw		= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "mu_law", <<>>))),
+	G723Payload	= case catch list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "audio_g723", <<>>))) of
+					{'EXIT', _} ->
+							0;
+						TemVal5 ->
+							TemVal5
+						end,
+	G729Payload	= case catch list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "audio_g729", <<>>))) of
+					{'EXIT', _} ->
+							0;
+						TemVal6 ->
+							TemVal6
+						end,
+	Mpeg4Payload	= case catch list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "video_mpeg4", <<>>))) of
+					{'EXIT', _} ->
+							0;
+						TemVal7 ->
+							TemVal7
+						end,
+	H263_2429Payload	= case catch list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "video_h263", <<>>))) of
+					{'EXIT', _} ->
+							0;
+						TemVal8 ->
+							TemVal8
+						end,
+	H264Payload	= case catch list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "video_h264", <<>>))) of
+					{'EXIT', _} ->
+							0;
+						TemVal9 ->
+							TemVal9
+						end,
+	PreEarlyMedia= binary_to_list(rfc4627:get_field(RequestData, "early_media", <<>>)),
+	Description	 		= binary_to_list(rfc4627:get_field(RequestData, "description", <<>>)),
+	PreAccCdeStat		= binary_to_list(rfc4627:get_field(RequestData, "acc_code_status", <<>>)),
+	PreCnfSupport		= binary_to_list(rfc4627:get_field(RequestData, "cnf_support", <<>>)),
+	PreCnfReInvite		= binary_to_list(rfc4627:get_field(RequestData, "cnf_re_invite_support", <<>>)),
+	PreStreamReInvite	= binary_to_list(rfc4627:get_field(RequestData, "stream_re_invite", <<>>)),
+	SilenceDeTtype 		= binary_to_integer(rfc4627:get_field(RequestData, "silence_type", <<>>)),
+	PreGenDtmf			= binary_to_list(rfc4627:get_field(RequestData, "gen_dtmf", <<>>)),
+	OverWrite			= list_to_atom(binary_to_list(rfc4627:get_field(RequestData, "over_write", <<>>))),
+	AccType				= binary_to_list(rfc4627:get_field(RequestData, "acc_type", <<>>)),
+	case PreEarlyMedia of
+		[]->
+			EarlyMedia=0;
+		_->
+			EarlyMedia=1
+	end,	
+
+	case PreAccCdeStat of
+		[]->
+			AccCdeStat=0;
+		_->
+			AccCdeStat=1
+	end,
+
+	case PreCnfSupport of
+		[]->
+			CnfSupport=0;
+		_->
+			CnfSupport=1
+	end,
+
+	case PreCnfReInvite of
+		[]->
+			CnfReInvite=0;
+		_->
+			CnfReInvite=1
+	end,
+
+	case PreStreamReInvite of
+		[]->
+			StreamReInvite=0;
+		_->
+			StreamReInvite=1
+	end,
+	case PreGenDtmf of
+		[]->
+			GenDtmf=0;
+		_->
+			GenDtmf=1
+	end,
+
+	AccNumberRecord=#access_number{
+						acc_no=AccessNumber,
+						app_type=AppType,
+						cc_type=CallControlType,
+						status=AccCdeStat,
+						adj_node=AdjcType,
+						login=LoginUrl,
+						logout=LogoutUrl,
+						dci_data=DciData,
+						vid_codec_list=VideoCodec,
+						aud_codec_list=AudioCdcLst,
+						dtmf=DtmfVal,
+						dtmf_payload=DtmfPyld,
+						amr_nb_payload=AudioAmrNb,
+						amr_wb_payload=AudioAmrWb,
+						g711_alaw_payload=ALaw,
+						g711_mulaw_payload=MuLaw,
+						g723_payload=G723Payload,
+						g729_payload=G729Payload,
+						mpeg4_payload=Mpeg4Payload,
+						h263_2429_payload=H263_2429Payload,
+						h264_payload=H264Payload,
+						early_media=EarlyMedia,
+						description=Description,
+						cnf_support=CnfSupport,
+						cnf_re_invite=CnfReInvite,
+						stream_re_invite=StreamReInvite,
+						silence_detection_type=SilenceDeTtype,
+						generate_dtmf=GenDtmf,
+						access_type=AccType,
+						creator="ivr"},
+	error_logger:info_msg("~p",[AccNumberRecord]),
+	
+	RpcCall = ivr_mediator:call(?IVR_NODE, ?HMP_MOD, add_short_code,[[AccNumberRecord],OverWrite, "777"]),
+	case RpcCall of
+		successful ->
+			if OverWrite == false ->
+				ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "access code " ++ AccessNumber++" successfully created."),
+				Response = [{obj,[{status, <<"ok">>},{reason, <<"Access Code successfully created.">>}]}];
+			true ->
+				ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "access code " ++ AccessNumber++" successfully updated."),
+				Response = [{obj,[{status, <<"ok">>},{reason, <<"Access Code successfully updated.">>}]}]
+			end;
+		codec_mismatch -> 
+			ivr_logger:error(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "failed to create access code due to Not supported codec"),
+			Response = [{obj,[{status, <<"error">>},{reason, <<"Not supported codec. Please contact System Administrator">>}]}];
+		{error, Reason} ->
+			ivr_logger:error(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Failed to create access code."),
+			Response = [{obj,[{status, <<"error">>},{reason, list_to_binary(atom_to_list(Reason))}]}];
+		already_exists ->
+			ivr_logger:error(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "failed to create access code due to code allready exists"),
+			Response = [{obj,[{status, <<"error">>},{reason, <<"Access code already exists.">>}]}];
+		_	->
+			ivr_logger:error(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Failed to create access code."),
+			Response = [{obj,[{status, <<"error">>},{reason, <<"Access Code creating failed.">>}]}]
+	end,
+
+	{ehtml, rfc4627:encode(Response)};
+
+%% List access codes by User
+access_code("GET_CONFIGURATIONS", RequestData, RecSessionData) ->
+	UserName	= binary_to_list(rfc4627:get_field(RequestData, "user_name", <<>>)),
+	case ivr_mediator:call(?IVR_NODE, ?HMP_MOD, get_configuration_data, [[{UserName}]]) of
+		[error, _] ->
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid,"error when list  all access codes"),
+			Response = [{obj,[{status, <<"error">>},{reason, <<"Access Code data getting failed.">>}]}];
+		Res ->
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "list all access codes"),
+			Response = get_all_access_codes(Res, [])
+	end,
+
+	{ehtml, rfc4627:encode(Response)};
+	
+%% Load selected access code data
+access_code("LOAD_ACCESS_CODE", RequestData, RecSessionData) ->
+	AccessCode	= binary_to_list(rfc4627:get_field(RequestData, "access_code", <<>>)),
+	RefVal	= list_to_atom(binary_to_list(rfc4627:get_field(RequestData, "access_code", <<>>))),
+	
+	case ivr_mediator:call(?IVR_NODE, ?HMP_MOD, is_shortcode_available, [AccessCode, RefVal]) of
+		not_found->
+			ivr_logger:error(RecSessionData#session_data.username, RecSessionData#session_data.uniqid,"can not load data for access code :"++AccessCode),
+			Response="";
+		Res ->
+		ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid,"successfully  load data for access code :"++AccessCode),
+			Response = get_all_access_codes(Res, [])
+	end,
+
+	{ehtml, rfc4627:encode(Response)};
+
+%% Load adjcent node list
+access_code("LOAD_ADJ_NODE_LIST", RequestData, RecSessionData) ->
+	case ivr_mediator:call(?IVR_NODE, ?HMP_MOD, get_adj_nodes_list, []) of
+		{error,Reason} ->
+			Response = [{obj,[{status, <<"error">>},{message, <<"Get adjecent node list failed">>}]}];
+		Res ->
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid,"successfully  load data for adjecent nodes list :"++Res),
+				Response = [{obj,[{status, <<"ok">>},{message, list_to_binary(Res)}]}]
+	end,
+	{ehtml, rfc4627:encode(Response)};
+
+%% delete access code by access number
+access_code("DELETE_ACCESS_CODE", RequestData, RecSessionData) ->
+	UserName	= RecSessionData#session_data.username, %binary_to_list(rfc4627:get_field(RequestData, "user_name", <<>>)),
+	AccessCode	= binary_to_list(rfc4627:get_field(RequestData, "access_code", <<>>)),
+	
+	case ivr_mediator:call(?IVR_NODE, ?HMP_MOD, delete_shortcode_data, [AccessCode, UserName]) of
+		successful ->
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid,"successfully deleted access code:"++AccessCode),
+			Response = [{obj,[{status, <<"ok">>},{message, <<"Access Code successfully deleted.">>}]}];
+		Res ->
+			ivr_logger:error(RecSessionData#session_data.username, RecSessionData#session_data.uniqid,"failed to delete access code:"++AccessCode),
+			Response = [{obj,[{status, <<"error">>},{message, <<"Access Code delete failed.">>}]}]
+	end,
+
+	{ehtml, rfc4627:encode(Response)}.
+
+
+%% Generate JSON for access codes retrieval
+get_all_access_codes([], AccessCodes) ->
+	AccessCodes;
+
+get_all_access_codes([Row|Rest], AccessCodes) ->
+	AccTup = {obj,[
+		{acc_nbr, ivr_common:toBinary(Row#access_number.acc_no)},
+		{app_type, ivr_common:toBinary(Row#access_number.app_type)},
+		{cc_type, ivr_common:toBinary(Row#access_number.cc_type)},
+		{acc_code_status, ivr_common:toBinary(Row#access_number.status)},
+		{adjc_type, ivr_common:toBinary(Row#access_number.adj_node)},
+		{login_url, ivr_common:toBinary(Row#access_number.login)},
+		{logout_url, ivr_common:toBinary(Row#access_number.logout)},
+		{gen_dtmf, ivr_common:toBinary(Row#access_number.generate_dtmf)},
+		{dci_data, ivr_common:toBinary(Row#access_number.dci_data)},
+		{video_codec_list, ivr_common:toBinary(Row#access_number.vid_codec_list)},
+		{audio_cdc_lst, ivr_common:toBinary(Row#access_number.aud_codec_list)},
+		{dtmf, ivr_common:toBinary(Row#access_number.dtmf)},
+		{dtmf_payload, ivr_common:toBinary(Row#access_number.dtmf_payload)},
+		{audio_amr, ivr_common:toBinary(Row#access_number.amr_wb_payload)},
+		{audio_namr, ivr_common:toBinary(Row#access_number.amr_nb_payload)},
+		{a_law, ivr_common:toBinary(Row#access_number.g711_alaw_payload)},
+		{mu_law, ivr_common:toBinary(Row#access_number.g711_mulaw_payload)},
+		{g723_payload, ivr_common:toBinary(Row#access_number.g723_payload)},
+		{g729_payload, ivr_common:toBinary(Row#access_number.g729_payload)},
+		{mpeg4_payload, ivr_common:toBinary(Row#access_number.mpeg4_payload)},
+		{h263_2429_payload, ivr_common:toBinary(Row#access_number.h263_2429_payload)},
+		{h264_payload, ivr_common:toBinary(Row#access_number.h264_payload)},
+		{early_media, ivr_common:toBinary(Row#access_number.early_media)},
+		{description, ivr_common:toBinary(Row#access_number.description)},
+		{cnf_support, ivr_common:toBinary(Row#access_number.cnf_support)},
+		{cnf_re_invite, ivr_common:toBinary(Row#access_number.cnf_re_invite)},
+		{stream_re_invite, ivr_common:toBinary(Row#access_number.stream_re_invite)},
+		{silence_detection_type, ivr_common:toBinary(Row#access_number.silence_detection_type)},
+		{generate_dtmf, ivr_common:toBinary(Row#access_number.generate_dtmf)},
+		{acc_type, ivr_common:toBinary(Row#access_number.access_type)},
+		{creator, ivr_common:toBinary(Row#access_number.creator)}
+		]},
+
+	UpdatedList = lists:concat([AccessCodes, [AccTup]]),	
+	get_all_access_codes(Rest, UpdatedList).
+
+</erl>

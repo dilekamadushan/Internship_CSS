@@ -1,0 +1,829 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="js/application.js"></script>
+<script type="">
+   document.write(objApp.getHeader());
+</script>
+<!--<script src="js/accordion/jquery-1.10.2.js"></script>-->
+<!--<script src="js/accordion/jquery-ui.js"></script>-->
+
+<script>
+	$(function() {	
+		$("#accordion").accordion({
+	  		collapsible: true,
+			heightStyle: "content",
+			autoHeight:false
+		});
+	});
+</script>
+
+
+<!-- load all js/css and other stuff -->
+<script type="text/javascript" src="js/other_conf_manager.js"></script>
+<body>
+
+	<script type="">
+      document.write(objApp.getTopBanner());
+   </script>
+	<!-- Printing top banner & login check -->
+
+	<div class="InBody">
+		<div class="InBodyIn">
+			<script type="">
+            document.write(objApp.getMainMenu());
+         </script>
+			<!-- Left Main Menu -->
+			<div class="bodyMid">
+				<div class="bodytopic">Configurations</div>
+				<div class="bodytopic-Sub">Other Settings</div>
+				<div id='flash-msg'></div>
+				<div class="bodyMid_cont">	
+					<div id="accordion">
+					<!--div class="tabtopics" id="log-head">LOG LEVELS</div>	
+					<form name="frm_log_levels" id="frm_log_levels" action="">
+					<input type="hidden" id="charge_thrs" value="5000">
+						<div class="bdfill">	
+							<table id="common-tbl" width="82%" border="0" align="center" cellpadding="0"
+								cellspacing="0" class="insert">
+								<tr>
+									<td width="30%">Admin Web<span class="required-field"></span></td>
+									<td width="20%" align="left">
+										<select id="admin_act" name="admin_act" class="drpdwn-select">
+											<script>objOthset.getLogLevels('#admin_act')</script>
+										</select>
+									</td>
+									<td width="30%" align="right">Call Recording Call Flow<span class="required-field"></span></td>
+									<td width="20%" align="left"><select id="prompt_rec" name="prompt_rec" class="drpdwn-select">
+											<script>objOthset.getLogLevels('#prompt_rec')</script>
+										</select></td>
+								</tr>
+								<tr>
+									<td>OBD Web<span class="required-field"></span></td>
+									<td align="left"><select id="obd_web" name="obd_web" class="drpdwn-select">
+											<script>objOthset.getLogLevels('#obd_web')</script>
+										</select>
+									</td>
+									<td align="right">OBD Call Flow<span class="required-field"></span></td>
+									<td align="left"><select id="obd_call_flow" name="obd_call_flow" class="drpdwn-select">
+											<script>objOthset.getLogLevels('#obd_call_flow')</script>
+										</select>
+									</td>
+								</tr>
+								<tr>
+									<td>OBD Web Service<span class="required-field"></span></td>
+									<td align="left"><select id="obd_ws" name="obd_ws" class="drpdwn-select">
+											<script>objOthset.getLogLevels('#obd_ws')</script>
+										</select>
+									</td>
+									<td align="right">Black/White List Web Service<span class="required-field"></span></td>
+									<td align="left"><select id="black_white_list_ws" name="black_white_list_ws" class="drpdwn-select">
+											<script>objOthset.getLogLevels('#black_white_list_ws')</script>
+										</select>
+									</td>
+								</tr>
+								<tr>
+									<td>Service Management Web Service<span class="required-field"></span></td>
+									<td align="left"><select id="service_management_ws" name="service_management_ws" class="drpdwn-select">
+											<script>objOthset.getLogLevels('#service_management_ws')</script>
+										</select>
+									</td>
+									<td align="right">Statistics Web Service<span class="required-field"></span></td>
+									<td align="left"><select id="reports_ws" name="reports_ws" class="drpdwn-select">
+											<script>objOthset.getLogLevels('#reports_ws')</script>
+										</select>
+									</td>								
+								</tr>
+								<tr>
+									<td>SCE<span class="required-field"></span></td>
+									<td align="left"><select id="sce" name="sce" class="drpdwn-select">
+											<script>objOthset.getLogLevels('#sce')</script>
+										</select>
+									</td>
+									<td align="right">Rejected Calls<span class="required-field"></span></td>
+									<td align="left"><select id="ivr" name="ivr" class="drpdwn-select">
+											<script>objOthset.getLogLevels('#ivr')</script>
+										</select>
+									</td>
+								</tr>
+											
+								<tr>
+									<td height="10"></td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>
+								<tr>
+									<td></td>
+									<td></td>
+									<td align="left">
+										<input type="button" 
+											name="save_log_lvls" id="save_log_lvls" value="Update" />
+									</td>
+									<td></td>
+								</tr>								
+							</table>
+						</div>	
+
+					</form-->
+
+						<div class="tabtopics" id="gen-head">GENERAL CONFIGURATIONS</div>
+						<form name="frm_general_conf" id="frm_general_conf" action="">	
+						<div class="bdfill">
+							<table id="sub-tbl" width="82%" border="0" align="center" cellpadding="0"
+								cellspacing="0" class="insert">
+								<div id="gen_data"></div>
+								<tr>
+									<td width="30%">Node Description<span class="required-field"></span></td>
+									<td width="20%" align="left"><input type="text"
+											name="node_desc" id="node_desc"
+											data-validation-engine="validate[required,custom[onlyPureLettersAndNumbers]]"
+											style="width: 100%" maxlength="25"/>
+									</td>
+									<td width="30%">Max Dial-outs<span class="required-field"></span></td>
+									<td width="20%" align="left">
+									<input type="text"
+											name="max_douts" id="max_douts"
+											data-validation-engine="validate[required, custom[integer],funcCall[objOthset.checkMinMax[this]]"
+											style="width: 100%" />
+									</td>
+								</tr>								
+								<tr>
+									<td>Channel Free Time-out (ms)<span class="required-field"></span></td>
+									<td align="left"><input type="text"
+										name="chanfree_timeout" id="chanfree_timeout"
+										data-validation-engine="validate[required,custom[integer],funcCall[objOthset.checkMinMax[this]]"
+										style="width: 100%" />
+									</td>
+									<td>Common Blocklist<span class="required-field"></span></td>
+									<td align="left">
+									<input type="text"
+											name="cmn_blocklist" id="cmn_blocklist"
+											data-validation-engine="validate[required, funcCall[obj_common.checkAllZero[field]], funcCall[obj_common.checkDuplicate[field]], funcCall[obj_common.checkBlockList[field]]]"
+											style="width: 100%" maxlength="20" />
+									</td>
+								</tr>
+								<tr>
+									<td style="display:none;">Dial-out Call Type<span class="required-field"></span></td>
+									<td align="left" style="display:none;">
+										<select id="dout_call_type" name="dout_call_type" class="drpdwn-select">
+											<script>objOthset.getCallTypes('#dout_call_type')</script>
+										</select>
+									</td>
+									<td>Reinvite Timeout(ms)<span class="required-field"></span></td>
+									<td align="left">
+									<input type="text"
+											name="reinvite_timeout" id="reinvite_timeout"
+											data-validation-engine="validate[required,custom[integer],funcCall[objOthset.checkMinMax[this]]"
+											style="width: 100%" />
+									</td>
+								</tr>
+							
+								<tr>
+									<td height="10"></td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>
+								<tr>
+									<td></td>
+									<td align="left"><input type="button"
+										name="save_gen_conf" id="save_gen_conf" value="Update" /></td>
+									<td></td>
+									<td></td>
+								</tr>								
+							</table>
+						</div>						
+						</form>
+						<div class="tabtopics" id="http-head">HTTP CONFIGURATIONS</div>	
+						<form name="frm_http_conf" id="frm_http_conf" action="">	
+						<div class="bdfill">
+
+							<table id="sub-tbl" width="82%" border="0" align="center" cellpadding="0"
+								cellspacing="0" class="insert">
+								<div id="http_request"></div>
+								<tr>
+									<td width="30%">Timeout (ms)<span class="required-field"></span></td>
+									<td width="20%" align="left"><input type="text"
+											name="http_time_out" id="http_time_out"
+											data-validation-engine="validate[required,custom[integer],funcCall[objOthset.checkMinMax[this]]"
+											style="width: 100%"/>
+									</td>
+								</tr>								
+								<tr>
+									<td>Download Directory<span class="required-field"></span></td>
+									<td align="left"><input type="text"
+										name="http_down_dir" id="http_down_dir"
+										data-validation-engine="validate[required,funcCall[objOthset.checkPath], funcCall[obj_common.validateBackwardSlash[field]]]"
+										style="width: 150%" />
+									</td>
+								</tr>
+								<tr>
+									<td>Cache Timeout (sec)<span class="required-field"></span></td>
+									<td align="left"><input type="text"
+										name="http_cache_timeout" id="http_cache_timeout"
+										data-validation-engine="validate[required,custom[integer],funcCall[objOthset.checkMinMax[this]]"
+										style="width: 80%" />
+									</td>
+								</tr>
+								<tr>
+									<td>File Check Frequency (sec)<span class="required-field"></span></td>
+									<td align="left"><input type="text"
+										name="http_file_chk_freq" id="http_file_chk_freq"
+										data-validation-engine="validate[required,custom[integer],funcCall[objOthset.checkMinMax[this]]"
+										style="width: 80%" />
+									</td>
+								</tr>
+								<tr>
+									<td height="10"></td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>
+								<tr>
+									<td></td>
+									<td align="left"><input type="button"
+										name="save_http_conf" id="save_http_conf" value="Update" /></td>
+									<td></td>
+									<td></td>
+								</tr>								
+							</table>
+						</div>						
+						</form>
+						<div class="tabtopics" id="dgt-head">DIGIT CONFIGURATIONS</div>	
+						<form name="frm_digit_conf" id="frm_digit_conf" action="">	
+						<div class="bdfill">
+							<table id="sub-tbl" width="82%" border="0" align="center" cellpadding="0"
+								cellspacing="0" class="insert">
+								<div id="digit_data"></div>
+								<tr >
+									<td width="30%">DTMF<span class="required-field"></span></td>
+									<td width="20%" align="left"><select id="digit_dtmf" name="digit_dtmf" class="drpdwn-select">
+											<script>objOthset.getDtmfVals('#digit_dtmf')</script>
+										</select>
+									</td>
+									<td width="30%"></td>
+									<td width="20%"></td>
+								</tr>
+								<tr id="dtmf_payload">
+									<td>DTMF Payload<span class="required-field"></span></td>
+									<td align="left"><input type="text"
+										name="digit_dtmf_pyld" id="digit_dtmf_pyld"
+										data-validation-engine="validate[required,custom[integer],funcCall[objOthset.checkMinMax[this]]"
+										style="width: 80%" />
+									</td>
+								</tr>
+								<tr>
+									<td>Generate DTMF<span class="required-field"></span></td>
+									<td width="20%" align="left"><select id="digit_gnrt_dtmf" name="digit_gnrt_dtmf" class="drpdwn-select">
+											<script>objOthset.getDefValues('#digit_gnrt_dtmf')</script>
+										</select>
+									</td>
+									<td width="30%"></td>
+									<td width="20%"></td>
+								</tr>
+								<tr>
+									<td>Max Digits<span class="required-field"></span></td>
+									<td align="left"><input type="text"
+										name="digit_max_digits" id="digit_max_digits"
+										data-validation-engine="validate[required,custom[integer],funcCall[objOthset.checkMinMax[this]]"
+										style="width: 80%" />
+									</td>
+									<td></td>
+									<td></td>
+								</tr>
+								<tr>
+									<td>First timeout (ms)<span class="required-field"></span></td>
+									<td align="left"><input type="text"
+										name="digit_frst_tout" id="digit_frst_tout"
+										data-validation-engine="validate[required,custom[integer],funcCall[objOthset.checkMinMax[this]]"
+										style="width: 80%" />
+									</td>
+									<td></td>
+									<td></td>
+								</tr>
+								<tr>
+									<td>Inter timeout (ms)<span class="required-field"></span></td>
+									<td align="left"><input type="text"
+										name="digit_inter_tout" id="digit_inter_tout"
+										data-validation-engine="validate[required,custom[integer],funcCall[objOthset.checkMinMax[this]]"
+										style="width: 80%" />
+									</td>
+									<td></td>
+									<td></td>
+								</tr>
+								<tr>
+									<td height="10"></td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>
+								<tr>
+									<td></td>
+									<td align="left"><input type="button"
+										name="save_digit_conf" id="save_digit_conf" value="Update" /></td>
+									<td></td>
+									<td></td>
+								</tr>								
+							</table>
+							</form>
+						</div>						
+						<div class="tabtopics" id="rcd-head">RECORD CONFIGURATIONS</div>	
+						<form name="frm_record_conf" id="frm_record_conf" action="">	
+						<div class="bdfill">
+							<table id="sub-tbl" width="82%" border="0" align="center" cellpadding="0"
+								cellspacing="0" class="insert">
+								<div id="rec_data"></div>
+								<tr>
+									<td>Max Record Time (ms)<span class="required-field"></span></td>
+									<td align="left"><input type="text"
+										name="rec_max_time" id="rec_max_time"
+										data-validation-engine="validate[required,custom[integer],funcCall[objOthset.checkMinMax[this]]"
+										style="width: 40%" />
+									</td>
+									<td width="30%"></td>
+									<td width="20%"></td>
+								</tr>								
+								<tr>
+									<td>No Voice Timeout (sec)<span class="required-field"></span></td>
+									<td align="left"><input type="text"
+										name="rec_voice_tout" id="rec_voice_tout"
+										data-validation-engine="validate[required,custom[integer],funcCall[objOthset.checkMinMax[this]]"
+										style="width: 40%" />
+									</td>
+									<td width="30%"></td>
+									<td width="20%"></td>
+								</tr>
+								<tr>
+									<td>Silence Timeout (sec)<span class="required-field"></span></td>
+									<td align="left"><input type="text"
+										name="rec_sil_tout" id="rec_sil_tout"
+										data-validation-engine="validate[required,custom[integer],funcCall[objOthset.checkMinMax[this]]"
+										style="width: 40%" />
+									</td>
+									<td width="30%"></td>
+									<td width="20%"></td>
+								</tr>
+								<tr>
+									<td>Silence Ampl <span class="required-field"></span></td>
+									<td align="left"><input type="text"
+										name="rec_sil_ampl" id="rec_sil_ampl"
+										data-validation-engine="validate[required,custom[integer],funcCall[objOthset.checkMinMax[this]]"
+										style="width: 40%" />
+									</td>
+									<td width="30%"></td>
+									<td width="20%"></td>
+								</tr>
+								<tr>
+									<td height="10"></td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>
+								<tr>
+									<td width="30%">Silence Detection Type<span class="required-field"></span></td>
+									<td width="40%%" align="left"><select id="silnce_det_type" name="silnce_det_type" class="drpdwn-select">
+										<script>objOthset.getSilenceType('#silnce_det_type')</script>
+										</select>
+									</td>
+									<td width="30%"></td>
+									<td width="20%"></td>
+								</tr>
+								<tr>
+									<td></td>
+									<td align="left"><input type="button"
+										name="save_record_conf" id="save_record_conf" value="Update" /></td>
+									<td></td>
+									<td></td>
+								</tr>								
+							</table>
+						</div>						
+						</form>
+						<div class="tabtopics" id="ply-head">PLAY CONFIGURATIONS</div>	
+						<form name="frm_play_conf" id="frm_play_conf" action="">	
+						<div class="bdfill">
+							<table id="sub-tbl" width="82%" border="0" align="center" cellpadding="0"
+								cellspacing="0" class="insert">
+								<div id="play_data"></div>
+								<tr>
+									<td>Max Play Count<span class="required-field"></span></td>
+									<td align="left"><input type="text"
+										name="ply_max_count" id="ply_max_count"
+										data-validation-engine="validate[required,custom[integer],funcCall[objOthset.checkMinMax[this]]"
+										style="width: 80%" />
+									</td>
+									<td width="30%"></td>
+									<td width="20%"></td>
+								</tr>	
+								<tr>
+									<td height="10"></td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>							
+								<tr>
+									<td></td>
+									<td align="left"><input type="button"
+										name="save_play_conf" id="save_play_conf" value="Update" /></td>
+									<td></td>
+									<td></td>
+								</tr>								
+							</table>
+						</div>						
+						</form>
+						<div class="tabtopics" id="cdcf-head">CODECS CONFIGURATIONS</div>	
+						<form name="frm_codecs_conf" id="frm_codecs_conf" action="">	
+						<div class="bdfill">
+							<table id="sub-tbl" width="82%" border="0" align="center" cellpadding="0"
+								cellspacing="0" class="insert">
+								<div id="codec_data"></div>
+								<tr>
+									<!--<td width="30%">Video Format<span class="required-field"></span></td> -->
+									<td width="20%" align="left" hidden="hidden"><select id="codec_video_frmt" name="codec_video_frmt" class="drpdwn-select">
+										<script>objOthset.getVideoCodecs('#codec_video_frmt')</script>
+										</select>
+									</td>
+									<td width="30%"></td>
+									<td width="20%"></td>
+								</tr>
+								<tr>
+									<td width="30%">Audio Format<span class="required-field"></span></td>
+									<td width="20%" align="left"><select id="codec_audio_frmt" name="codec_audio_frmt" class="drpdwn-select">
+										<script>objOthset.getAudioCodecs('#codec_audio_frmt')</script>
+										</select>
+									</td>
+									<td width="30%"></td>
+									<td width="20%"></td>
+								</tr>
+								<tr>
+									<td height="10"></td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>
+								<tr>
+									<td></td>
+									<td align="left"><input type="button"
+										name="save_codecs_conf" id="save_codecs_conf" value="Update" /></td>
+									<td></td>
+									<td></td>
+								</tr>								
+							</table>
+						</div>						
+						</form>
+						<!-- <div class="tabtopics" id="sil-head">SILENCE DETECTION CONFIGURATIONS</div>	
+						<form name="frm_silence_conf" id="frm_silence_conf" action="">	
+						<div class="bdfill">
+							<table id="sub-tbl" width="82%" border="0" align="center" cellpadding="0"
+								cellspacing="0" class="insert">
+								<tr>
+									<td width="30%">Silence Detection Type<span class="required-field"></span></td>
+									<td width="40%%" align="left"><select id="silnce_det_type" name="silnce_det_type" class="drpdwn-select">
+										<script>objOthset.getSilenceType('#silnce_det_type')</script>
+										</select>
+									</td>
+									<td width="30%"></td>
+									<td width="20%"></td>
+								</tr>
+								<tr>
+									<td height="10"></td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>								
+								<tr>
+									<td></td>
+									<td align="left"><input type="button"
+										name="save_silence_conf" id="save_silence_conf" value="Update" /></td>
+									<td></td>
+									<td></td>
+								</tr>								
+							</table>
+						</div>						
+						</form> -->
+						<div class="tabtopics" id="rtcp-head">RTCP CONFIGURATIONS</div>	
+						<form name="frm_rtcp_conf" id="frm_rtcp_conf" action="">	
+						<div class="bdfill">
+							<table id="sub-tbl" width="82%" border="0" align="center" cellpadding="0"
+								cellspacing="0" class="insert">
+								<div id="rtcp_data"></div>
+								<tr>
+									<td width="30%">RTCP Support<span class="required-field"></span></td>
+									<td width="20%" align="left"><select id="rtcp_support" name="rtcp_support" class="drpdwn-select">
+										<script>objOthset.getDefValues('#rtcp_support')</script>
+										</select>
+									</td>
+									<td width="30%"></td>
+									<td width="20%"></td>
+								</tr>
+								<tr>
+									<td>RTCP Packet Interval 	(sec)<span class="required-field"></span></td>
+									<td align="left"><input type="text"
+										name="rtcp_pkt_intrvl" id="rtcp_pkt_intrvl"
+										data-validation-engine="validate[required,custom[integer],funcCall[objOthset.checkMinMax[this]]"
+										style="width: 80%" />
+									</td>
+									<td width="30%"></td>
+									<td width="20%"></td>
+								</tr>
+								<tr>
+									<td>RTCP Receive Timeout (sec)<span class="required-field"></span></td>
+									<td align="left"><input type="text"
+										name="rtcp_recve_tout" id="rtcp_recve_tout"
+										data-validation-engine="validate[required,custom[integer],funcCall[objOthset.checkMinMax[this]]]"
+										style="width: 80%" />
+									</td>
+									<td width="30%"></td>
+									<td width="20%"></td>
+								</tr>
+								<tr>
+									<td height="10"></td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>								
+								<tr>
+									<td></td>
+									<td align="left"><input type="button"
+										name="save_rtcp_conf" id="save_rtcp_conf" value="Update" /></td>
+									<td></td>
+									<td></td>
+								</tr>								
+							</table>
+						</div>						
+						</form>
+						<div class="tabtopics" id="fax-head">FAX CONFIGURATIONS</div>	
+						<form name="frm_fax_conf" id="frm_fax_conf" action="">	
+						<div class="bdfill"> 	
+							<table id="sub-tbl" width="82%" border="0" align="center" cellpadding="0"
+								cellspacing="0" class="insert">
+								<div id="fax_data"></div>
+								<tr>
+									<td width="30%">Fax Support<span class="required-field"></span></td>
+									<td width="20%" align="left"><select id="fax_supprt" name="fax_supprt" class="drpdwn-select">
+										<script>objOthset.getDefValues('#fax_supprt')</script>
+										</select>
+									</td>
+									<td width="30%"></td>
+									<td width="20%"></td>
+								</tr>
+								<tr>
+									<td height="10"></td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>								
+								<tr>
+									<td></td>
+									<td align="left"><input type="button"
+										name="save_fax_conf" id="save_fax_conf" value="Update" /></td>
+									<td></td>
+									<td></td>
+								</tr>								
+							</table>
+						</div>						
+						</form>
+						<div class="tabtopics" id="amr-head">AMR CONFIGURATIONS</div>	
+						<form name="frm_amr_conf" id="frm_amr_conf" action="">	
+						<div class="bdfill"> 	
+							<table id="sub-tbl" width="82%" border="0" align="center" cellpadding="0"
+								cellspacing="0" class="insert">
+								<div id="amr_data"></div>
+								<tr>
+									<td width="30%">Octet Aligned<span class="required-field"></span></td>
+									<td width="20%" align="left"><select id="amr_oct_algn" name="amr_oct_algn" class="drpdwn-select">
+										<script>objOthset.getDefValues('#amr_oct_algn')</script>
+										</select>
+									</td>
+									<td width="30%"></td>
+									<td width="20%"></td>
+								</tr>
+								<tr>
+									<td width="30%">Inter Leaving<span class="required-field"></span></td>
+									<td width="20%" align="left"><select id="amr_intr_lvng" name="amr_intr_lvng" class="drpdwn-select">
+										<script>objOthset.getDefValues('#amr_intr_lvng')</script>
+										</select>
+									</td>
+									<td width="30%"></td>
+									<td width="20%"></td>
+								</tr>
+								<tr>
+									<td width="30%">Crc<span class="required-field"></span></td>
+									<td width="20%" align="left"><select id="amr_crc" name="amr_crc" class="drpdwn-select">
+										<script>objOthset.getDefValues('#amr_crc')</script>
+										</select>
+									</td>
+									<td width="30%"></td>
+									<td width="20%"></td>
+								</tr>
+								<tr>
+									<td height="10"></td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>								
+								<tr>
+									<td></td>
+									<td align="left"><input type="button"
+										name="save_amr_conf" id="save_amr_conf" value="Update" /></td>
+									<td></td>
+									<td></td>
+								</tr>								
+							</table>
+						</div>						
+						</form>
+						<div class="tabtopics" id="nbrl-head">NUMBER LIST CONFIGURATIONS</div>	
+						<form name="frm_nbr_lst_conf" id="frm_nbr_lst_conf" action="">	
+						<div class="bdfill"> 	
+							<table id="sub-tbl" width="82%" border="0" align="center" cellpadding="0"
+								cellspacing="0" class="insert">
+								<div id="number_list_data"></div>
+								<tr>
+									<td width="30%">Number List Checking <span class="required-field"></span></td>
+									<td width="20%" align="left"><select id="nbr_lst_chk" name="nbr_lst_chk" class="drpdwn-select">
+										<script>objOthset.getDefValues('#nbr_lst_chk')</script>
+										</select>
+									</td>
+									<td width="30%"></td>
+									<td width="20%"></td>
+								</tr>
+								<tr>
+									<td width="30%">Default WhiteList BlackList Action <span class="required-field"></span></td>
+									<td width="20%" align="left"><select id="nbr_lst_wba" name="nbr_lst_wba" class="drpdwn-select">
+										<script>objOthset.getPassBlock('#nbr_lst_wba')</script>
+										</select>
+									</td>
+									<td width="30%"></td>
+									<td width="20%"></td>
+								</tr>
+								<tr>
+									<td height="10"></td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>								
+								<tr>
+									<td></td>
+									<td align="left"><input type="button"
+										name="save_nbr_lst_conf" id="save_nbr_lst_conf" value="Update" /></td>
+									<td></td>
+									<td></td>
+								</tr>								
+							</table>
+						</div>						
+						</form>
+						<div class="tabtopics" id="ivr-head">IVR STATUS CONFIGURATIONS</div>	
+						<form name="frm_ivr_conf" id="frm_ivr_conf" action="">	
+						<div class="bdfill">
+							<table id="sub-tbl" width="82%" border="0" align="center" cellpadding="0"
+								cellspacing="0" class="insert">
+								<div id="ivr_status_data"></div>
+								<tr>
+									<td width="30%">IVR Notification URL<span class="required-field"></span></td>
+									<td width="20%" align="left"><input type="text"
+										name="ivr_notfy_url" id="ivr_notfy_url"
+										data-validation-engine="validate[required, funcCall[obj_common.validateBackwardSlash[field]]]"
+										style="width: 150%" />
+									</td>
+									<td width="30%"></td>
+									<td width="20%"></td>
+								</tr>
+								<tr>
+									<td height="10"></td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>								
+								<tr>
+									<td></td>
+									<td align="left"><input type="button"
+										name="save_ivr_ntfy_conf" id="save_ivr_ntfy_conf" value="Update" /></td>
+									<td></td>
+									<td></td>
+								</tr>								
+							</table>
+						</div>						
+						</form>
+						<div class="tabtopics" id="snmp-head">SNMP CONFIGURATIONS</div>	
+						<form name="frm_snmp_conf" id="frm_snmp_conf" action="">	
+						<div class="bdfill">
+							<table id="sub-tbl" width="82%" border="0" align="center" cellpadding="0"
+								cellspacing="0" class="insert">
+								<div id="snmp_data"></div>
+								<tr>
+									<td width="30%">SNMP Timer Value(ms) <span class="required-field"></span></td>
+									<td width="20%" align="left"><input type="text"
+										name="snmp_time_val" id="snmp_time_val"
+										data-validation-engine="validate[required,custom[integer],funcCall[objOthset.checkMinMax[this]]"
+										style="width: 80%" />
+									</td>
+									<td width="30%"></td>
+									<td width="20%"></td>
+								</tr>
+								<tr>
+									<td height="10"></td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>								
+								<tr>
+									<td></td>
+									<td align="left"><input type="button"
+										name="save_snmp_conf" id="save_snmp_conf" value="Update" /></td>
+									<td></td>
+									<td></td>
+								</tr>								
+							</table>
+						</div>						
+						</form>
+						<div class="tabtopics" id="chan-head">CHANNEL WISE LOG LEVELS</div>	
+						<form name="frm_chanel_logs" id="frm_chanel_logs" action="">	
+							<div class="bdfill">
+								<table id="sub-tbl" width="82%" border="0" align="center" cellpadding="0"
+									cellspacing="0" class="insert">
+									<div id="channel_flash"></div>
+									<div class="bdfill_tb">
+										
+											Server ID
+											
+												<select id="server_id" name="server_id">
+												</select>
+												
+										<div id="channel_tbl"></div>
+										<script type="">
+											objOthset.listServerIds();
+										</script>
+									</div>
+									<table width="19%" border="0" align="center" cellpadding="0"
+							cellspacing="0" class="insert">
+										<tr> 
+											<td width="54%"><input type="button"
+												name="channel_bulk_update" id="channel_bulk_update"
+												value="Update Selected" /></td>								
+											<td width="46%" colspan="4"></td>
+										</tr>
+									</table>
+								</table>
+							</div>						
+						</form>
+						<div class="tabtopics" id="num-head">NUMBER WISE LOG LEVELS</div>	
+						<form name="frm_number_logs" id="frm_number_logs" action="">	
+							<div class="bdfill">
+								<table id="sub-tbl" width="82%" border="0" align="center" cellpadding="0"
+									cellspacing="0" class="insert">	
+									<div id="number_flash"></div>
+									<div class="bdfill_tb">
+										<div id="number_tbl"></div>
+										<script type="">
+											objOthset.listNumbers();
+										</script>
+									</div>	
+									<table width="19%" border="0" align="center" cellpadding="0"
+							cellspacing="0" class="insert">
+										<tr> 
+											<td width="75%"><input type="button"
+												name="number_bulk_update" id="number_bulk_update"
+												value="Update " />
+												
+											</td><td><input type="button"
+												name="number_bulk_delete" id="number_bulk_delete"
+												value="Delete " /></td>								
+											<td width="25%" colspan="3"></td>
+										</tr>
+									</table>					
+								</table>
+							</div>						
+						</form>
+						<div class="tabtopics" id="trc-head">TRACE NUMBERS</div>	
+						<form name="frm_trace_numbers" id="frm_trace_numbers" action="" onsubmit="return false;">	
+							<div class="bdfill">
+								<table id="sub-tbl" width="82%" border="0" align="center" cellpadding="0"
+									cellspacing="0" class="insert">	
+									<div id="trace_flash"></div>
+									<div class="bdfill_tb">
+										
+										<div id="number_tbl" style="margin:auto;width:40%">Add Number
+											 <input type="text" id="newtraceNumber" data-validation-engine="validate[required,custom[integer]]">
+												<input type="submit" name="add_number" id="add_number" value="Add" />
+										</div>
+										<table class="results_minis" border="0" id="traceNumberList" width="40%" style="margin:auto">
+											 	<tr><th>Number</th><th></th></tr>	
+										</table><br>
+										 
+										</center>
+									</div>	
+														
+								</table>
+							</div>						
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript">
+		document.write(objApp.getFooter());
+	</script>
+	<!-- Printing footer -->
+</body>
+</html>

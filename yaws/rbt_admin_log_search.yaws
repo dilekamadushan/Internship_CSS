@@ -1,0 +1,342 @@
+<erl module=rbt_admin_log_search>
+-export([out/1, admin_log_search/4]).  
+
+-include("rbt_conf.hrl"). 
+-include("rbt_api.hrl").
+
+out(Arg) ->
+   Method = method(Arg),
+   error_logger:info_msg("~p:~p ~p Request~n",[?MODULE, ?LINE, Method ]),  
+   handle(Method, Arg). 
+
+method(Arg) ->
+   Rec = Arg#arg.req,
+   Rec#http_request.method.
+   
+handle('GET', Arg) ->
+
+   case rbt_session:get_sess("name", Arg) of		
+		{error,no_session} ->
+			Response = <<"logout">>,
+			{ehtml, rfc4627:encode(Response)};	
+		Name ->	
+			C = (Arg#arg.headers)#headers.cookie,
+			SessionID = yaws_api:find_cookie_val("session_id", C),
+			{ok, SessionData} = yaws_api:cookieval_to_opaque(SessionID),	
+			{ok, Action} = yaws_api:getvar(Arg, "action"),					  
+			RecSessionData = #session_data
+			{
+				username = rbt_common:toString(rbt_session:get_sess("name", Arg)),
+				uniqid   = rbt_common:toString(rbt_session:get_sess("uniqid", Arg)),
+				app   	 = rbt_common:toString(rbt_session:get_sess("app", Arg))
+			},
+			admin_log_search(Action, SessionData#user_session.permissions, RecSessionData, Arg) 
+   end;
+
+handle('POST', Arg) -> 
+
+	case rbt_session:get_sess("name", Arg) of		
+		{error,no_session} ->
+			Response = <<"logout">>,
+			{ehtml, rfc4627:encode(Response)};	
+		Name ->		
+			{ok,[RequestData|[SessionData]],_} = rfc4627:decode(Arg#arg.clidata), 						
+			Action = binary_to_list(rfc4627:get_field(RequestData, "action", <<>>)),  
+			
+			RecSessionData = #session_data
+			{
+				username = rbt_common:toString(rbt_session:get_sess("name", Arg)),
+				uniqid   = rbt_common:toString(rbt_session:get_sess("uniqid", Arg)),
+				app   	 = rbt_common:toString(rbt_session:get_sess("app", Arg))
+			},
+
+			admin_log_search(Action, RequestData, RecSessionData, Arg)
+	end.
+	
+
+-spec admin_log_search(MethodPrefix :: '"ADD_NUMBER"'|'"UPDATE_NUMBER"' | '"DELETE_NUMBER"' | '"SEARCH_NUMBERS"' | '"GET_ALL_NUMBERS"' | '"GENERATE_CSV"' | '"GENERATE_XLS"', 
+				RequestData :: list(), RecSessionData :: session_data(), Arg :: any()) -> {ehtml, Response :: list()}.
+
+%%	
+%% Get all profiles
+%%
+admin_log_search("GET_ADMIN_USERS", RequestData, RecSessionData, Arg) ->	
+	
+	Username = rbt_common:toString(rbt_session:get_sess("name", Arg)),
+	Password = rbt_common:toString(cam_session:get_sess("password", Arg)),	
+	Uniqid   = rbt_common:toString(rbt_session:get_sess("uniqid", Arg)), 
+
+	Ret = cam_mediator:call(?CAM_NODE, ?CAM_MOD, search_user, [ Username, Password, 0, []]),		
+
+    case Ret of    
+		{ok,Res} -> 
+		
+			case cam_mediator:call(?CAM_NODE, ?CAM_MOD, search_permission, [ Username, Password, 0, []]) of    
+				{ok,Permissions} ->	
+
+					case get_all_rbt_permisions(Permissions,[]) of 
+						RbtRes ->							
+							RbtPermissions = RbtRes;
+						_ ->
+							RbtPermissions = []
+					end,					
+				
+					rbt_logger:info(RecSessionData, "Content Moderate : Get roles success");		
+				_ ->				
+					rbt_logger:info(RecSessionData, "Content Moderate : Get roles fail : Bad Rpc"),	
+					RbtPermissions = []	
+			end,	
+
+			case cam_mediator:call(?CAM_NODE, ?CAM_MOD, search_role, [ Username, Password, 0, []]) of    
+				{ok,Roles} ->				
+					rbt_logger:info(RecSessionData, "Content Moderate : Get roles success");		
+				_ ->				
+					rbt_logger:info(RecSessionData, "Content Moderate : Get roles fail : Bad Rpc"),	
+					Roles = []	
+			end,
+		
+			rbt_logger:info(RecSessionData, "Content Moderate : Get all the users successful"),
+			case get_all_admin_users(Res, [], RbtPermissions, Roles) of 
+				[] ->
+					Response = [{obj,[{status, <<"ok">>},{data, []}]}];
+				Results ->
+					Response = [{obj,[{status, <<"ok">>},{data, Results}]}]
+			end;		
+		{error,Reason} ->				
+			rbt_logger:info(RecSessionData, "Content Moderate : Get all the users fail : " ++ rbt_common:toString(Reason)),	
+			Response = [{obj,[{status, <<"error">>},{message, rbt_common:toBinary(rbt_common:get_error(Reason))}]}];
+		_ ->				
+			rbt_logger:info(RecSessionData, "Content Moderate : Get all the users fail : Bad Rpc"),	
+			Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+	end,
+	
+	{ehtml, rfc4627:encode(Response)};				
+				
+%% Get all the numbers in Blacklist
+%%
+admin_log_search("LOG_SEARCH", RequestData, RecSessionData, Arg) ->
+	
+	Columns = ["`id`","number_series"], 
+	
+	{ok, SearchValue}	= yaws_api:getvar(Arg, "search[value]"),
+	{ok, Order} 		= yaws_api:getvar(Arg, "order[0][column]"),
+	{ok, OrderDirection}= yaws_api:getvar(Arg, "order[0][dir]"),
+	{ok, LimitStart} 	= yaws_api:getvar(Arg, "start"),
+	{ok, LimitLength} 	= yaws_api:getvar(Arg, "length"),
+	{ok, Draw} 			= yaws_api:getvar(Arg, "draw"),
+	
+	{ok, DateFrom} 		= yaws_api:getvar(Arg, "date_from"),
+	{ok, DateTo} 		= yaws_api:getvar(Arg, "date_to"),
+	{ok, Admin} 		= yaws_api:getvar(Arg, "admin_name"), 
+
+	Username			= rbt_common:toString(rbt_session:get_sess("name", Arg)),
+	
+	if
+		Username == ?SUPER_USER ->
+			Sql 		= "SELECT * FROM admin_data WHERE time_of_action BETWEEN '" ++ DateFrom ++ "' AND '" ++ DateTo ++ "' AND admin LIKE '%"++ Admin ++"%' ORDER BY time_of_action LIMIT "++ LimitStart ++", "++ LimitLength,
+			TotalSql 	= "SELECT COUNT(*) FROM admin_data WHERE time_of_action BETWEEN '" ++ DateFrom ++ "' AND '" ++ DateTo ++ "' AND admin LIKE '%"++ Admin ++"%' ORDER BY time_of_action";
+		true ->
+			Sql 		= "SELECT * FROM admin_data WHERE admin <> '" ++ ?SUPER_USER ++ "' AND time_of_action BETWEEN '" ++ DateFrom ++ "' AND '" ++ DateTo ++ "' AND admin LIKE '%"++ Admin ++"%' ORDER BY time_of_action LIMIT "++ LimitStart ++", "++ LimitLength,
+			TotalSql 	= "SELECT COUNT(*) FROM admin_data WHERE admin <> '" ++ ?SUPER_USER ++ "' AND time_of_action BETWEEN '" ++ DateFrom ++ "' AND '" ++ DateTo ++ "' AND admin LIKE '%"++ Admin ++"%' ORDER BY time_of_action"
+	end,
+	
+	error_logger:info_msg("SQL - ~p:~n",[Sql]), 
+	error_logger:info_msg("SQL - ~p:~n",[TotalSql]), 
+	
+	case rbt_mysql_odbc:connect() of  
+		{ok,Ref} ->	
+
+			case rbt_mysql_odbc:sql_query(Ref, TotalSql) of  
+				{TotalAa,TotalBb,TotalRes} ->
+					RecordsTotal = list_to_integer(element(1, lists:last(TotalRes)));
+				{error,_Reason} ->
+					RecordsTotal = 0;
+				_->
+				RecordsTotal = 0
+			end,
+		
+		   case rbt_mysql_odbc:sql_query(Ref, Sql) of  
+				{Aa,Bb,Res} ->
+					rbt_logger:info(RecSessionData, "CDR Search : Get all the numbers successful"),
+					
+					case get_all_records(Res, []) of 
+						[] ->
+							Response = {obj,[{draw, rbt_common:toBinary(Draw)},{recordsTotal, rbt_common:toBinary(0)},{recordsFiltered, rbt_common:toBinary(0)},{data, []}]};
+						Results ->
+							RecordsFiltered = RecordsTotal,	
+							Response = {obj,[{draw, rbt_common:toBinary(Draw)},{recordsTotal, rbt_common:toBinary(RecordsTotal)},{recordsFiltered, rbt_common:toBinary(RecordsFiltered)},{data, Results}]}
+					end;		
+				{error,Reason} ->				
+					rbt_logger:info(RecSessionData, "CDR Search : Get all the Numbers fail : " ++ rbt_common:toString(Reason)),	
+					Response = [{obj,[{status, <<"error">>},{message, rbt_common:toBinary(rbt_common:get_error(Reason))}]}];
+				_ ->				
+					rbt_logger:info(RecSessionData, "CDR Search : Get all the Numbers fail : Bad Rpc"),	
+					Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+				end,
+				rbt_mysql_odbc:disconnect(Ref);	
+		{error,Reason} ->				
+			rbt_logger:info(RecSessionData, "CDR Search : Get all the Numbers fail : " ++ rbt_common:toString(Reason)),	
+			Response = [{obj,[{status, <<"error">>},{message, rbt_common:toBinary(rbt_common:get_error(Reason))}]}];
+		_ ->				
+			rbt_logger:info(RecSessionData, "CDR Search : Get all the Numbers fail : Internal Error"),	
+			Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+		end,
+	
+	{ehtml, rfc4627:encode(Response)};
+
+admin_log_search("GENERATE_CSV", RequestData, RecSessionData, Arg) ->
+	
+	DateFrom	= rbt_common:toString(rfc4627:get_field(RequestData, "date_from", <<"0">>)),
+	DateTo		= rbt_common:toString(rfc4627:get_field(RequestData, "date_to", <<"">>)),
+	Admin		= rbt_common:toString(rfc4627:get_field(RequestData, "admin_name", <<"0">>)),	
+	 
+	Sql = "SELECT * FROM admin_data WHERE time_of_action BETWEEN '" ++ DateFrom ++ "' AND '" ++ DateTo ++ "' AND admin LIKE '%"++ Admin ++"%' ORDER BY time_of_action",
+	 
+	case rbt_mysql_odbc:connect() of  
+		{ok,Ref} ->
+
+		   case rbt_mysql_odbc:sql_query(Ref, Sql) of  
+				{Aa,Bb,Res} ->
+				
+					{_,_,Rand} = now(),
+					FileName 	= "admin_log_search_" ++ integer_to_list(Rand) ++ ".csv",
+					CsvFile 	= ?TMP_PATH ++ FileName,
+					CsvUrl 		= ?TMP_URL ++ FileName,			
+					
+					case catch file:open(CsvFile, [read,write,append]) of
+						{ok, IoDevice}	->
+							rbt_logger:info(RecSessionData, "Access profile : Generate CSV successful"),
+							
+							Head = "Date Time, Session ID, Administrator , Type Of Action, Status, Description \n", 
+							
+							file:write(IoDevice, Head),
+							get_csv_records(Res, IoDevice),
+
+							Response = [{obj,[{status, <<"ok">>},{message, <<"CSV File Created">>},{csv_url, list_to_binary(CsvUrl)}]}],
+							file:close(IoDevice);
+						_Else ->					
+							Response = [{obj,[{status, <<"fail">>},{message, <<"CSV File Create Failed">>}]}]
+						end;		
+				{error,Reason} ->				
+					rbt_logger:info(RecSessionData, "CDR Search : Get all the Numbers fail : " ++ rbt_common:toString(Reason)),	
+					Response = [{obj,[{status, <<"error">>},{message, rbt_common:toBinary(rbt_common:get_error(Reason))}]}];
+				_ ->				
+					rbt_logger:info(RecSessionData, "CDR Search : Get all the Numbers fail : Bad Rpc"),	
+					Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+				end,
+				rbt_mysql_odbc:disconnect(Ref);		
+		{error,Reason} ->				
+			rbt_logger:info(RecSessionData, "Access profile : Get all the users fail : " ++ rbt_common:toString(Reason)),	
+			Response = [{obj,[{status, <<"error">>},{message, rbt_common:toBinary(rbt_common:get_error(Reason))}]}];
+		_ ->				
+			rbt_logger:info(RecSessionData, "Access profile : Get all the users fail : Bad Rpc"),	
+			Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+	end,
+	
+	{ehtml, rfc4627:encode(Response)}. 		
+
+-spec get_all_admin_users(ResultSet :: [tuple()], RecordList :: [tuple()], RbtPermissions :: [tuple()], Roles :: [tuple()]) -> RecordList :: [tuple()].
+%% @doc Iterate user list return from API and prepare json formatted response list.
+%%
+get_all_admin_users([], RecordList, RbtPermissions, Roles) ->
+	RecordList;	
+get_all_admin_users([Row|Rest], RecordList, RbtPermissions, Roles) ->  	
+	
+	Tup =   {obj,[
+				{id, rbt_common:toBinary(element(3, Row))},
+				{name, rbt_common:toBinary(element(3, Row))}			 
+			]},	
+			
+	RoleId = element(5, Row),		
+	
+	case lists:keysearch(RoleId, 2, Roles) of 
+		{value, Role} ->
+			RolePermissions 	= element(6, Role),
+			RolePermissionsLen 	= length(RolePermissions),			
+			
+			SubPermissions 		= lists:subtract(RolePermissions, RbtPermissions),
+			SubPermissionsLen 	= length(SubPermissions),
+			
+			case RolePermissionsLen of 
+				SubPermissionsLen ->					
+					UpdatedList = RecordList;
+				_ ->
+					UpdatedList = lists:concat([RecordList, [Tup]])
+			end;			
+		_ ->
+			UpdatedList = RecordList
+	end,			
+	
+	get_all_admin_users(Rest, UpdatedList, RbtPermissions, Roles).	
+	
+-spec get_all_rbt_permisions(ResultSet :: [tuple()], RecordList :: [tuple()]) -> RecordList :: [tuple()].
+%% @doc Iterate user list return from API and prepare json formatted response list.
+%%
+get_all_rbt_permisions([], RecordList) ->
+	RecordList;	
+get_all_rbt_permisions([Row|Rest], RecordList) ->  	
+	
+	AppCode = element(4, Row),		
+
+	case AppCode of 
+		rbt_admin ->		
+			UpdatedList = lists:concat([RecordList, [element(3, Row)]]);			
+		_ ->
+			UpdatedList = RecordList
+	end,		
+	
+	get_all_rbt_permisions(Rest, UpdatedList).		
+
+-spec get_all_records(ResultSet :: [tuple()], RecordList :: [tuple()]) -> RecordList :: [tuple()].
+%% @doc Iterate user list return from API and prepare json formatted response list.
+%%
+get_all_records([], RecordList) ->
+	RecordList;	
+get_all_records([Row|Rest], RecordList) ->  
+
+	%{"87","282339380857620", {{2016,11,25},{13,10,19}}, "super_admin@globalwavenet.com","0","71","3", "Fail to view system contents by artist Reason: internal_error"},
+	
+	if
+		element(6, Row) == [] ->
+			AdminAction = "";
+		true ->
+			AdminAction = rbt_common:toBinary(rbt_common:get_value(list_to_integer(element(6, Row)), ?ADMIN_ACTION_TYPE, 1, 2))
+	end,
+
+	if
+		element(7, Row) == [] ->
+			AdminLogStatus = ""; 
+		true ->
+			AdminLogStatus = rbt_common:toBinary(rbt_common:get_value(list_to_integer(element(7, Row)), ?ADMIN_LOG_STATUS, 1, 2))
+	end,	
+	
+	Tup =   [rbt_common:toBinary(rbt_common:get_formatted_date(element(3, Row))), 
+			 rbt_common:toBinary(element(2, Row)),
+			 rbt_common:toBinary(element(4, Row)),
+			 AdminAction,			 	
+			 AdminLogStatus,		 
+			 rbt_common:toBinary(element(8, Row))],  
+	
+	UpdatedList = lists:concat([RecordList, [Tup]]),
+	get_all_records(Rest, UpdatedList). 
+	
+-spec get_csv_records(ResultSet :: [tuple()], RecordList :: [tuple()]) -> RecordList :: [tuple()].
+%% @doc Iterate user list return from API and prepare json formatted response list.
+%%
+get_csv_records([], IoDevice) ->
+	ok; 
+get_csv_records([Row|Rest], IoDevice) -> 	
+
+	DateTime	= rbt_common:toString(rbt_common:get_formatted_date(element(3, Row))),
+	SessionId 	= rbt_common:toString(element(2, Row)),
+	AdminName 	= rbt_common:toString(element(4, Row)),	
+	ActionType	= rbt_common:toString(rbt_common:get_value(list_to_integer(element(6, Row)), ?ADMIN_ACTION_TYPE, 1, 2)),
+	Status		= rbt_common:toString(rbt_common:get_value(list_to_integer(element(7, Row)), ?ADMIN_LOG_STATUS, 1, 2)),
+	Description	= rbt_common:toString(element(8, Row)),	
+	
+	Line =lists:concat([DateTime, ",", SessionId, ",", AdminName, ",", ActionType, ",", Status, ",", Description,"\n"]),
+	
+	file:write(IoDevice, Line),
+	get_csv_records(Rest, IoDevice).
+	
+</erl>

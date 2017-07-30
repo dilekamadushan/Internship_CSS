@@ -1,0 +1,18 @@
+#############################################################################
+#	   	Release Notes  ivr_admin        
+#		ivr_admin Version :3.2.0.0	  			
+#		Release Date: 2015-11-19                        
+#############################################################################
+
+Fetueres Added :
+		CDR/Activity log search related changes (acrding to crs changes)
+Bug Fixes      :
+		all bug fixes in 3.1 brancg are fixed
+Required Supportive Applications :
+	CRS 1.1.0.0 release is a must (wn_crs-1.1.0.0-1.el6.x86_64.rpm) 
+
+
+
+
+
+

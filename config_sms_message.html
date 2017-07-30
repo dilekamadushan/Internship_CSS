@@ -1,0 +1,177 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+
+<style>
+.select2-container {
+    width: 100% !important;
+}
+</style>
+<!-- *#__dan__#* application js *#__dan__#* -->
+<script type="text/javascript" src="js/application.js"></script>
+<!-- *#__dan__#* application js *#__dan__#* -->
+<script type="text/javascript">	
+	document.write(objApp.getHeader());
+</script>
+<!-- load all js/css and other stuff -->
+
+<!-- *#__dan__#* live_circuit_util js *#__dan__#* -->
+<script type="text/javascript" src="js/manage_provider.js"></script>
+<!-- *#__dan__#* live_circuit_util js *#__dan__#* -->
+
+<!-- *#__dan__#* styles *#__dan__#* -->
+	<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+	<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+	<!--[if lt IE 9]>
+	<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+	<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+	<![endif]-->
+<!-- *#__dan__#* styles *#__dan__#* -->
+
+
+<body class="hold-transition skin-blue sidebar-mini">
+
+	<div class="wrapper">
+
+		<!-- Top menu bar with Branding -->
+		<script type="text/javascript">		
+			document.write(objApp.getTopBanner()); 
+		</script>
+		
+		<!-- Content Wrapper. Contains page content -->
+		<div class="content-wrapper">
+			
+			<!-- Content Header (Page header) -->
+			<section class="content-header">
+			  <h1>
+				SMS Message
+				<small>Configuration &#62; SMS</small>
+			  </h1>
+			  <ol class="breadcrumb">
+				<li><a href="home"><i class="fa fa-home"></i> Home</a></li>
+				<li><i class="fa fa-bar-chart"></i> Configuration</li>
+				<li><i class="fa fa-bar-chart"></i> SMS</li>
+				<li class="active">SMS Message</li>
+			  </ol>
+			</section>
+			
+			<!-- Main content -->
+			<section class="content">
+				
+				<div class="row">
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<div class="box">
+							<div id='flash-msg'></div>
+							<!-- <div class="box-header with-border">
+								<h3 class="box-title">SMS Platform Detail</h3>
+							</div> -->
+							<div class="box-body">
+								<table class="table table-bordered table-striped table-hover">
+									<thead>
+										<tr>
+											<th>Subject</th>
+											<th>Thai Message <span class="req-fld">*</span></th>
+											<th>English Message <span class="req-fld">*</span></th>
+											<th>Status <span class="req-fld">*</span></th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td>
+												<div class="form-group" >
+													<label for="provider_name" class="control-label">Unsubscribe Contentent Provider Service</label>
+												</div>
+											</td>
+											<td>
+												<div class="form-group">
+													<textarea class="form-control" rows="3" placeholder="Unsubscribe Message in Thai" id="unsub_msg_thai" name="unsub_msg_thai" title="Enter Unsubscribe Message in Thai"></textarea>
+												</div>
+											</td>
+											<td>
+												<div class="form-group">
+													<textarea class="form-control" rows="3" placeholder="Unsubscribe Message in English" id="unsub_msg_eng" name="unsub_msg_eng" title="Enter Unsubscribe Message in English"></textarea>
+												</div>
+											</td>
+											<td>
+												<div class="form-group">
+													<select class="form-control select2" placeholder="Unsubscribe Message Status" title="Select Unsubscribe Message Status">
+														<option selected="selected">Active</option>
+														<option>Disabled</option>
+													</select>
+												</div>
+											</td>
+										</tr>
+										<tr>
+											<td>
+												<div class="form-group" >
+													<label for="provider_name" class="control-label">Subscription Contentent Provider Service</label>
+												</div>
+											</td>
+											<td>
+												<div class="form-group">
+													<textarea class="form-control" rows="3" placeholder="Subscription Message in Thai" id="sub_msg_thai" name="sub_msg_thai" title="Enter Subscription Message in Thai"></textarea>
+												</div>
+											</td>
+											<td>
+												<div class="form-group">
+													<textarea class="form-control" rows="3" placeholder="Subscription Message in English" id="sub_msg_eng" name="sub_msg_eng" title="Enter Subscription Message in English"></textarea>
+												</div>
+											</td>
+											<td>
+												<div class="form-group">
+													<select class="form-control select2" placeholder="Subscription Message Status" title="Select Subscription Message Status">
+														<option selected="selected">Active</option>
+														<option>Disabled</option>
+													</select>
+												</div>
+											</td>
+										</tr>
+									</tbody>
+									<tfoot>
+										<tr>
+											<th>Subject</th>
+											<th>Thai Message <span class="req-fld">*</span></th>
+											<th>English Message <span class="req-fld">*</span></th>
+											<th>Status <span class="req-fld">*</span></th>
+										</tr>
+									</tfoot>
+								</table>
+								<div class="row">
+									<div class="box-body boxpad">
+										<div class="col-md-12 col-sm-12 col-xs-12">
+											<div class="box-footer"> 
+												<button type="submit" class="btn btn-primary pull-right btnspace" name="save" id="save">Save</button>
+											</div>
+										</div>
+									</div>						
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+			</section>
+			<!-- /.content -->
+			
+		</div>
+		<!-- /.content-wrapper -->
+
+		<script>
+			document.write(objApp.getFooter());
+		</script>
+		<!-- Printing footer -->
+	
+	</div>
+	<!-- ./wrapper -->
+	
+	<script>
+		$(function () {
+			//Initialize Select2 Elements
+			$(".select2").select2();
+		});
+	</script>
+	
+</body>
+</html>

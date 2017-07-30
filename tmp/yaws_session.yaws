@@ -1,0 +1,129 @@
+<erl module=yaws_session>
+-export([out/1, sess/4]). 
+
+-include("ivr_conf.hrl"). 
+
+out(Arg) ->
+   Method = method(Arg),
+   error_logger:info_msg("~p:~p ~p Request~n",[?MODULE, ?LINE, Method ]),  
+   handle(Method, Arg). 
+
+method(Arg) ->
+   Rec = Arg#arg.req,
+   Rec#http_request.method.
+   
+handle('GET', Arg) ->
+   error_logger:info_msg("~p:~p Enter into GET method~n",[?MODULE, ?LINE]);  
+
+handle('POST', Arg) ->
+
+	{ok,[RequestData|[SessionData]],[]} = rfc4627:decode(Arg#arg.clidata),
+	Action = binary_to_list(rfc4627:get_field(RequestData, "action", <<>>)),
+%	HttpReq = rfc4627:decode(Arg#arg.clidata),
+%	case catch {ok,[CheckRequestData|[CheckSessionData]],_} = HttpReq of
+%		{'EXIT',_} ->
+%			{ok,[RequestData|[SessionData]],_} = rfc4627:decode(Arg#arg.clidata);
+%		{ok,[RequestData|[SessionData]],_} ->
+%			 RequestData
+%	end,
+%	RequestData = get_request_data(Arg),
+%	case catch binary_to_list(rfc4627:get_field(RequestData, "action", <<>>)) of
+%		{'EXIT',_} ->
+%			Action = binary_to_list(rfc4627:get_field(RequestData, "action", <<>>));
+%		Action ->
+%			Action
+%	end,
+%	Action = get_action_data(RequestData),
+	C = (Arg#arg.headers)#headers.cookie,
+	SessionID = yaws_api:find_cookie_val("session_id", C),
+	{ok, RecSessionData} = yaws_api:cookieval_to_opaque(SessionID),
+
+	 %obd_logger:debug(RecSessionData#user_session.name, RecSessionData#user_session.uniqid, "Request:" ++ binary_to_list(Arg#arg.clidata)),
+	
+	sess(Action, RequestData, RecSessionData, Arg).
+	
+get_request_data(Arg) ->
+	HttpReq = rfc4627:decode(Arg#arg.clidata),
+	case catch {ok,[CheckRequestData|[CheckSessionData]],_} = HttpReq of
+		{'EXIT',_} ->
+			get_request_data(Arg);
+		{ok,[RequestData|[SessionData]],_} ->
+			 RequestData
+	end.
+	
+get_action_data(RequestData) ->
+	case catch binary_to_list(rfc4627:get_field(RequestData, "action", <<>>)) of
+		{'EXIT',_} ->
+			get_action_data(RequestData);
+		Action ->
+			Action
+	end.
+
+-spec sess(MethodPrefix :: '"GET_SESSION_INFO"'|'"ADD_NUMBER"' | '"DELETE_NUMBER_WL"' | '"DELETE_NUMBER_BL"' | '"SEARCH_NUMBER_WL"' | '"SEARCH_NUMBER_BL"', 
+				RequestData :: list(), RecSessionData :: session_data(), Arg :: any()) -> {ehtml, Response :: list()}.
+%% @doc Add number, Delete number, Search number,
+%% 
+%% Add number/series to Blacklist
+%%
+sess("GET_SESSION_INFO", RequestData, RecSessionData, Arg) ->
+	
+	%obd_session:set_sess("app", "obd_admin", Arg),
+	
+	Response = [rcd2json(RecSessionData, user_session)],
+	{ehtml, rfc4627:encode(Response)}.
+	
+-spec extract_permissions_b2f(RequestDataSet :: [tuple()], PermissionList :: [tuple()]) -> PermissionList :: [tuple()].
+%% @doc Extract appwise permission lists comes on ajax request and prepare them separately to store in db.
+%%
+extract_permissions_b2f([], PermissionList) ->
+	PermissionList;
+extract_permissions_b2f([{AppName, Permissions}|Rest], PermissionList) ->
+
+	PermTup = {obj,[
+	  {app_name, list_to_binary(AppName)},
+	  {permissions, list_to_binary(Permissions)}
+	]},
+
+	UpdatedList = lists:concat([PermissionList, [PermTup]]),
+	extract_permissions_b2f(Rest, UpdatedList).
+
+rcd2json(RcdVar, Rcd) ->
+	case Rcd of
+		user_session ->
+			RcdFields = record_info(fields, user_session)
+	end,
+
+	if
+		Rcd == user_session ->
+			%Permissions = extract_permissions_b2f(RcdVar#user_session.permissions, []),
+			Permissions = RcdVar#user_session.permissions,
+			Applications = RcdVar#user_session.applications,
+			[Rcd | RcdVal] = tuple_to_list(RcdVar),
+			Length = length(RcdFields),
+			Count = lists:seq(1,Length),
+			JsonVal = [{lists:nth(X, RcdFields), var_to_bin(lists:nth(X, RcdVal))} || X <- Count
+						, lists:nth(X, RcdFields) /= permissions andalso lists:nth(X, RcdFields) /= applications],
+			{obj, [{session_data, {obj, JsonVal}}, {permissions, Permissions},{applications, Applications}]};
+		true ->
+			[Rcd | RcdVal] = tuple_to_list(RcdVar),
+			Length = length(RcdFields),
+			Count = lists:seq(1,Length),
+			JsonVal = [{lists:nth(X, RcdFields), var_to_bin(lists:nth(X, RcdVal))} || X <- Count],
+			{obj, JsonVal}
+	end.
+	
+var_to_bin(Var) ->
+	if
+		is_list(Var) ->
+			list_to_binary(Var);
+		is_integer(Var) ->
+			list_to_binary(integer_to_list(Var));
+		is_atom(Var) ->
+			list_to_binary(atom_to_list(Var));
+		is_binary(Var) ->
+			Var;
+		true ->
+			<<"undefined">>
+	end.
+
+</erl>

@@ -1,0 +1,49 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="js/application.js"></script>
+<script type="">
+	document.write(objApp.getHeader());
+</script>
+
+<!-- load all js/css and other stuff -->
+<script type="text/javascript" src="js/access_code_manage.js"></script>
+<body>
+
+	<script type="">
+		document.write(objApp.getTopBanner());
+	</script>
+	<!-- Printing top banner & login check -->
+
+	<div class="InBody">
+		<div class="InBodyIn">
+			<script type="">
+				document.write(objApp.getMainMenu());
+			</script>
+			<!-- Left Main Menu -->
+			<div class="bodyMid">
+				<div class="bodytopic">Access Codes</div>
+				<!--<div class="bodytopic-Sub">Add / Update Package</div>-->
+				<div class="bodyMid_cont">
+				<div class="bdfill">
+					<div id='flash-msg'></div>
+					<!-- Flash Message -->
+					<table id="sub-tbl" width="82%" border="0" align="center" cellpadding="0"
+									cellspacing="0" class="insert">
+						<div class="bdfill_tb">
+							<div id="access_tbl"></div>
+<!--							<script type="">-->
+<!--								objOthset.listChannels();-->
+<!--							</script>-->
+						</div>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript">
+		document.write(objApp.getFooter());
+	</script>
+	<!-- Printing footer -->
+</body>
+</html>

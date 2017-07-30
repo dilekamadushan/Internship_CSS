@@ -1,0 +1,379 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="js/application.js"></script>
+<style>
+	div#mts_wrapper {
+	    padding-bottom:50px;
+	    background: #F2F2F2;
+	}
+
+	div#mts_length {
+	    padding:10px; 
+	    ont-style: normal;
+	    font-size: 14px; 
+	}
+
+	div#mts_filter {
+	    padding:10px;
+	    ont-style: normal;
+	    font-size: 14px; 
+	}
+	div#mts_info {
+	    padding-left:15px; 
+	    font-style: normal;
+	    font-size: 14px;
+	}
+
+	div#mts_paginate {
+	    padding-right:15px;
+	}
+</style>
+<script type="">
+	document.write(objApp.getHeader());
+</script>
+<!-- load all js/css and other stuff -->
+<script type="text/javascript" src="js/log_search.js"></script>
+<body onload="onloadFunc()">
+	<script type="">
+		document.write(objApp.getTopBanner());
+		function onloadFunc(){
+			objLog.getCreatedCDRlogFiles('activity_log');
+		}
+	</script>
+	<!-- Printing top banner & login check -->
+
+	<div class="InBody" id="activityLogSearch">
+		<div class="InBodyIn">
+			<script type="">
+				document.write(objApp.getMainMenu());
+			</script>
+			<!-- Left Main Menu -->
+			<div class="bodyMid">
+				<div class="bodytopic">App log Search</div>
+				<div class="bodytopic-Sub" style="margin-bottom: 10px;">Activity Log Serach</div>
+				
+				<!--<div class="bodytopic-Sub">EDR Analyzer</div>-->
+				<div class="bodyMid_cont_edr">
+					<div class="bdfill">
+						<div class="customNotification" style="margin-bottom: 10px;">User able to select maximum, <span id="limitedRange"></span> period of time for searching
+						</div>
+						<script type="">
+						$("#limitedRange").html(config.log_search_maximum_range_in_word);
+					</script>
+						<div id='flash-msg'></div>
+						<div id="dialog-confirm" title="Alert">
+							<p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span><span id="viewMsg"></span></p>
+						</div>
+						<!-- Flash Message -->
+						<form name="frm_log" id="frm_log" action="">
+							
+							<input type="hidden" name="log_type" id="log_type" value="ivr_activity_log"/>
+								<table border="0" align="center" cellpadding="0" cellspacing="0"
+									class="insert" width="100%">
+									<tr>								
+										<td width="30%">
+											From <span class="required-field"></span>
+										</td>
+										<td width="70%" align="left">											
+											<input type="text" readonly
+											id="fromDate" data-validation-engine="validate[required]"/>
+											To <span class="required-field"></span>
+											<input type="text" readonly
+												id="toDate" data-validation-engine="validate[required]" /> &nbsp&nbsp
+										</td>
+									</tr>
+									<tr style="display:none">								
+										<td width="30%">
+											From <span class="required-field"></span>
+										</td>
+										<td width="70%" align="left">											
+											<input type="text" readonly
+											id="webFromDate" data-validation-engine="validate[required]"/>
+											To<span class="required-field"></span>
+											<input type="text" readonly
+												id="webToDate" data-validation-engine="validate[required]"/> &nbsp&nbsp
+										</td>
+									</tr>
+									<tr style="display:none">								
+										<td width="30%">
+											From <span class="required-field"></span>
+										</td>
+										<td width="70%" align="left">											
+											<input type="text" readonly
+											id="adminFromDate" data-validation-engine="validate[required]"/>
+											To<span class="required-field"></span>
+											<input type="text" readonly
+												id="adminToDate" data-validation-engine="validate[required]"/> &nbsp&nbsp
+										</td>
+									</tr>
+
+									<tr>
+										<td>
+											Server ID
+										</td>
+										<td align="left" >
+											<select id="server_id" name="server_id" style="width: 75px;">
+											<script type="text/javascript">
+												objLog.getServerId();
+											</script>
+										</td>
+									</tr>									
+									
+									<tr>
+										<td>
+											Event Type
+										</td>
+										<td align="left" >
+											<select id="event_type" name="event_type" style="width: 213px;">
+											<script type="text/javascript">
+												objLog.getEventType();
+											</script>
+										</td>
+									</tr>
+
+									<tr>
+										<td>
+											Channel
+										</td>
+										<td align="left" >
+											<input type="text" id="channel" style="width: 50px;" 
+												name="channel" data-validation-engine="validate[custom[onlyNumber],maxSize[4]]"> 
+										</td>
+									</tr>									
+									
+									<tr>
+										<td>
+											Session ID
+										</td>
+										<td align="left" >
+											<input type="text" id="session_id" name="session_id" 
+											style="width: 125px;" data-validation-engine="validate[maxSize[50]]"> 
+										</td>
+									</tr>
+									
+								<!--	<tr id="call_type-tr">
+										<td>
+											Call Type
+										</td>
+										<td align="left" >
+											<select id="call_type" name="call_type">
+											<script type="text/javascript">
+												objLog.getCallType();
+											</script> 
+										</td>
+									</tr> -->
+									
+									<tr>
+										<td>
+											Call Category
+										</td>
+										<td align="left" >
+											<select id="call_category" name="call_category">
+											<script type="text/javascript">
+												objLog.getCallCategory();
+											</script>											
+										</td>
+									</tr>	
+
+									<tr>
+										<td>
+											Calling Party
+										</td>
+										<td align="left" >
+											<input type="text" id="calling" name="calling" 
+												style="width: 125px;" data-validation-engine="validate[maxSize[50]]"> 
+										</td>
+									</tr>	
+
+									<tr>
+										<td>
+											Called Party
+										</td>
+										<td align="left" >
+											<input type="text" id="called" name="called" 
+											style="width: 125px;" data-validation-engine="validate[maxSize[50]]"> 
+										</td>
+									</tr>
+
+									<tr>
+										<td>
+											Module
+										</td>
+										<td align="left" >
+											<select id="module" name="module">
+											<script type="text/javascript">
+												objLog.getModule();
+											</script> 
+										</td>
+									</tr>
+									<tr></tr>
+									<tr id="access_code-tr" class="hide-tr" >
+										<td> Requested Data</td>
+										<td align="left">
+											<select id="req_data" name="req_data" multiple style="height:100px;width:100px;">
+												<option value="all">All</option>
+												<option value="time">Time</option>
+												<option value="event_type">Event Type</option>
+												<option value="serverid">Server ID</option>
+												<option value="channel">Channel</option>
+												<option value="sessionid">Session ID</option>
+												<!-- <option value="type">Call Type</option> -->
+												<option value="direction">Call Category </option>
+												<option value="from">Calling Party</option>
+												<option value="to">Called Party</option>
+												<option value="module_name">Module Name</option>
+												<option value="description">Description</option>
+											</select>
+										</td>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+									</tr>										
+							
+									<tr>
+										<td colspan="2">&nbsp;</td>
+									</tr>
+									<tr>
+										<td></td>
+										<td align="left">
+											<input type="button"
+												name="activity_search" id="activity_search" value="Search" />&nbsp; 
+												&nbsp; <input type="button" name="act_csv" id="act_csv"
+											value="CSV" />
+										</td>
+									</tr>
+									<tr>
+										<td></td>
+										<td align="left" height="20">
+										</td>
+									</tr>									
+									<tr>
+										<td></td>
+										<td align="left">
+											<img id="uploading" src="images/loading.gif" style="display: none;"/>
+										</td> 
+									</tr>									
+								</table>
+						</form>
+					</div>
+					<div class="bdfill_tb">
+						<div id="wavenet_cam" class="ui-tabs-panel ui-widget-content ui-corner-bottom">					
+							<div  id="log_data_tbl"></div>
+							<input type="button" name="activity_search_next" id="activity_search_next" value="More"  style="float: right; margin: 10px 5px 0 0;"/>
+						</div>
+						
+				</div>
+
+				<!--div class="bodytopic-Sub" id="component_search_topic">Activity Log Files</div>
+				<div class="bdfill_tb">
+						<div id="ivr_cdr_logs" class="ui-tabs-panel ui-widget-content ui-corner-bottom" style="overflow-y: scroll;overflow-x: scroll;">		
+							<div  id="downloaded_activity_log_info"></div>
+						</div>
+						<div id="pager_downloaded_cdr_log_info" style="margin: auto;">					
+					</div>
+				<div style="text-align:center" id="bulk_del_area_div"><span id="bulk_del_area"></span><span id="bulk_del_reset_area"></span><span id="bulk_del_statement"></span></div>
+				</div>
+			</div-->
+		</div>
+	</div>
+		<div id="alert" title="Result Not Found"></div>
+		<div id="view-pop1" title="Full Description"></div>
+		<div id="viewAlert" title="Result Not Found"></div>
+
+	<!-- Dialog Box -->
+	<script>
+	$(document).ready(function() {
+		$("#alert").dialog({
+			modal: true
+		})
+		.dialog("widget")
+		.next(".ui-widget-overlay")
+		.css("background", "#000");
+
+		$("#viewAlert").dialog({
+			modal: true
+		})
+		.dialog("widget")
+		.next(".ui-widget-overlay")
+		.css("background", "#000");
+	});
+	</script>
+
+	<script>
+		$( "#alert" ).dialog({
+			autoOpen: false,
+			show: {
+				effect: "fade",
+				duration: 1000
+			},
+			hide: {
+				effect: "fade",
+				duration: 1000
+			}
+		});
+
+		$( "#viewAlert" ).dialog({
+			autoOpen: false,
+			show: {
+				effect: "fade",
+				duration: 1000
+			},
+			hide: {
+				effect: "fade",
+				duration: 1000
+			}
+		});
+	 
+		$(document).ready(function() {
+		$("#view-pop1").dialog({
+			modal: true
+		})
+		.dialog("widget")
+		.next(".ui-widget-overlay")
+		.css("background", "#000");
+
+		$("#viewAlert").dialog({
+			modal: true
+		})
+		.dialog("widget")
+		.next(".ui-widget-overlay")
+		.css("background", "#000");
+	});
+	</script>
+
+	<script>
+		$( "#view-pop1" ).dialog({
+			autoOpen: false,
+			show: {
+				effect: "fade",
+				duration: 1000
+			},
+			hide: {
+				effect: "fade",
+				duration: 1000
+			}
+		});
+
+		$( "#viewAlert" ).dialog({
+			autoOpen: false,
+			show: {
+				effect: "fade",
+				duration: 1000
+			},
+			hide: {
+				effect: "fade",
+				duration: 1000
+			}
+		});
+
+
+	</script>
+
+	<script type="text/javascript">
+		document.write(objApp.getFooter());
+	</script>
+	<!-- Printing footer -->
+</body>
+</html>

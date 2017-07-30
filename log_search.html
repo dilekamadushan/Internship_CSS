@@ -1,0 +1,150 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="js/application.js"></script>
+<script type="text/javascript">	
+	document.write(objApp.getHeader());
+</script>
+<!-- load all js/css and other stuff -->
+<script type="text/javascript" src="js/report_manager.js"></script>
+<body>
+	<script type="text/javascript">		
+		document.write(objApp.getTopBanner());
+	</script>
+	<!-- Printing top banner & login check -->
+	<div class="InBody">
+		<div class="InBodyIn">
+			<script type="text/javascript">
+				document.write(objApp.getMainMenu());
+			</script>
+			<!-- Left Main Menu -->
+
+			<div class="bodyMid">
+				<div class="bodytopic">Reports and Logs</div>
+				<div class="bodytopic-Sub">Log Search</div>
+					<div class="bodyMid_cont">
+						<div class="bdfill">
+						<div id='flash-msg'></div>
+						<!-- Flash Message -->
+						<form name="frm_report" id="frm_report" action="">
+						<input type="hidden" name="report_type" id="report_type" value="log_search"/>
+							<table id="common-tbl" width="100%" border="0" align="center" cellpadding="0"
+								cellspacing="0" class="insert">
+								<tr>
+									<td width="20%">Date<span class="required-field"></span></span></td>
+									<td width="20%" align="left">
+									<input type="text" readonly
+										id="from_date" name="from_date" data-validation-engine="validate[required]"/>&nbsp
+									</td>
+									<td width="20%" align="right">Per page<span class="required-field"></span></td>
+									<td width="20%" align="left">
+									<input type="text" 
+										id="per_page" name="per_page" data-validation-engine="validate[required]"/>&nbsp							
+									</td>
+									<td width="30%"></td>	
+								</tr>
+								<tr>
+									<td width="20%">Start Time<span class="required-field"></span></span></td>
+									<td width="20%" align="left">
+									<input type="text" readonly
+										id="from_time" name="from_time" data-validation-engine="validate[required]"/>&nbsp
+									</td>
+									<td width="20%" align="right">End Time<span class="required-field"></span></td>
+									<td width="20%" align="left">
+									<input type="text" readonly
+										id="to_time" name="to_time" data-validation-engine="validate[required]"/>&nbsp							
+									</td>
+									<td width="30%"></td>	
+								</tr>								
+								<tr>
+									<td>Call Type<span class="required-field"></span></span></td>
+									<td align="left">
+									<select name="call_type" id="call_type"
+											style="width: 70%">
+										<option value = "audio">Audio</option>
+									</select>
+									&nbsp
+									</td>
+									<td align="right">Call Category<span class="required-field"></span></td>
+									<td align="left">
+									<select name="category" id="category"
+											style="width: 70%">
+										<option value = "0">Dial In</option>
+										<option value = "1">Dial OUT</option>
+										<option value = "all">Both</option>
+									</select>
+									&nbsp
+									</td>
+									<td></td>
+								</tr>
+								<tr>
+									<td>Calling Party<span class="required-field"></span></span></td>
+									<td align="left">
+									<input type="text"
+										name="call_party" id="call_party"
+										data-validation-engine="validate[required,custom[integer],minSize[8],min[0]]"
+										style="width: 80%" maxlength="15"/>&nbsp
+									</td>
+									<td align="right">Called Party</td>
+									<td align="left">
+									<input type="text"
+										name="called_party" id="called_party"
+										data-validation-engine="validate[required,custom[integer],minSize[8],min[0]]"
+										style="width: 80%" maxlength="15"/>
+									</td>
+									<td></td>									
+								</tr>
+								<tr>
+									<td>Call Duration<span class="required-field"></span></span></td>
+									<td align="left">
+									<input type="text" placeholder="From" 
+										name="call_dur_from" id="call_dur_from"
+										data-validation-engine="validate[required,custom[integer],minSize[8],min[0]]"
+										style="width: 20%" maxlength="15" />&nbsp
+									<input type="text" placeholder="To"
+										name="call_dur_to" id="call_dur_to"
+										data-validation-engine="validate[required,custom[integer],minSize[8],min[0]]"
+										style="width: 20%" maxlength="15"/>	
+									</td>
+									<td align="right"></td>
+									<td align="left">
+									</td>
+									<td></td>									
+								</tr>																
+											
+								<tr>
+									<td height="10"></td>
+									<td></td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>
+								<tr>
+									<td></td>
+									<td align="left">
+									<input type="button" 
+										name="search" id="search" value="Search" />&nbsp;										
+										</td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>								
+							</table>
+						</form>	
+						</div>
+
+						<div class="bdfill" id="log_search_tbl">
+						</div>						
+						
+				   </div>
+			</div>
+		</div>
+	</div>
+	
+
+	<script>
+		document.write(objApp.getFooter());
+	</script>
+	<!-- Printing footer -->
+</body>
+</html>

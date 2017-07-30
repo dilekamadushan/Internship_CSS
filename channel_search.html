@@ -1,0 +1,162 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+
+<!-- *#__dan__#* application js *#__dan__#* -->
+<script type="text/javascript" src="js/application.js"></script>
+<!-- *#__dan__#* application js *#__dan__#* -->
+<script type="text/javascript">	
+	document.write(objApp.getHeader());
+</script>
+<!-- load all js/css and other stuff -->
+<script type="text/javascript" src="js/facybox.js"></script>
+<!-- *#__dan__#* live_circuit_util js *#__dan__#* -->
+<script type="text/javascript" src="js/channel_manager.js"></script>
+<!-- *#__dan__#* live_circuit_util js *#__dan__#* -->
+
+<!-- *#__dan__#* styles *#__dan__#* -->
+	<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+	<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+	<!--[if lt IE 9]>
+	<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+	<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+	<![endif]-->
+<!-- *#__dan__#* styles *#__dan__#* -->
+
+
+<body class="hold-transition skin-blue sidebar-mini">
+	
+	<div class="wrapper">
+
+		<!-- Top menu bar with Branding -->
+		<script type="text/javascript">		
+			document.write(objApp.getTopBanner()); 
+		</script>
+		
+		<!-- Content Wrapper. Contains page content -->
+		<div class="content-wrapper">
+			
+			<!-- Content Header (Page header) -->
+			<section class="content-header">
+			  <h1>
+				Channel Search
+				<small>Subscription</small>
+			  </h1>
+			  <ol class="breadcrumb">
+				<li><a href="home"><i class="fa fa-home"></i> Home</a></li>
+				<li><i class="fa fa-bar-chart"></i> Subscription</li>
+				<li class="active">Channel Search</li>
+			  </ol>
+			</section>
+			
+			<!-- Main content -->
+			<section class="content">
+				
+				<div class="row">
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<div class="box">
+							<div id='flash-msg'></div>
+							<!-- <div class="box-header with-border">
+								<h3 class="box-title">Content Provider Detail</h3>
+							</div> -->
+							<div class="box-body">
+								<form class="form-horizontal" name="frm_channel_search" id="frm_channel_search">
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label for="channel_name" class="col-sm-4 control-label">Channel Name</label>
+													<div class="col-sm-8">
+														<input type="text" class="form-control" placeholder="Channel Name" id="channel_name" name="channel_name" title="Enter Channel Name">
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label for="keyword" class="col-sm-4 control-label">Keyword </label>
+													<div class="col-sm-8">
+														<input type="text" class="form-control" placeholder="Keyword" id="keyword" name="keyword" title="Enter Keyword">
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-12 col-sm-12 col-xs-12">
+												<div class="box-footer">
+													<button type="submit" class="btn btn-primary pull-right btnspace" onClick="objChannelManager.SearchChannel()" name="search" id="search_channel">Search</button>
+												</div>
+											</div>
+										</div>						
+									</div>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<div class="box">
+							<div class="box-body">
+								<div class="box-body">
+								  <table id="search_channel_tbl" class="table table-bordered table-striped table-hover">
+									<thead>
+										<tr>
+											<th>Channel Name</th>
+											<th>Keyword</th>
+											<th>SMS Notification</th>
+											<th>Actions</th>
+										</tr>
+									</thead>
+									<tfoot>
+										<tr>
+											<th>Channel Name</th>
+											<th>Keyword</th>
+											<th>SMS Notification</th>
+											<th>Actions</th>
+										</tr>
+									</tfoot>
+								  </table>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+			</section>
+			<!-- /.content -->
+			
+		</div>
+		<!-- /.content-wrapper -->
+		<!-- Modal --> 
+		<div class="modal fade" id="confirmDelete" tabindex="-1" role="dialog" aria-labelledby="removeConfirmation">
+		  <div class="modal-dialog" role="document">
+			<div class="modal-content">
+			  <div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="removeConfirmation">Confirmation</h4>
+			  </div>
+			  <div class="modal-body">
+				Are you sure you want to remove this channel ?
+			  </div>
+			  <div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				<button type="submit" class="btn btn-primary" data-row_id="" onClick="objChannelManager.RemoveChannel()" id="removeChannel">Save changes</button>
+			  </div>
+			</div>
+		  </div>
+		</div>
+		<script>
+			document.write(objApp.getFooter());
+		</script>
+		<!-- Printing footer -->
+	
+	</div>
+	<!-- ./wrapper -->
+	
+</body>
+</html>

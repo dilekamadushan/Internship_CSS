@@ -1,0 +1,116 @@
+<erl module=css_servicegroup_manager>
+-export([out/1, manage_servicegroups/4]).  
+
+-include("css_conf.hrl"). 
+-include("css_api.hrl").
+
+out(Arg) ->
+   Method = method(Arg),
+   error_logger:info_msg("~p:~p ~p Request~n",[?MODULE, ?LINE, Method ]),  
+   handle(Method, Arg). 
+
+method(Arg) ->
+   Rec = Arg#arg.req,
+   Rec#http_request.method.
+   
+handle('GET', Arg) ->
+
+   case css_session:get_sess("name", Arg) of		
+		{error,no_session} ->
+			Response = <<"logout">>,
+			{ehtml, rfc4627:encode(Response)};	
+		Name ->	
+			C = (Arg#arg.headers)#headers.cookie,
+			SessionID = yaws_api:find_cookie_val(?SESSION_NAME, C),
+			{ok, SessionData} = yaws_api:cookieval_to_opaque(SessionID),	
+			{ok, Action} = yaws_api:getvar(Arg, "action"),
+			error_logger:info_msg("SQL - ~p:~n",[Action]),			
+			RecSessionData = #session_data
+			{
+				username = css_common:toString(css_session:get_sess("name", Arg)),
+				uniqid   = css_common:toString(css_session:get_sess("uniqid", Arg))
+			},
+			manage_servicegroups(Action, SessionData, RecSessionData, Arg)
+   end;
+
+handle('POST', Arg) -> 
+
+	error_logger:info_msg("SQL - ~p:~n",["ffffffffffff"]),
+
+	case css_session:get_sess("name", Arg) of		
+		{error,no_session} ->
+			Response = <<"logout">>,
+			{ehtml, rfc4627:encode(Response)};	
+		Name ->		
+			{ok,[RequestData|[SessionData]],_} = rfc4627:decode(Arg#arg.clidata), 						
+			Action = binary_to_list(rfc4627:get_field(RequestData, "action", <<>>)),  		
+			RecSessionData = #session_data
+			{
+				username = css_common:toString(css_session:get_sess("name", Arg)),
+				uniqid   = css_common:toString(css_session:get_sess("uniqid", Arg)),
+				app   	 = css_common:toString(css_session:get_sess("app", Arg))
+			},
+			manage_servicegroups(Action, RequestData, RecSessionData, Arg)
+	end.
+	
+-spec manage_servicegroups(MethodPrefix :: '"CREATE"'|'"SEARCH"' |'"SEARCH-ALL"', 
+				RequestData :: list(), RecSessionData :: session_data(), Arg :: any()) -> {ehtml, Response :: list()}.
+
+manage_servicegroups("GET_ALL_SERVICEGROUPS", RequestData, RecSessionData, Arg) ->
+
+    error_logger:info_msg("SQL ---------- ~p:~n",["in get all service groups method"]),
+	
+	Username			= css_common:toString(css_session:get_sess("name", Arg)),
+	
+	Sql 		= "SELECT servicegroup_id, servicegroup_name FROM servicegroup",
+	
+	error_logger:info_msg("SQL - ~p:~n",[Sql]),  
+		
+	case css_mysql_odbc:connect() of  
+		{ok,Ref} ->	
+		   case css_mysql_odbc:sql_query(Ref, Sql) of  
+				{Aa,Bb,Res} ->
+					css_logger:info(RecSessionData, "Service Group Manage : Service Group Found Successfully"),
+					
+					case get_all_records_for_serviceproviders(Res, []) of 
+						[] ->
+							Response = {obj,[{data, []}]};
+						Results ->
+						
+							Response = {obj,[{data, Results}]}
+					end;		
+				{error,Reason} ->				
+					css_logger:info(RecSessionData, "Service Group Manage : Service Group Search Failed : " ++ css_common:toString(Reason)),	
+					Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+				_ ->				
+					css_logger:info(RecSessionData, "Service Group Manage : Service Group Search Failed : Bad Rpc"),	
+					Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+				end,
+				css_mysql_odbc:disconnect(Ref);	
+		{error,Reason} ->				
+			css_logger:info(RecSessionData, "Service Group Manage : Service Group Search Failed : " ++ css_common:toString(Reason)),	
+			Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+		_ ->				
+			css_logger:info(RecSessionData, "Service Group Manage : Service Group Search Failed : Internal Error"),	
+			Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+		end,
+
+	{ehtml, rfc4627:encode(Response)}.
+
+%% @doc Iterate user list return from API and prepare json formatted response list.
+%%	
+	
+-spec get_all_records_for_serviceproviders(ResultSet :: [tuple()], RecordList :: [tuple()]) -> RecordList :: [tuple()].
+
+get_all_records_for_serviceproviders([], RecordList) ->
+	RecordList;	
+get_all_records_for_serviceproviders([Row|Rest], RecordList) ->  
+	
+	Tup =   [css_common:toBinary(element(1, Row)), 
+			 css_common:toBinary(element(2, Row))],  
+	
+	UpdatedList = lists:concat([RecordList, [Tup]]),
+	get_all_records_for_serviceproviders(Rest, UpdatedList). 	
+	
+	
+</erl>

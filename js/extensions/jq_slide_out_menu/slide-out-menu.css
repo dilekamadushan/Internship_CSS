@@ -1,0 +1,226 @@
+   .clear{
+      clear:both;
+   }
+   
+   #mainContainer{
+   width:95%;
+   text-align:left;
+   height:auto;
+   margin-top: 0;
+   margin-right: 10px;
+   margin-bottom: 10;
+   margin-left: auto;
+   -webkit-border-radius: 5px 5px 5px 5px;
+   -moz-border-radius: 5px 5px 5px 5px;
+   border-radius: 5px 5px 5px 5px;
+   /*background-color: #e3cb21;
+   border: 2px solid #b49f0d;*/
+   }
+   
+   #topBar{
+      width:760px;
+      height:100px;
+   }
+   #leftMenu{
+   width:100px;
+   padding-left:10px;
+   padding-right:10px;
+   float:left;
+   }
+   #mainContent{
+   padding-right:10px;
+   float:left;
+   width: 100%;
+   }
+   /*
+   General rules
+   */
+
+   #dhtmlgoodies_slidedown_menu li{
+   list-style-type:none;
+   position:relative;
+   font-family: "Trebuchet MS";
+   font-size: 12px;
+   font-weight: normal;
+   color: #C53508;
+   padding-left: 5px;
+   }
+#dhtmlgoodies_slidedown_menu li a:active {
+   /*background-image: url(../images/m-highltd.png);*/
+   background-repeat: no-repeat;
+   color: #FFFFFF;
+}
+#dhtmlgoodies_slidedown_menu li a:focus {
+  /*background-image: url(../images/m-highltd.png);*/
+   background-repeat: no-repeat;
+   color: #FFFFFF;
+}
+   
+   #dhtmlgoodies_slidedown_menu li li{
+   list-style-type:none;
+   position:relative;
+   margin-left: 0px;
+      /*background-image:url('../images/manu-back.jpg'); */
+   }
+   #dhtmlgoodies_slidedown_menu ul{
+   padding:0px;
+   position:relative;
+   margin-top: 0px;
+   margin-right: 0px;
+   margin-bottom: 10px;
+   margin-left: 0px;
+   }
+
+   #dhtmlgoodies_slidedown_menu div{
+      margin:0px;
+      padding:0px;      
+   }
+   /*    Layout CSS */
+   #dhtmlgoodies_slidedown_menu{
+   visibility:hidden;
+   border:0px solid #FFFFFF;
+   padding:1px;
+   width: 179px;  /* IE 5.x */
+   width/* */:/**/179px;   /* Other browsers */
+   width: /**/100%;
+   }
+
+   /* All A tags - i.e menu items. */
+   #dhtmlgoodies_slidedown_menu a{
+   color: #000000;
+   text-decoration:none;
+   display:block;
+   clear:both;
+   padding-left:0px;
+   width: 100%;   /* IE 5.x */
+   width/* */:/**/100%; /* Other browsers */
+   width: /**/100%;
+      
+   }
+   
+   #dhtmlgoodies_slidedown_menu a:hover{
+   /*background-image:url(../images/m-highltd.png);*/
+   color: #fff;
+   background-repeat: no-repeat;
+   } 
+   
+   #dhtmlgoodies_slidedown_menu li li a:hover{
+   #background-image:url(../images/sub-menu-high.png);
+   color: #fcf3b9;
+   background-repeat: no-repeat;
+   background-position: 0px;
+   }
+      #dhtmlgoodies_slidedown_menu li li li a:hover{
+   color: #8CBB00;
+   background-position: -20px;
+   }
+   img{
+      border:0px;
+   }
+   
+   /*
+   A tags 317082 background-image:url('../images/manu-back.jpg'); background-color:#317082;
+   */
+   #dhtmlgoodies_slidedown_menu .slMenuItem_depth1{   /* Main menu items */
+   margin-top:1px;
+   font-weight:normal;
+   color:#333333;
+   height:18px;
+   vertical-align:middle;
+   padding-left:10px;
+   font-size: 14px;
+   padding-top: 2px;
+   padding-bottom: 4px;
+   margin-right: 5px;
+   width: auto;
+   -webkit-border-radius: 3px;
+   -moz-border-radius: 3px;
+   border-radius: 3px;
+   /*-moz-box-shadow:    inset 0 0 10px #e1cc3c;
+   -webkit-box-shadow: inset 0 0 10px #e1cc3c;
+   box-shadow:         inset 0 0 10px #e1cc3c;
+   border: 1px solid #d0b812;*/
+   background-color: #ff8a3b;
+   }  
+#dhtmlgoodies_slidedown_menu .slMenuItem_depth1-bakup {
+   margin-top:1px;
+   font-weight:normal;
+   color:#333333;
+   height:18px;
+   vertical-align:middle;
+   padding-left:5px;
+   font-size: 14px;
+   padding-top: 2px;
+   padding-bottom: 4px;
+   border-top-width: 1px;
+   border-top-style: solid;
+   border-top-color: #6F9300;
+   background-color: #c9b424;
+   margin-right: 5px;
+   width: auto;
+   -webkit-border-radius: 3px;
+   -moz-border-radius: 3px;
+   border-radius: 3px;
+   -moz-box-shadow:    inset 0 0 10px #7aa008;
+   -webkit-box-shadow: inset 0 0 10px #7aa008;
+   box-shadow:         inset 0 0 10px #7aa008;
+}
+   #dhtmlgoodies_slidedown_menu .slMenuItem_depth2{   /* Sub menu items */
+   margin-top:1px;
+   text-align:left;
+   padding-left: 10px;
+   color: #f8e66a;      /*background-image:url('../images/manu-back.jpg');font-weight:bold; */
+   padding-bottom: 3px;
+   background-color: #c55000;
+   width: 92%;
+   font-size: 12px;
+   padding-top: 3px;
+   }  
+   #dhtmlgoodies_slidedown_menu .slMenuItem_depth3{   /* Sub menu items */
+   margin-top:1px;
+   font-style:normal;
+   color:#D0C794;
+   font-family: "Trebuchet MS";
+   font-size: 11px;
+   }  
+   #dhtmlgoodies_slidedown_menu .slMenuItem_depth4{   /* Sub menu items */
+      margin-top:1px;
+      color:red;
+   }  
+   #dhtmlgoodies_slidedown_menu .slMenuItem_depth5{   /* Sub menu items */
+      margin-top:1px;
+   }
+
+   /* UL tags, i.e group of menu utems. 
+   It's important to add style to the UL if you're specifying margins. If not, assign the style directly
+   to the parent DIV, i.e. 
+   
+   #dhtmlgoodies_slidedown_menu .slideMenuDiv1
+   
+   instead of 
+   
+   #dhtmlgoodies_slidedown_menu .slideMenuDiv1 ul
+   */
+   
+   #dhtmlgoodies_slidedown_menu .slideMenuDiv1 ul{
+      padding:1px;
+   }
+   #dhtmlgoodies_slidedown_menu .slideMenuDiv2 ul{
+
+   }
+   #dhtmlgoodies_slidedown_menu .slideMenuDiv3 ul{
+   margin-left:5px;
+   padding:1px;
+   }
+   #dhtmlgoodies_slidedown_menu .slMenuItem_depth4 ul{
+   margin-left:15px;
+   padding:1px;
+   }
+#dhtmlgoodies_slidedown_menu li li a:active {
+   color: #FFFFFF;
+}
+#dhtmlgoodies_slidedown_menu li li a:focus {
+   background-image:url(../images/sub-menu-high.jpg);
+   color: #FFFFFF;
+   background-position: left;
+}

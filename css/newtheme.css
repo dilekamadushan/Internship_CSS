@@ -1,0 +1,39 @@
+@charset "UTF-8";
+
+div.slimScrollDiv { height: 82px !important; }
+.skin-blue .main-header .navbar { background-color: #85c3ef; }
+.skin-blue .main-header .logo { background-color: #85c3ef; padding-top: 9px; }
+.skin-blue .main-header .navbar .sidebar-toggle:hover { background-color: #69aaf7; }
+.skin-blue .main-header .logo:hover { background-color: #69aaf7; }
+.graph_mid { border: 0; background: transparent; min-height: 240px; margin-bottom: 10px; color: #444; }
+.text-spark { color: #85c3ef; }
+.skin-blue .sidebar-menu>li:hover>a, .skin-blue .sidebar-menu>li.active>a { border-left-color: #85c3ef; }
+
+.pad-frm-top { padding-top: 25px; padding-bottom: 0; }
+.req-fld { color: #dd4b39; }
+.boxpad { padding: 0 10px; }
+.btnspace { margin: 0 2px; } 
+.radioDisplay { display: inline-block; padding-right: 30px; }
+
+.table-hover>tbody>tr:hover { background-color: #ecf0f5; }
+
+.btn-box-table-inner {
+	padding: 0px 8px;
+    font-size: 16px;
+    color: #2C3B43;
+}
+
+.btn-box-table-inner:hover {
+    color: #fe6a20;
+}
+/* 
+.btn-box-table-inner:focus, .btn-box-table-inner:active, .btn-box-table-inner:hover {
+	outline: 0 !important;
+} */
+.checkboxWidthF { display: inline-block; width: 100%; }
+.checkboxTxtPad { padding-left: 10px; }
+.checkboxPermis { display: inline-block; width: 100%; margin: 0 auto; }
+.checkboxPermisHead { text-align: center; }
+.checkboxPermisCenter { padding-left: 0px !important; margin: 0 auto; text-align: center; width: 100%; }
+.checkboxPermisLeft { padding-left: 0px !important; margin: 0 auto; text-align: Left; width: 100%; }
+.tableHeadExportTxt { padding-top: 8px; }

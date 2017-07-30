@@ -1,0 +1,208 @@
+<erl module=css_webuser_manager>
+-export([out/1, manage_user/4]).  
+
+-include("css_conf.hrl"). 
+-include("css_api.hrl").
+
+out(Arg) ->
+   Method = method(Arg),
+   error_logger:info_msg("~p:~p ~p Request~n",[?MODULE, ?LINE, Method ]),  
+   handle(Method, Arg). 
+
+method(Arg) ->
+   Rec = Arg#arg.req,
+   Rec#http_request.method.
+   
+handle('GET', Arg) ->
+
+   case css_session:get_sess("name", Arg) of		
+		{error,no_session} ->
+			Response = <<"logout">>,
+			{ehtml, rfc4627:encode(Response)};	
+		Name ->	
+			C = (Arg#arg.headers)#headers.cookie,
+			SessionID = yaws_api:find_cookie_val(?SESSION_NAME, C),
+			{ok, SessionData} = yaws_api:cookieval_to_opaque(SessionID),	
+			{ok, Action} = yaws_api:getvar(Arg, "action"),
+		
+			RecSessionData = #session_data
+			{
+				username = css_common:toString(css_session:get_sess("name", Arg)),
+				uniqid   = css_common:toString(css_session:get_sess("uniqid", Arg))
+			},
+			manage_channel(Action, SessionData, RecSessionData, Arg)
+   end;
+
+handle('POST', Arg) -> 
+
+	error_logger:info_msg("SQL - ~p:~n",["im in the create user method"]),
+
+	case css_session:get_sess("name", Arg) of		
+		{error,no_session} ->
+			Response = <<"logout">>,
+			error_logger:info_msg("SQL - ~p:~n",["im in the create user method2"]),
+			{ehtml, rfc4627:encode(Response)};	
+		Name ->	
+            	
+			{ok,[RequestData|[SessionData]],_} = rfc4627:decode(Arg#arg.clidata), 						
+			Action = binary_to_list(rfc4627:get_field(RequestData, "action", <<>>)),  		
+			RecSessionData = #session_data
+			{
+				username = css_common:toString(css_session:get_sess("name", Arg)),
+				uniqid   = css_common:toString(css_session:get_sess("uniqid", Arg)),
+				app   	 = css_common:toString(css_session:get_sess("app", Arg))
+			},
+			manage_user(Action, RequestData, RecSessionData, Arg)
+	end.
+	
+-spec manage_user(MethodPrefix :: '"ADD_NUMBER"'|'"UPDATE_NUMBER"' | '"DELETE_NUMBER"' | '"SEARCH_NUMBERS"' | '"GET_ALL_NUMBERS"' | '"GENERATE_CSV"' | '"GENERATE_XLS"', 
+				RequestData :: list(), RecSessionData :: session_data(), Arg :: any()) -> {ehtml, Response :: list()}.
+
+%%	
+%% Add Webuser into the database
+%%
+manage_user("CREATE", RequestData, RecSessionData, Arg) ->
+
+
+    error_logger:info_msg("SQL - ~p:~n",["im adding values"]),
+	Username     = binary_to_list(rfc4627:get_field(RequestData, "username", <<>>)),
+	Password 	 = binary_to_list(rfc4627:get_field(RequestData, "password", <<>>)),
+	Description	 = binary_to_list(rfc4627:get_field(RequestData, "description", <<>>)),
+	ExpireDate   = binary_to_list(rfc4627:get_field(RequestData, "expire_date", <<>>)),
+	ProviderId 	 = binary_to_list(rfc4627:get_field(RequestData, "provider_id", <<>>)),
+	Type	     = binary_to_list(rfc4627:get_field(RequestData, "type", <<>>)),
+	Status       = binary_to_list(rfc4627:get_field(RequestData, "status", <<>>)),
+	CreatedDTTM  = binary_to_list(rfc4627:get_field(RequestData, "created_dttm", <<>>)),
+	CreatedUser	 = binary_to_list(rfc4627:get_field(RequestData, "created_user", <<>>)),
+	UpdatedUser	 = binary_to_list(rfc4627:get_field(RequestData, "password", <<>>)),
+	
+	Sql 		= "INSERT INTO webuser ( username, password, description , expire_date, provider_id, type, status, created_dttm,created_user, updated_dttm, updated_user ) 
+	VALUES (  '"++ Username ++"', '"++ Password ++"', '"++ Description ++"', '"++ ExpireDate ++"', '"++ ProviderId++"',
+	'"++ Type ++"', '"++ Status ++"', Now(), '"++ CreatedUser ++"', Now(), '"++ UpdatedUser ++"' )",
+	
+	error_logger:info_msg("SQL - ~p:~n",[Sql]), 
+	
+	error_logger:info_msg("SQL - ~p:~n",["in create provider method"]),
+	
+	case css_mysql_odbc:connect() of  
+		{ok,Ref} ->	
+		   Ret = css_mysql_odbc:sql_query(Ref, Sql),  
+		   error_logger:info_msg("Ret - ~p:~n",[Ret]), 
+		   case Ret of  
+				{updated,1} ->
+					css_logger:info(RecSessionData, "Webuser Manager : Webuser Added Successfully"),
+					Response = [{obj,[{status, <<"ok">>},{message, <<"Webuser Created Successfully">>}]}];
+				{error,Reason} ->				
+					css_logger:info(RecSessionData, "Webuser Manager : Webuser Adding Failed : " ++ css_common:toString(Reason)),	
+					Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+				_ ->				
+					css_logger:info(RecSessionData, "Webuser Manager : Webuser Adding Failed : Bad Rpc"),	
+					Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+				end,
+				css_mysql_odbc:disconnect(Ref);	
+		{error,Reason} ->	
+             error_logger:info_msg("in error 1 error - ~p:~n",[error]), 		
+			css_logger:info(RecSessionData, "Webuser Manager : Webuser Adding Failed : " ++ css_common:toString(Reason)),	
+			Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+		_ ->	
+             error_logger:info_msg("in error 2 error - ~p:~n",[error]), 		
+			css_logger:info(RecSessionData, "Webuser Manager : Webuser Adding Failed : Internal Error"),	
+			Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+		end,
+	
+	{ehtml, rfc4627:encode(Response)};
+	
+manage_user("SEARCH", RequestData, RecSessionData, Arg) ->
+
+ error_logger:info_msg("SQL ---------- ~p:~n",["im in user search method"]),
+
+	{ok, SearchValue}	= yaws_api:getvar(Arg, "search[value]"),
+	{ok, Order} 		= yaws_api:getvar(Arg, "order[0][column]"),
+	{ok, OrderDirection}= yaws_api:getvar(Arg, "order[0][dir]"),
+	{ok, LimitStart} 	= yaws_api:getvar(Arg, "start"),
+	{ok, LimitLength} 	= yaws_api:getvar(Arg, "length"),
+	{ok, Draw} 			= yaws_api:getvar(Arg, "draw"),
+	
+	{ok, WebUserName} 	= yaws_api:getvar(Arg, "user_name"),
+	{ok, ProviderName} 	= yaws_api:getvar(Arg, "provider_name"),
+	{ok, GroupName} 	= yaws_api:getvar(Arg, "group_name"),
+	
+	Username			= css_common:toString(css_session:get_sess("name", Arg)),
+	
+	Sql 		= "SELECT username, type, description, provider_name_en FROM webuser JOIN provider ON webuser.provider_id == provider.provider_id WHERE username LIKE '%"++ WebUserName ++"%' AND provider_name_en LIKE '%"++ ProviderName ++"%' AND type LIKE '%"++ group_name ++"%' ORDER BY user_name LIMIT "++ LimitStart ++", "++ LimitLength,
+	TotalSql 	= "SELECT COUNT(*) FROM webuser JOIN provider ON webuser.provider_id == provider.provider_id WHERE username LIKE '%"++ WebUserName ++"%' AND provider_name LIKE '%"++ ProviderName ++"%' AND group_name LIKE '%"++ group_name ++"%'",
+	
+	error_logger:info_msg("SQL - ~p:~n",[Sql]), 
+	error_logger:info_msg("SQL - ~p:~n",[TotalSql]), 
+		
+	case css_mysql_odbc:connect() of  
+		{ok,Ref} ->	
+			
+			case css_mysql_odbc:sql_query(Ref, TotalSql) of  
+				{TotalAa,TotalBb,TotalRes} ->
+					RecordsTotal = list_to_integer(element(1, lists:last(TotalRes)));
+				{error,_Reason} ->
+					RecordsTotal = 0;
+				_->
+				RecordsTotal = 0
+			end,
+		
+		   case css_mysql_odbc:sql_query(Ref, Sql) of  
+				{Aa,Bb,Res} ->
+					css_logger:info(RecSessionData, "Channel Manage : Channel Surched Successfully"),
+					
+					case get_all_records(Res, []) of 
+						[] ->
+							Response = {obj,[{draw, css_common:toBinary(Draw)},{recordsTotal, css_common:toBinary(0)},{recordsFiltered, css_common:toBinary(0)},{data, []}]};
+						Results ->
+							RecordsFiltered = RecordsTotal,	
+							Response = {obj,[{draw, css_common:toBinary(Draw)},{recordsTotal, css_common:toBinary(RecordsTotal)},{recordsFiltered, css_common:toBinary(RecordsFiltered)},{data, Results}]}
+					end;		
+				{error,Reason} ->				
+					css_logger:info(RecSessionData, "Channel Manage : Channel Search Failed : " ++ css_common:toString(Reason)),	
+					Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+				_ ->				
+					css_logger:info(RecSessionData, "Channel Manage : Channel Search Failed : Bad Rpc"),	
+					Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+				end,
+				css_mysql_odbc:disconnect(Ref);	
+		{error,Reason} ->				
+			css_logger:info(RecSessionData, "Channel Manage : Channel Search Failed : " ++ css_common:toString(Reason)),	
+			Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+		_ ->				
+			css_logger:info(RecSessionData, "Channel Manage : Channel Search Failed : Internal Error"),	
+			Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+		end,
+
+	{ehtml, rfc4627:encode(Response)}.
+	
+	
+	
+	
+	
+%% @doc Iterate user list return from API and prepare json formatted response list.
+%%
+
+-spec get_all_records(ResultSet :: [tuple()], RecordList :: [tuple()]) -> RecordList :: [tuple()].
+
+get_all_records([], RecordList) ->
+	RecordList;	
+get_all_records([Row|Rest], RecordList) ->  
+
+	Tup =   [css_common:toBinary(element(1, Row)),
+			 css_common:toBinary(element(1, Row)),
+			 css_common:toBinary(element(1, Row)),
+			 css_common:toBinary(element(1, Row))],
+	
+	UpdatedList = lists:concat([RecordList, [Tup]]),
+	get_all_records(Rest, UpdatedList).
+
+	
+%%		
+%% Get all the webuser from the database
+%%
+
+
+
+
+</erl>

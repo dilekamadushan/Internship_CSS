@@ -1,0 +1,430 @@
+<erl module=other_conf_manager>
+-export([out/1, other_config/3]).
+-include("ivr_conf.hrl"). 
+
+out(Arg) ->
+   Method = method(Arg),
+   error_logger:info_msg("~p:~p ~p Request~n",[?MODULE, ?LINE, Method ]),  
+   handle(Method, Arg). 
+
+%get request method type
+method(Arg) ->
+   Rec = Arg#arg.req,
+   Rec#http_request.method.
+   
+handle('GET', Arg) ->
+   error_logger:info_msg("~p:~p Enter into GET method~n",[?MODULE, ?LINE]);   
+
+handle('POST', Arg) ->
+	
+	{ok,[RequestData|[SessionData]],_} = rfc4627:decode(Arg#arg.clidata),   
+	Action = binary_to_list(rfc4627:get_field(RequestData, "action", <<>>)),  
+  	error_logger:info_msg("~p:~p Enter into POST method~n",[?MODULE, ?LINE]), 
+	RecSessionData = #session_data
+	{
+		username = ivr_common:toString(ivr_session:get_sess("name", Arg)),
+		uniqid   = ivr_common:toString(ivr_session:get_sess("uniqid", Arg))
+	},
+	
+	% Logging request data
+	%ivr_logger:debug(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Request:" ++ binary_to_list(Arg#arg.clidata)),
+	error_logger:info_msg("~p:~p Enter into POST method~n",[?MODULE, Action]),
+	other_config(Action, RequestData, RecSessionData).
+
+%% Create/Update user
+other_config("SAVE_LOG_LEVELS", RequestData, RecSessionData) ->
+
+	AdminAct 	= binary_to_list(rfc4627:get_field(RequestData, "admin_act", <<>>)),
+	PrmptRec 	= binary_to_list(rfc4627:get_field(RequestData, "prompt_rec", <<>>)),
+	ObdWeb 		= binary_to_list(rfc4627:get_field(RequestData, "obd_web", <<>>)),
+	ObdCf 		= binary_to_list(rfc4627:get_field(RequestData, "obd_call_flow", <<>>)),
+	ObdWs 		= binary_to_list(rfc4627:get_field(RequestData, "obd_ws", <<>>)),
+	BlkWhtLstWs	= binary_to_list(rfc4627:get_field(RequestData, "black_white_list_ws", <<>>)),	
+	SMWs 		= binary_to_list(rfc4627:get_field(RequestData, "service_management_ws", <<>>)),
+	RepWs 		= binary_to_list(rfc4627:get_field(RequestData, "reports_ws", <<>>)),
+	Sce 		= binary_to_list(rfc4627:get_field(RequestData, "sce", <<>>)),
+	Ivr 		= binary_to_list(rfc4627:get_field(RequestData, "ivr", <<>>)),
+	
+	error_logger:info_msg("IVR_ADMIN - DATA CAME ~p~n", [AdminAct]),
+	Response = [{obj,[{status, <<"ok">>}]}],
+	{ehtml, rfc4627:encode(Response)};
+
+
+%% Create/Update user
+other_config("GET_CONF_VALUES", RequestData, RecSessionData) ->
+
+	case ivr_mediator:call(?IVR_NODE, ?HMP_MOD,  get_action_data,[RecSessionData#session_data.username]) of
+	%case Result of
+		{ok, Res} ->
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid,"get all configuration values"),
+			Reason = tuple_to_list(Res),
+			Respons = get_conf_data(Reason,[]),		
+			Response = [{obj,[{status, <<"ok">>},{message, Respons}]}];
+		_->	
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid,"failed to get  configuration values"),			
+			Response = [{obj,[{status, <<"error">>},{message, <<"Not Tested">>}]}]
+	end,
+	{ehtml, rfc4627:encode(Response)};
+
+%% update Channel
+other_config("UPDATE_CONF_VALUES", RequestData, RecSessionData) ->
+	
+	ConfigType 	= list_to_atom(binary_to_list(rfc4627:get_field(RequestData, "conf_type", <<>>))),
+
+	case ConfigType of
+		gen_data ->	 			%% GeneralConf Data
+			NodeDesc	= binary_to_list(rfc4627:get_field(RequestData, "node_desc", <<>>)),
+			MaxDout 	= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "max_douts", <<>>))),
+			ChanfTout 	= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "chanfree_timeout", <<>>))),	
+			PreCmnBlklst= binary_to_list(rfc4627:get_field(RequestData, "cmn_blocklist", <<>>)),
+			CmnBlklst="\""++PreCmnBlklst++"\"",
+			%CmnBlklst	= [list_to_integer(X) ||X<-string:tokens(_CmnBlklst, ",")],
+			DotCtype	= list_to_atom(binary_to_list(rfc4627:get_field(RequestData, "dout_call_type", <<>>))),
+			ReinviteTout= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "reinvite_timeout", <<>>))),
+			RpcCall 	= ivr_mediator:call(?IVR_NODE, ?HMP_MOD, change_action_data,[{ConfigType,{ConfigType, NodeDesc, MaxDout, ChanfTout, CmnBlklst, DotCtype, ReinviteTout}}]);
+
+		http_request ->			%% HTTPConf Data
+			HttpTout 	= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "http_time_out", <<>>))),
+			HttpDownDir	= binary_to_list(rfc4627:get_field(RequestData, "http_down_dir", <<>>)),
+			HttpCaTout 	= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "http_cache_timeout", <<>>))),
+			HttpFleChkF = list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "http_file_chk_freq", <<>>))),
+			RpcCall 	= ivr_mediator:call(?IVR_NODE, ?HMP_MOD, change_action_data,[{ConfigType,{ConfigType, HttpTout, HttpDownDir, HttpCaTout, HttpFleChkF}}]);
+
+		digit_data ->			%% DigitConf Data
+			DigitDtmf 	= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "digit_dtmf", <<>>))),
+			DtmfPyld	= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "digit_dtmf_pyld", <<>>))),
+			GnrtDtmf 	= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "digit_gnrt_dtmf", <<>>))),
+			MaxDigits	= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "digit_max_digits", <<>>))),
+			FrstTout	= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "digit_frst_tout", <<>>))),
+			InterTout	= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "digit_inter_tout", <<>>))),
+			RpcCall 	= ivr_mediator:call(?IVR_NODE, ?HMP_MOD, change_action_data,[{ConfigType,{ConfigType, DigitDtmf, DtmfPyld, GnrtDtmf, MaxDigits, FrstTout, InterTout}}]);
+
+		rec_data ->			%% DigitConf Data
+			RecMxTime 	= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "rec_max_time", <<>>))),
+			RecVTout	= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "rec_voice_tout", <<>>))),
+			RecSilTout 	= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "rec_sil_tout", <<>>))),
+			RecSilMPL	= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "rec_sil_ampl", <<>>))),
+			SlenceDetTyp= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "silnce_det_type", <<>>))),
+			RpcCall 	= ivr_mediator:call(?IVR_NODE, ?HMP_MOD, change_action_data,[{ConfigType,{ConfigType, RecMxTime, RecVTout, RecSilTout, RecSilMPL,SlenceDetTyp}}]);
+
+		play_data ->
+			PlayMaxCount= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "ply_max_count", <<>>))),
+			RpcCall 	= ivr_mediator:call(?IVR_NODE, ?HMP_MOD, change_action_data,[{ConfigType,{ConfigType, PlayMaxCount}}]);
+
+		codec_data ->
+			CodecVFrmt	= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "codec_video_frmt", <<>>))),
+			CodecAFrmt	= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "codec_audio_frmt", <<>>))),
+			RpcCall 	= ivr_mediator:call(?IVR_NODE, ?HMP_MOD, change_action_data,[{ConfigType,{ConfigType, CodecVFrmt, CodecAFrmt}}]);
+
+		silence_data ->
+			SlenceDetTyp= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "silnce_det_type", <<>>))),
+			RpcCall 	= ivr_mediator:call(?IVR_NODE, ?HMP_MOD, change_action_data,[{ConfigType,{ConfigType, SlenceDetTyp}}]);
+
+		rtcp_data ->
+			RtcpSupport	= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "rtcp_support", <<>>))),
+			RtcpPktIntrvl= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "rtcp_pkt_intrvl", <<>>))),
+			RtcpRecvTout= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "rtcp_recve_tout", <<>>))),
+			RpcCall 	= ivr_mediator:call(?IVR_NODE, ?HMP_MOD, change_action_data,[{ConfigType,{ConfigType, RtcpSupport,RtcpPktIntrvl,RtcpRecvTout}}]);
+
+		amr_data ->
+			AmrOctAlgn	= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "amr_oct_algn", <<>>))),
+			AmrIntrLvng	= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "amr_intr_lvng", <<>>))),
+			AmrCrc		= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "amr_crc", <<>>))),
+			RpcCall 	= ivr_mediator:call(?IVR_NODE, ?HMP_MOD, change_action_data,[{ConfigType,{ConfigType,AmrOctAlgn,
+							AmrIntrLvng,AmrCrc}}]);
+
+		fax_data ->
+			FaxSupport	= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "fax_supprt", <<>>))),
+			RpcCall 	= ivr_mediator:call(?IVR_NODE, ?HMP_MOD, change_action_data,[{ConfigType,{ConfigType,FaxSupport}}]);
+
+		number_list_data ->
+			NbrLstChkng	= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "nbr_lst_chk", <<>>))),
+			DefWteBlck	= list_to_atom(binary_to_list(rfc4627:get_field(RequestData, "nbr_lst_wba", <<>>))),
+			RpcCall 	= ivr_mediator:call(?IVR_NODE, ?HMP_MOD, change_action_data,[{ConfigType,{ConfigType,NbrLstChkng,DefWteBlck}}]);
+
+		ivr_status_data ->
+			IvrNtfyUrl	= binary_to_list(rfc4627:get_field(RequestData, "ivr_notfy_url", <<>>)),
+			RpcCall 	= ivr_mediator:call(?IVR_NODE, ?HMP_MOD, change_action_data,[{ConfigType,{ConfigType,IvrNtfyUrl}}]);
+
+		snmp_data ->
+			SnmpTval	= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "snmp_time_val", <<>>))),
+			RpcCall 	= ivr_mediator:call(?IVR_NODE, ?HMP_MOD, change_action_data,[{ConfigType,{ConfigType,SnmpTval}}]);
+		
+		_ ->
+			RpcCall = ok,
+			error_logger:info_msg("RPC DATA : NONE~n")
+	end,
+		error_logger:info_msg("RPC call : ~p~n",[RpcCall]),
+
+	case RpcCall of
+		ok ->
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Configuration updated"),		
+			Response = [{obj,[{status, <<"ok">>},{message, <<"Configuration updated.">>}]}];
+		_->				
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Failed to update configuration"),
+			Response = [{obj,[{status, <<"error">>},{message, <<"Configuration update failed.">>}]}]
+	end,
+	error_logger:info_msg("request data, ~p",[RequestData]),
+	{ehtml, rfc4627:encode(Response)};
+
+%% update Channel
+other_config("UPDATE_CHANNELS", RequestData, RecSessionData) ->
+	Node = list_to_atom(binary_to_list(rfc4627:get_field(RequestData, "node", <<>>))),
+	Channel = list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "channel", <<>>))),
+	PlatformLogLevel= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "pltfm_log_lvl", <<>>))),
+	AppLogLevel= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "app_log_lvl", <<>>))),
+	error_logger:info_msg("~p~n",[Channel]),
+	case ivr_mediator:call(?IVR_NODE, ?HMP_MOD,  change_channels_to_log,[[{Channel,PlatformLogLevel,AppLogLevel}],Node]) of	%module and node to be edit
+		ok ->
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Chanel "++binary_to_list(rfc4627:get_field(RequestData, "channel", <<>>))++"-->p-"++ binary_to_list(rfc4627:get_field(RequestData, "pltfm_log_lvl", <<>>))++",a-"++binary_to_list(rfc4627:get_field(RequestData, "app_log_lvl", <<>>)) ++"log level updated"),
+			Response = [{obj,[{status, <<"ok">>},{message, <<"Chanel log level updated.">>}]}];
+		_->			
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Fail to update Chanel "++binary_to_list(rfc4627:get_field(RequestData, "channel", <<>>))++"-->p-"++ binary_to_list(rfc4627:get_field(RequestData, "pltfm_log_lvl", <<>>))++",a-"++binary_to_list(rfc4627:get_field(RequestData, "app_log_lvl", <<>>)) ++"log level "),
+			Response = [{obj,[{status, <<"error">>},{message, <<"Chanel log level update failed.">>}]}]
+	end,
+	error_logger:info_msg("request data, ~p",[RequestData]),
+	{ehtml, rfc4627:encode(Response)};
+
+
+%% Get all channels
+other_config("GET_SERVER_IDS", RequestData, RecSessionData) ->
+
+	case ivr_mediator:call(?IVR_NODE, ?HMP_MOD,  get_server_id,[]) of	%module and node to be edit
+		[] ->
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "No server ids to load"),		
+			Response = "";
+		error ->
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Error to get server ids."),		
+			Response = "";
+		Data->				
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "get all server ids"),
+			Response = get_json_server_list(Data, [])
+	end,
+	{ehtml, rfc4627:encode(Response)};
+
+
+%% Get all channels
+other_config("GET_ALL_CHANNELS", RequestData, RecSessionData) ->
+	Node = list_to_atom(binary_to_list(rfc4627:get_field(RequestData, "node", <<>>))),
+	case ivr_mediator:call(?IVR_NODE, ?HMP_MOD,  get_channels_to_log,[Node]) of	%module and node to be edit
+		[] ->
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "No chanels to load"),		
+			Response = "";
+		error ->
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Error to get Channels."),		
+			Response = "";
+		Data->				
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "get all channels"),
+			Response = get_json_channels(Data, [])
+	end,
+	{ehtml, rfc4627:encode(Response)};
+
+%% Get all numbers
+other_config("GET_ALL_NUMBERS", RequestData, RecSessionData) ->
+	
+	case ivr_mediator:call(?IVR_NODE, ?HMP_MOD,  get_numbers_to_log,[]) of	%module and node to be edit
+		[] ->
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "no Numbers to load."),		
+			Response = "";
+		error ->
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Error when load Numbers"),		
+			Response = "";
+		Data->				
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Get all numbers"),
+			Response = get_json(element(1,Data), [])
+	end,
+	{ehtml, rfc4627:encode(Response)};
+
+%% Get all trace numbers
+other_config("GET_ALL_TRACE_NUMBERS", RequestData, RecSessionData) ->
+	case ivr_mediator:call(?IVR_NODE, ?HMP_MOD,  get_trace_numbers,[]) of	%module and node to be edit
+		[] ->
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "no Numbers to load."),		
+			Response = "";
+		error ->
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Error when load Numbers"),		
+			Response = "";
+		Data->				
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Get all numbers"),
+			Response = get_json_trace_number(element(1, Data), [])
+	end,
+	{ehtml, rfc4627:encode(Response)};
+
+other_config("CHANNEL_BULK_UPDATE", RequestData, RecSessionData) ->
+	Node = list_to_atom(binary_to_list(rfc4627:get_field(RequestData, "node", <<>>))),
+	Channels = binary_to_list(rfc4627:get_field(RequestData, "channel", <<>>)),
+	ChannelList = re:split(Channels, ["\\|"], [trim]),
+	ChannelSet=makeChannelSet(ChannelList,[]),
+
+	error_logger:info_msg("chanelset to update, ~p",[ChannelSet]),
+	case ivr_mediator:call(?IVR_NODE, ?HMP_MOD,  change_channels_to_log,[ChannelSet,Node]) of	%module and node to be edit
+		ok ->
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Chanel loglevel updated.channels: "++getUpdatedList
+(ChannelSet,"")),		
+			Response = [{obj,[{status, <<"ok">>},{message, <<"Chanel log levels updated.">>}]}];
+		_->				
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Fail to update Chanel loglevel"++getUpdatedList
+(ChannelSet,"")),
+			Response = [{obj,[{status, <<"error">>},{message, <<"Chanel log levels update failed.">>}]}]
+	end,
+	{ehtml, rfc4627:encode(Response)};
+
+other_config("NUMBER_BULK_UPDATE", RequestData, RecSessionData) ->
+	Numbers = binary_to_list(rfc4627:get_field(RequestData, "number", <<>>)),
+
+	case Numbers of
+		"empthy" ->
+			NumberSet=[];
+		Numbers ->
+			NumberList = re:split(Numbers, ["\\|"], [trim]),
+			error_logger:info_msg("request datas, ~p",[NumberList]),
+			NumberSet=makeNumberSet(NumberList,[])
+	end,
+
+	case ivr_mediator:call(?IVR_NODE, ?HMP_MOD,  change_numbers_to_log,[NumberSet]) of	
+		ok ->
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Number loglevel updated."++getUpdatedList(NumberSet,"")),		
+			Response = [{obj,[{status, <<"ok">>},{message, <<"number log level  updated.">>}]}];
+		_ ->				
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Fail to update Number loglevel"++getUpdatedList(NumberSet,"")),
+			Response = [{obj,[{status, <<"error">>},{message, <<"number log level update failed.">>}]}]
+	end,
+	error_logger:info_msg("request data, ~p",[RequestData]),
+	{ehtml, rfc4627:encode(Response)};
+
+other_config("TRACE_NUMBERS_UPDATE", RequestData, RecSessionData) ->
+	Numbers = binary_to_list(rfc4627:get_field(RequestData, "numbers", <<>>)),
+	NumberList = re:split(Numbers, ["\\,"], [trim]),
+	if
+		NumberList==[<<>>]->
+			NumberSet=[];
+		true->
+			NumberSet= lists:map(fun (X) -> binary_to_list(X) end,NumberList)
+	end,
+	error_logger:info_msg("request data, ~p",[NumberSet]),
+	case ivr_mediator:call(?IVR_NODE, ?HMP_MOD, trace_numbers,[NumberSet]) of	
+		ok ->
+			TraceList=getUpdatedTraceNumberList(NumberSet,""),
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "trace numbers "++TraceList++" updated."),		
+			Response = [{obj,[{status, <<"ok">>},{message, <<"trace numbers  updated.">>}]}];
+		_ ->
+			TraceList=getUpdatedTraceNumberList(NumberSet,""),		
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Fail to update trace numbers "++TraceList),
+			Response = [{obj,[{status, <<"error">>},{message, <<"trace numberd update failed.">>}]}]
+	end,
+	error_logger:info_msg("request data, ~p",[RequestData]),
+	{ehtml, rfc4627:encode(Response)}.
+	
+   
+get_config( Record, Conf) ->
+	
+	Res = lists:keysearch(Conf, 1, Record),
+	
+	if
+		Res == false ->
+			Value = "";
+		true ->
+			{_,{Param,Value}} = Res
+	end,
+
+	Value.
+   
+
+makeNumberSet([],ResultSet)->
+	ResultSet;
+
+makeNumberSet([Head|Tail],ResultSet)->
+	Rec=re:split(binary_to_list(Head), ["\\#"], [trim]),
+	Tup={binary_to_list(lists:nth(1,Rec)),list_to_integer(binary_to_list(lists:nth(2,Rec))),list_to_integer(binary_to_list(lists:nth(3,Rec)))},
+	makeNumberSet(Tail,ResultSet++[Tup]).
+
+makeChannelSet([],ResultSet)->
+	ResultSet;
+
+makeChannelSet([Head|Tail],ResultSet)->
+	Rec=re:split(binary_to_list(Head), ["\\#"], [trim]),
+	Tup={binary_to_integer(lists:nth(1,Rec)),list_to_integer(binary_to_list(lists:nth(2,Rec))),list_to_integer(binary_to_list(lists:nth(3,Rec)))},
+	makeChannelSet(Tail,ResultSet++[Tup]).
+
+
+get_json_channels([],Result)->
+	Result;
+get_json_channels([Head|Rest],Result)->
+	Json={obj,[{server,ivr_common:toBinary(element(1,Head)++","++element(2,Head))},{data,get_json( lists:keysort(1,element(3, Head)),[])}]},
+	get_json_channels(Rest,Result++[Json]).
+
+
+get_json([], Res) ->
+	Res;
+get_json([Head|Rest], Res) ->
+
+	Channel	= element(1, Head),
+	PltLogLevel = element(2, Head),
+	AppLogLevel = element(3, Head),
+
+	Tup = {obj,[
+		{id, ivr_common:toBinary(Channel)},
+		{platform, ivr_common:toBinary(PltLogLevel)},
+		{application, ivr_common:toBinary(AppLogLevel)}
+		]},
+	UpdatedList = lists:concat([Res, [Tup]]),	
+	get_json(Rest, UpdatedList).
+
+
+get_json_trace_number([], Res) ->
+	Res;
+
+get_json_trace_number([Head|Rest],Res) ->
+	Tup = {obj,[
+		{number, ivr_common:toBinary(Head)}
+		]},
+	UpdatedList = lists:concat([Res, [Tup]]),	
+	get_json_trace_number(Rest, UpdatedList).
+
+get_conf_data([], Res) ->
+	Res;
+get_conf_data([Head|Rest],Res) ->
+
+	List = tuple_to_list(Head),
+	[Title|Data] =  List,
+	
+	Reason = [ivr_common:toString(I) ++ "|" || I <- Data ],
+
+	
+	Tup = {obj,[
+		{Title, ivr_common:toBinary(Reason)}
+		]},
+
+	UpdatedList = lists:concat([Res, [Tup]]),	
+	get_conf_data(Rest, UpdatedList).
+
+get_json_server_list([], Res) ->
+	Res;
+get_json_server_list([Head|Rest],Res) ->
+
+	List = tuple_to_list(Head),
+	Tup = {obj,[
+		{id, ivr_common:toBinary(element(1,Head))},
+		{node, ivr_common:toBinary(element(2,Head))},
+		{cookie, ivr_common:toBinary(element(3,Head))}
+		]},
+
+	UpdatedList = lists:concat([Res, [Tup]]),	
+	get_json_server_list(Rest, UpdatedList).
+
+getUpdatedList([],Result)->
+	Result;
+getUpdatedList([H|Rest],Result)->
+	NewResult=io_lib:format("~p-->p-:~p,a-:~p | ",[element(1,H),element(2,H),element(3,H)]),
+	getUpdatedList
+(Rest,Result++NewResult).
+
+getUpdatedTraceNumberList([],NumberSet)->
+	NumberSet;
+getUpdatedTraceNumberList([H|Rest],NumberSet)->
+	getUpdatedTraceNumberList(Rest,NumberSet++","++H).
+
+
+	
+</erl>
+

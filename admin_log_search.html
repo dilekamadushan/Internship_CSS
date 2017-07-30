@@ -1,0 +1,193 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="js/application.js"></script>
+<script type="">
+	document.write(objApp.getHeader());
+</script>
+<style>
+	div#mts_wrapper {
+	    padding-bottom:40px;
+	    background: #F2F2F2;
+	}
+
+	div#mts_length {
+	    padding:10px; 
+	    ont-style: normal;
+	    font-size: 14px; 
+	}
+
+	div#mts_filter {
+	    padding:10px;
+	    ont-style: normal;
+	    font-size: 14px; 
+	}
+	div#mts_info {
+	    padding-left:15px; 
+	    font-style: normal;
+	    font-size: 14px;
+	}
+
+	div#mts_paginate {
+	    padding-right:15px;
+	    background: #F2F2F2;
+	}
+</style>
+<!-- load all js/css and other stuff -->
+<script type="text/javascript" src="js/log_search.js"></script>
+<body>
+	<script type="">
+		document.write(objApp.getTopBanner());
+	</script>
+	<!-- Printing top banner & login check -->
+
+	<div class="InBody">
+		<div class="InBodyIn">
+			<script type="">
+				document.write(objApp.getMainMenu());
+			</script>
+			<!-- Left Main Menu -->
+			<div class="bodyMid">
+				<div class="bodytopic">App log Search</div>
+					<div class="bodytopic-Sub" style="margin-bottom: 10px;">Admin Log</div>
+				<!--<div class="bodytopic-Sub">EDR Analyzer</div>-->
+				<div class="bodyMid_cont_edr">
+					<div class="bdfill">
+						<div class="customNotification" style="margin-bottom: 10px;">User able to select maximum, <span id="limitedRange"></span></div>
+						<script type="">
+							$("#limitedRange").html(config.admin_log_search_maximum_range_in_word+" period of time for searching");
+						</script>
+						<div id='flash-msg'></div>
+						<!-- Flash Message -->
+						<form name="frm_log" id="frm_log" action="">
+							
+							<input type="hidden" name="type" id="type" value="ggsn"/>
+								<table border="0" align="center" cellpadding="0" cellspacing="0"
+									class="insert" width="100%">
+									<tr style="display:none">								
+										<td width="30%">
+											From <span class="required-field"></span>
+										</td>
+										<td width="70%" align="left">											
+											<input type="text" readonly
+											id="fromDate" data-validation-engine="validate[required]"/>
+											TO <span class="required-field"></span>
+											<input type="text" id="toDate" name="toDate" data-validation-engine="validate[required]" readonly>
+										</td>
+									</tr>
+									<tr style="display:none">								
+										<td width="30%">
+											From <span class="required-field"></span>
+										</td>
+										<td width="70%" align="left">											
+											<input type="text" readonly
+											id="webFromDate" data-validation-engine="validate[required]"/>
+											To<span class="required-field"></span>
+											<input type="text" readonly
+												id="webToDate" data-validation-engine="validate[required]"/> &nbsp&nbsp
+										</td>
+									</tr>
+									<tr>								
+										<td width="30%">
+											From <span class="required-field"></span>
+										</td>
+										<td width="70%" align="left">											
+											<input type="text" readonly
+											id="adminFromDate" data-validation-engine="validate[required]"/>
+											To<span class="required-field"></span>
+											<input type="text" readonly
+												id="adminToDate" data-validation-engine="validate[required]"/> &nbsp&nbsp
+										</td>
+									</tr>
+									<tr>
+										<td>
+											Keyword
+										</td>
+										<td align="left" >
+											<input type="text" id="keyword" name="keyword" 
+												data-validation-engine="validate[custom[onlyNumbersLettersDashes],minSize[2],maxSize[50]]" style="width: 125px" maxlength="50"> 
+										</td>
+									</tr>
+
+						
+									<tr>
+										<td colspan="2">&nbsp;</td>
+									</tr>
+									<tr>
+										<td></td>
+										<td align="left">
+											<input type="button"
+												name="search" id="search" value="Search" />&nbsp; 
+												&nbsp; <input type="button" name="log_csv" id="log_csv"
+											value="CSV" />
+										</td>
+									</tr>								
+								</table>
+						</form>
+					</div>
+					<div class="bdfill_tb">
+						<div  id="log_data_tbl"></div>
+					</div>
+					<div id="view_dialog" title="Full Message">
+						<div id="view-pop1"></div>  
+					</div>					
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	
+	<div id="alert" title="Result Not Found"></div>
+		<div id="viewAlert" title="Result Not Found"></div>
+
+	<!-- Dialog Box -->
+	<script>
+	$(document).ready(function() {
+		$("#alert").dialog({
+			modal: true
+		})
+		.dialog("widget")
+		.next(".ui-widget-overlay")
+		.css("background", "#000");
+
+		$("#viewAlert").dialog({
+			modal: true
+		})
+		.dialog("widget")
+		.next(".ui-widget-overlay")
+		.css("background", "#000");
+	});
+	</script>
+
+	<script>
+		$( "#alert" ).dialog({
+			autoOpen: false,
+			show: {
+				effect: "fade",
+				duration: 1000
+			},
+			hide: {
+				effect: "fade",
+				duration: 1000
+			}
+		});
+
+		$( "#viewAlert" ).dialog({
+			autoOpen: false,
+			show: {
+				effect: "fade",
+				duration: 1000
+			},
+			hide: {
+				effect: "fade",
+				duration: 1000
+			}
+		});
+
+	</script>
+	<script type="text/javascript">
+		document.write(objApp.getFooter());
+	</script>
+	<!-- Printing footer -->
+</body>
+</html>

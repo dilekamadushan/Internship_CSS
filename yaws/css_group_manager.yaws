@@ -1,0 +1,419 @@
+<erl module=css_group_manager>
+-export([out/1, manage_group/4]).  
+
+-include("css_conf.hrl"). 
+-include("css_api.hrl").
+
+out(Arg) ->
+   Method = method(Arg),
+   error_logger:info_msg("~p:~p ~p Request~n",[?MODULE, ?LINE, Method ]),  
+   handle(Method, Arg). 
+
+method(Arg) ->
+   Rec = Arg#arg.req,
+   Rec#http_request.method.
+   
+handle('GET', Arg) ->
+
+   case css_session:get_sess("name", Arg) of		
+		{error,no_session} ->
+			Response = <<"logout">>,
+			{ehtml, rfc4627:encode(Response)};	
+		Name ->	
+			C = (Arg#arg.headers)#headers.cookie,
+			SessionID = yaws_api:find_cookie_val(?SESSION_NAME, C),
+			{ok, SessionData} = yaws_api:cookieval_to_opaque(SessionID),	
+			{ok, Action} = yaws_api:getvar(Arg, "action"),			
+			RecSessionData = #session_data
+			{
+				username = css_common:toString(css_session:get_sess("name", Arg)),
+				uniqid   = css_common:toString(css_session:get_sess("uniqid", Arg))
+			},
+			manage_group(Action, SessionData, RecSessionData, Arg)
+   end;
+
+handle('POST', Arg) -> 
+
+	case css_session:get_sess("name", Arg) of		
+		{error,no_session} ->
+			Response = <<"logout">>,
+			{ehtml, rfc4627:encode(Response)};	
+		Name ->		
+			{ok,[RequestData|[SessionData]],_} = rfc4627:decode(Arg#arg.clidata), 						
+			Action = binary_to_list(rfc4627:get_field(RequestData, "action", <<>>)),  		
+			RecSessionData = #session_data
+			{
+				username = css_common:toString(css_session:get_sess("name", Arg)),
+				uniqid   = css_common:toString(css_session:get_sess("uniqid", Arg)),
+				app   	 = css_common:toString(css_session:get_sess("app", Arg))
+			},
+			manage_group(Action, RequestData, RecSessionData, Arg)
+	end.
+	
+
+-spec manage_group(MethodPrefix :: '"ADD_NUMBER"'|'"UPDATE_NUMBER"' | '"DELETE_NUMBER"' | '"SEARCH_NUMBERS"' | '"GET_ALL_NUMBERS"' | '"GENERATE_CSV"' | '"GENERATE_XLS"', 
+				RequestData :: list(), RecSessionData :: session_data(), Arg :: any()) -> {ehtml, Response :: list()}.
+
+%%	
+%% Insert group details into the database
+%%
+manage_group("CREATE", RequestData, RecSessionData, Arg) ->	
+	
+	GroupName 		    = css_common:toString(rfc4627:get_field(RequestData, "group_name", <<>>)),
+	Description 		= css_common:toString(rfc4627:get_field(RequestData, "description", <<>>)),
+	Status		        = css_common:toString(rfc4627:get_field(RequestData, "status", <<>>)),
+	
+	Username			= css_common:toString(css_session:get_sess("name", Arg)),
+	
+	 Sql 		        = "INSERT INTO usergroup ( group_name, description, status,created_dttm,created_user,updated_user) VALUES 
+	 (  '"++ GroupName ++"', '"++ Description ++"', '"++ Status ++"', Now(), '"++ Username ++"', '"++ Username ++"')",
+	 
+	 error_logger:info_msg("SQL - ~p:~n",["im in the create user method and added values"]),
+	
+	error_logger:info_msg("SQL - ~p:~n",[Sql]),  
+	
+	error_logger:info_msg("SQL - ~p:~n",["in create group method"]),
+	
+	case css_mysql_odbc:connect() of  
+		{ok,Ref} ->	
+		   Ret = css_mysql_odbc:sql_query(Ref, Sql),  
+		   error_logger:info_msg("Ret - ~p:~n",[Ret]),
+       		   
+		   case Ret of  
+				{updated,1} ->
+				
+				    error_logger:info_msg("in updated 1 - ~p:~n",[Ret]),
+					
+					Response = [{obj,[{status, <<"ok">>},{message, <<"Group Created Successfully">>}]}];
+				{error,Reason} ->				
+					css_logger:info(RecSessionData, "Channel Manager : Channel Adding Failed : " ++ css_common:toString(Reason)),	
+					Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+				_ ->				
+					css_logger:info(RecSessionData, "Channel Manager : Channel Adding Failed : Bad Rpc"),	
+					Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+				end,
+				css_mysql_odbc:disconnect(Ref);	
+		{error,Reason} ->				
+			css_logger:info(RecSessionData, "Channel Manager : Channel Adding Failed : " ++ css_common:toString(Reason)),	
+			Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+		_ ->				
+			css_logger:info(RecSessionData, "Channel Manager : Channel Adding Failed : Internal Error"),	
+			Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+		end,
+		
+	error_logger:info_msg("Response - ~p:~n",[Response]), 
+	
+	{ehtml, rfc4627:encode(Response)};
+
+%% Get all the group details 
+
+manage_group("SEARCH", RequestData, RecSessionData, Arg) ->  
+	
+	{ok, SearchValue}	= yaws_api:getvar(Arg, "search[value]"),
+	{ok, Order} 		= yaws_api:getvar(Arg, "order[0][column]"),
+	{ok, OrderDirection}= yaws_api:getvar(Arg, "order[0][dir]"),
+	{ok, LimitStart} 	= yaws_api:getvar(Arg, "start"),
+	{ok, LimitLength} 	= yaws_api:getvar(Arg, "length"),
+	{ok, Draw} 			= yaws_api:getvar(Arg, "draw"),
+	
+	{ok, ProviderCode} 	= yaws_api:getvar(Arg, "group_code"), 
+	{ok, ProviderName} 	= yaws_api:getvar(Arg, "group_name"),
+	
+	Username			= css_common:toString(css_session:get_sess("name", Arg)),	
+
+	Sql 		= "SELECT * FROM group WHERE group_code LIKE '%"++ ProviderCode ++"%' AND group_name_en LIKE '%"++ ProviderName ++"%' LIMIT "++ LimitStart ++", "++ LimitLength,
+	TotalSql 	= "SELECT COUNT(*) FROM group WHERE group_code LIKE '%"++ ProviderCode ++"%' AND group_name_en LIKE '%"++ ProviderName ++"%'",
+	
+	error_logger:info_msg("SQL - ~p:~n",[Sql]), 
+	error_logger:info_msg("SQL - ~p:~n",[TotalSql]), 
+	
+	case css_mysql_odbc:connect() of  
+		{ok,Ref} ->			
+		
+		    Ret = css_mysql_odbc:sql_query(Ref, Sql),  
+		    error_logger:info_msg(" result of Ret - ~p:~n",[Ret]), 
+			case css_mysql_odbc:sql_query(Ref, TotalSql) of  
+				{TotalAa,TotalBb,TotalRes} ->
+					RecordsTotal = list_to_integer(element(1, lists:last(TotalRes)));
+				{error,_Reason} ->
+					RecordsTotal = 0;
+				_->
+				RecordsTotal = 0
+			end,
+		
+		   case css_mysql_odbc:sql_query(Ref, Sql) of  
+				{Aa,Bb,Res} ->
+				
+					css_logger:info(RecSessionData, "CSS Provider Search : Get all the groups successful"),
+					case get_all_records(Res, []) of 
+						[] ->
+							Response = {obj,[{draw, css_common:toBinary(Draw)},{recordsTotal, css_common:toBinary(0)},{recordsFiltered, css_common:toBinary(0)},{data, []}]};
+						Results ->
+							RecordsFiltered = RecordsTotal,	
+							Response = {obj,[{draw, css_common:toBinary(Draw)},{recordsTotal, css_common:toBinary(RecordsTotal)},{recordsFiltered, css_common:toBinary(RecordsFiltered)},{data, Results}]}
+					end;		
+				{error,Reason} ->				
+					css_logger:info(RecSessionData, "CDR Search : Get all the Numbers fail : " ++ css_common:toString(Reason)),	
+					Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+				_ ->				
+					css_logger:info(RecSessionData, "CDR Search : Get all the Numbers fail : Bad Rpc"),	
+					Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+				end,
+				css_mysql_odbc:disconnect(Ref);	
+		{error,Reason} ->				
+			css_logger:info(RecSessionData, "CSS Provider Search : Get all the Provider fail : " ++ css_common:toString(Reason)),	
+			Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+		_ ->				
+			css_logger:info(RecSessionData, "CSS Provider Search : Get all the Provider fail : Internal Error"),	
+			Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+		end,
+	
+	{ehtml, rfc4627:encode(Response)};
+	
+	
+manage_group("DELETE_PROVIDER", RequestData, RecSessionData, Arg) ->
+
+	ProviderId 	= binary_to_list(rfc4627:get_field(RequestData, "group_id", <<>>)),
+	
+	Sql 		= "DELETE FROM group WHERE group_id='"++ ProviderId ++"'",
+	
+	error_logger:info_msg("SQL - ~p:~n",[Sql]), 
+	
+	case css_mysql_odbc:connect() of  
+		{ok,Ref} ->	
+		   Ret = css_mysql_odbc:sql_query(Ref, Sql),  
+		   error_logger:info_msg("Ret - ~p:~n",[Ret]), 
+		   case Ret of  
+				{updated,1} ->
+					css_logger:info(RecSessionData, "Channel Manager : Provider Removed Successfully"),
+					Response = [{obj,[{status, <<"ok">>},{message, <<"Provider Deleted Successfully">>}]}];
+				{error,Reason} ->				
+					css_logger:info(RecSessionData, "Channel Manager : Channel Removal Failed : " ++ css_common:toString(Reason)),	
+					Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+				_ ->				
+					css_logger:info(RecSessionData, "Channel Manager : Channel Removal Failed : Bad Rpc"),	
+					Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+				end,
+				css_mysql_odbc:disconnect(Ref);	
+		{error,Reason} ->				
+			css_logger:info(RecSessionData, "Channel Manager : Channel Removal Failed : " ++ css_common:toString(Reason)),	
+			Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+		_ ->				
+			css_logger:info(RecSessionData, "Channel Manager : Channel Removal Failed : Internal Error"),	
+			Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+		end,
+	
+	{ehtml, rfc4627:encode(Response)};
+
+	
+manage_group("UPDATE", RequestData, RecSessionData, Arg) ->
+
+    ProviderId 	        = binary_to_list(rfc4627:get_field(RequestData, "group_id", <<>>)), 
+    ProviderCode 		= binary_to_list(rfc4627:get_field(RequestData, "group_code", <<>>)),
+	ProviderNameTH 		= binary_to_list(rfc4627:get_field(RequestData, "group_name_th", <<>>)),
+	ProviderNameEN		= binary_to_list(rfc4627:get_field(RequestData, "group_name_en", <<>>)),
+	Description		    = binary_to_list(rfc4627:get_field(RequestData, "description", <<>>)),
+	Address		        = binary_to_list(rfc4627:get_field(RequestData, "address", <<>>)),
+	Telephone		    = binary_to_list(rfc4627:get_field(RequestData, "telephone", <<>>)),
+	ContactName		    = binary_to_list(rfc4627:get_field(RequestData, "contact_name", <<>>)),
+	ContactTelephone    = binary_to_list(rfc4627:get_field(RequestData, "contact_telephone", <<>>)),
+	ContactMobile		= binary_to_list(rfc4627:get_field(RequestData, "contact_mobile", <<>>)),
+	ShortcodeManager    = binary_to_list(rfc4627:get_field(RequestData, "shortcode_manager", <<>>)),
+	TechName            = binary_to_list(rfc4627:get_field(RequestData, "tech_name", <<>>)),
+	TechTelephone       = binary_to_list(rfc4627:get_field(RequestData, "tech_telephone", <<>>)),
+	Password            = binary_to_list(rfc4627:get_field(RequestData, "password", <<>>)),
+
+	
+	Username			= css_common:toString(css_session:get_sess("name", Arg)),
+
+							Sql = "UPDATE group SET group_code = '" ++ ProviderCode ++ "', " ++  
+														  "group_name_th = '" ++ ProviderNameTH ++ "', " ++
+														  "group_name_en = '" ++ ProviderNameEN ++ "', " ++
+														  "address = '" ++ Address ++ "', " ++
+														  "telephone = '" ++ Telephone ++ "', " ++
+														  "contact_name = '" ++ ContactName ++ "', " ++
+														  "contact_telephone = '" ++ ContactTelephone ++ "', " ++
+														  "contact_mobile = '" ++ ContactMobile ++ "', " ++
+														  "shortcode_manager = '" ++ ShortcodeManager ++ "', " ++
+														  "tech_name = '" ++ TechName ++ "', " ++
+														  "tech_telephone = '" ++ TechTelephone ++ "'," ++
+														  "password = '" ++ Password ++ "'
+														  WHERE group_id = " ++ ProviderId,										  
+	
+	case css_mysql_odbc:connect() of  
+		{ok,Ref} ->	
+		   Ret = css_mysql_odbc:sql_query(Ref, Sql),  
+		   error_logger:info_msg("Ret - ~p:~n",[Ret]),
+       		   
+		   case Ret of  
+				{updated,X} ->
+				
+				    error_logger:info_msg("in updated 1 - ~p:~n",[Ret]),
+					
+					Response = [{obj,[{status, <<"ok">>},{message, <<"Provider Updated Successfully">>}]}];
+				{error,Reason} ->				
+					css_logger:info(RecSessionData, "Channel Manager : Channel Adding Failed : " ++ css_common:toString(Reason)),	
+					Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+				_ ->				
+					css_logger:info(RecSessionData, "Channel Manager : Channel Adding Failed : Bad Rpc"),	
+					Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+				end,
+				css_mysql_odbc:disconnect(Ref);	
+		{error,Reason} ->				
+			css_logger:info(RecSessionData, "Channel Manager : Channel Adding Failed : " ++ css_common:toString(Reason)),	
+			Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+		_ ->				
+			css_logger:info(RecSessionData, "Channel Manager : Channel Adding Failed : Internal Error"),	
+			Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+		end,
+		
+	error_logger:info_msg("Response - ~p:~n",[Response]), 
+	
+	{ehtml, rfc4627:encode(Response)};
+
+	
+	
+manage_group("GET_ALL_GROUPS", RequestData, RecSessionData, Arg) ->
+
+    error_logger:info_msg("SQL ---------- ~p:~n",["in getall groups method"]),
+	
+	Username			= css_common:toString(css_session:get_sess("name", Arg)),
+	
+	Sql 		= "SELECT group_id, group_name FROM usergroup",
+	
+	error_logger:info_msg("SQL - ~p:~n",[Sql]),  
+		
+	case css_mysql_odbc:connect() of  
+		{ok,Ref} ->	
+		   case css_mysql_odbc:sql_query(Ref, Sql) of  
+				{Aa,Bb,Res} ->
+					css_logger:info(RecSessionData, "Channel Manage : Channel Surched Successfully"),
+					
+					case get_all_records_for_groups(Res, []) of 
+						[] ->
+							Response = {obj,[{data, []}]};
+						Results ->
+						
+							Response = {obj,[{data, Results}]}
+					end;		
+				{error,Reason} ->				
+					css_logger:info(RecSessionData, "Channel Manage : Channel Search Failed : " ++ css_common:toString(Reason)),	
+					Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+				_ ->				
+					css_logger:info(RecSessionData, "Channel Manage : Channel Search Failed : Bad Rpc"),	
+					Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+				end,
+				css_mysql_odbc:disconnect(Ref);	
+		{error,Reason} ->				
+			css_logger:info(RecSessionData, "Channel Manage : Channel Search Failed : " ++ css_common:toString(Reason)),	
+			Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+		_ ->				
+			css_logger:info(RecSessionData, "Channel Manage : Channel Search Failed : Internal Error"),	
+			Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+		end,
+
+	{ehtml, rfc4627:encode(Response)};
+	
+	
+	
+manage_group("GET_PROVIDERS_TO_EDIT", RequestData, RecSessionData, Arg) ->
+
+    error_logger:info_msg("SQL ---------- ~p:~n",["in edit groups method"]),
+	
+	ProviderId 	= binary_to_list(rfc4627:get_field(RequestData, "group_id", <<>>)),
+	 error_logger:info_msg("SQL  in get to edit method the id - ~p:~n",[ProviderId]),  
+	
+	Sql 		= "SELECT * FROM group WHERE group_id='"++ProviderId++"'",
+	error_logger:info_msg("SQL - ~p:~n",[Sql]),  
+		
+	case css_mysql_odbc:connect() of  
+		{ok,Ref} ->	
+		   case css_mysql_odbc:sql_query(Ref, Sql) of  
+				{Aa,Bb,Res} ->
+					css_logger:info(RecSessionData, "Channel Manage : Channel Surched Successfully"),
+					
+					case get_all_records_to_edit(Res, []) of 
+						[] ->
+							Response = {obj,[{data, []}]};
+						Results ->
+						
+							Response = {obj,[{data, Results}]}
+					end;		
+				{error,Reason} ->				
+					css_logger:info(RecSessionData, "Channel Manage : Channel Search Failed : " ++ css_common:toString(Reason)),	
+					Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+				_ ->				
+					css_logger:info(RecSessionData, "Channel Manage : Channel Search Failed : Bad Rpc"),	
+					Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+				end,
+				css_mysql_odbc:disconnect(Ref);	
+		{error,Reason} ->				
+			css_logger:info(RecSessionData, "Channel Manage : Channel Search Failed : " ++ css_common:toString(Reason)),	
+			Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+		_ ->				
+			css_logger:info(RecSessionData, "Channel Manage : Channel Search Failed : Internal Error"),	
+			Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+		end,
+	{ehtml, rfc4627:encode(Response)}.
+
+	
+-spec get_all_records(ResultSet :: [tuple()], RecordList :: [tuple()]) -> RecordList :: [tuple()].
+%% @doc Iterate user list return from API and prepare json formatted response list.
+%%
+get_all_records([], RecordList) ->
+	RecordList;	
+get_all_records([Row|Rest], RecordList) ->  
+	
+	Tup =   [css_common:toBinary(element(2, Row)), 
+			 css_common:toBinary(element(4, Row)),
+			 css_common:toBinary(element(3, Row)),
+			 css_common:toBinary(element(11, Row)),
+			 css_common:toBinary(element(1, Row))],  
+	
+	UpdatedList = lists:concat([RecordList, [Tup]]),
+	get_all_records(Rest, UpdatedList). 
+	
+%% @doc Iterate user list return from API and prepare json formatted response list.
+%%	
+	
+-spec get_all_records_for_groups(ResultSet :: [tuple()], RecordList :: [tuple()]) -> RecordList :: [tuple()].
+
+get_all_records_for_groups([], RecordList) ->
+	RecordList;	
+get_all_records_for_groups([Row|Rest], RecordList) ->  
+	
+	Tup =   [css_common:toBinary(element(1, Row)), 
+			 css_common:toBinary(element(2, Row))],  
+	
+	UpdatedList = lists:concat([RecordList, [Tup]]),
+	get_all_records_for_groups(Rest, UpdatedList). 
+
+
+
+
+
+-spec get_all_records_to_edit(ResultSet :: [tuple()], RecordList :: [tuple()]) -> RecordList :: [tuple()].
+%% @doc Iterate user list return from API and prepare json formatted response list.
+%%
+get_all_records_to_edit([], RecordList) ->
+	RecordList;	
+get_all_records_to_edit([Row|Rest], RecordList) ->  
+	
+	Tup =   [css_common:toBinary(element(1, Row)), 
+			 css_common:toBinary(element(2, Row)),
+			 css_common:toBinary(element(3, Row)),
+			 css_common:toBinary(element(4, Row)),
+			 css_common:toBinary(element(5, Row)),
+			 css_common:toBinary(element(6, Row)),
+			 css_common:toBinary(element(7, Row)),
+			 css_common:toBinary(element(8, Row)),
+			 css_common:toBinary(element(9, Row)),
+			 css_common:toBinary(element(10, Row)),
+			 css_common:toBinary(element(11, Row)),
+			 css_common:toBinary(element(12, Row)),
+			 css_common:toBinary(element(13, Row))],  
+	
+	UpdatedList = lists:concat([RecordList, [Tup]]),
+	get_all_records_to_edit(Rest, UpdatedList). 	
+	
+</erl>

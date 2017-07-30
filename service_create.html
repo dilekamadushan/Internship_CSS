@@ -1,0 +1,288 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+
+<!-- *#__dan__#* application js *#__dan__#* -->
+<script type="text/javascript" src="js/application.js"></script>
+<!-- *#__dan__#* application js *#__dan__#* -->
+<script type="text/javascript">	
+	document.write(objApp.getHeader());
+</script>
+<!-- load all js/css and other stuff -->
+
+<!-- *#__dan__#* live_circuit_util js *#__dan__#* -->
+<script type="text/javascript" src="js/service_manager.js"></script>
+<!-- *#__dan__#* live_circuit_util js *#__dan__#* -->
+
+<!-- *#__dan__#* styles *#__dan__#* -->
+	<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+	<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+	<!--[if lt IE 9]>
+	<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+	<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+	<![endif]-->
+<!-- *#__dan__#* styles *#__dan__#* -->
+
+
+<body class="hold-transition skin-blue sidebar-mini">
+
+	<div class="wrapper">
+
+		<!-- Top menu bar with Branding -->
+		<script type="text/javascript">		
+			document.write(objApp.getTopBanner()); 
+		</script>
+		
+		<!-- Content Wrapper. Contains page content -->
+		<div class="content-wrapper">
+			
+			<!-- Content Header (Page header) -->
+			<section class="content-header">
+			  <h1>
+				Create CP Service
+				<small>Subscription</small>
+			  </h1>
+			  <ol class="breadcrumb">
+				<li><a href="home"><i class="fa fa-home"></i> Home</a></li>
+				<li><i class="fa fa-bar-chart"></i> Subscription</li>
+				<li class="active">Create CP Service</li>
+			  </ol>
+			</section>
+			
+			<!-- Main content -->
+			<section class="content">
+				
+				<div class="row">
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<div class="box">
+							<div id='flash-msg'></div>
+							<div class="box-header with-border">
+								<h3 class="box-title">Content Provider Service Detail</h3>
+							</div>
+							<div class="box-body">
+								<form class="form-horizontal" name="frm_service_create" id="frm_service_create"> 
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label for="serv_name" class="col-sm-4 control-label">Service Name <span class="req-fld">*</span></label>
+													<div class="col-sm-8">
+														<input type="text" 
+																class="form-control" 
+																placeholder="Service Name" 
+																id="serv_name" 
+																name="serv_name" 
+																title="Enter Service Name"   
+																data-validation-engine="validate[required]"> 
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label for="mo_code" class="col-sm-4 control-label">MO Code <span class="req-fld">*</span></label>
+													<div class="col-sm-8">
+														<input type="text" 
+														class="form-control" 
+														placeholder="MO Code" 
+														id="mo_code" 
+														name="mo_code" 
+														title="Enter MO Code"
+														data-validation-engine="validate[required]">
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label for="desc" class="col-sm-4 control-label">Description</label>
+													<div class="col-sm-8">
+														<textarea class="form-control" rows="3" placeholder="Description" id="desc" name="desc" title="Enter Description"></textarea>
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label for="mt" class="col-sm-4 control-label">MT <br/><i>seperate by new line</i></label>
+													<div class="col-sm-8">
+														<textarea class="form-control" rows="3" placeholder="MT: seperate by new line" id="mt" name="mt" title="Enter MT"></textarea>
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label for="provider" class="col-sm-4 control-label">Provider <span class="req-fld">*</span></label>
+													<div class="col-sm-8">
+														<select class="form-control select2" placeholder="Provider" title="Select Provider" id="provider_select">
+															<!-- Dynamic fill -->
+														</select>
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label for="operator" class="col-sm-4 control-label">Operator <span class="req-fld">*</span></label>
+													<div class="col-sm-8">
+														<select class="form-control select2" placeholder="Operator" title="Select Operator" id="operator_select">
+															<!-- Dynamic Fill -->
+														</select>
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label for="eff_date" class="col-sm-4 control-label">Effective Date</label>
+													<div class="col-sm-8">
+														<div class="input-group date">
+														  <div class="input-group-addon">
+															<i class="fa fa-calendar"></i>
+														  </div>
+														  <input type="text" class="form-control pull-right" id="effective_date" placeholder="Effective Date" title="Select Effective Date">
+														</div>
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label for="exp_date" class="col-sm-4 control-label">Expiry Date</label>
+													<div class="col-sm-8">
+														<div class="input-group date">
+														  <div class="input-group-addon">
+															<i class="fa fa-calendar"></i>
+														  </div>
+														  <input type="text" class="form-control pull-right" id="expir_date" placeholder="Expiry Date" title="Select Expiry Date">
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" id="subs">
+													<label for="subs" class="col-sm-4 control-label">Subscribe Keyword <br/><i>seperate by new line</i></label>
+													<div class="col-sm-8">
+														<textarea class="form-control" rows="3" placeholder="Subscribe Keyword: seperate by new line" id="subs" name="subs" title="Enter Subscribe Keyword"></textarea>
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label for="unsubs" class="col-sm-4 control-label">Unsubscribe Keyword <br/><i>seperate by new line</i></label>
+													<div class="col-sm-8">
+														<textarea class="form-control" rows="3" placeholder="Unsubscribe Keyword: seperate by new line" id="unsubs" name="unsubs" title="Enter MT"></textarea>
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" >
+													<label for="lang" class="col-sm-4 control-label">SMS Language <span class="req-fld">*</span></label>
+													<div class="col-sm-8">
+														<select class="form-control select2" placeholder="SMS Language" title="Select SMS Language" id="sms_language_select">
+															<!-- Dynamic Fill -->
+														</select>
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" >
+													<label for="sender" class="col-sm-4 control-label">SMS Sender <span class="req-fld">*</span></label>
+													<div class="col-sm-8">
+														<input type="text" 
+														class="form-control" 
+														placeholder="SMS Sender" 
+														id="sender" 
+														name="sender" 
+														title="Enter SMS Sender"
+														data-validation-engine="validate[required]">
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label for="blacklist" class="col-sm-4 control-label">Blacklist MSISDN</label>
+													<div class="col-sm-8">
+														<textarea class="form-control" rows="3" placeholder="Blacklist MSISDN" id="blacklist" name="blacklist" title="Enter Blacklist MSISDN"></textarea>
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label for="lang" class="col-sm-4 control-label">Service Group <span class="req-fld">*</span></label>
+													<div class="col-sm-8">
+														<select class="form-control select2" placeholder="SMS Language" title="Select Service Group" id="service_group_select">
+															<!-- Dynamic Fill -->
+														</select>
+													</div>
+												</div>
+											</div>
+										</div>										
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-12 col-sm-12 col-xs-12">
+												<div class="box-footer"> 
+													<button type="submit" class="btn btn-primary pull-right btnspace" name="create_service" id="create_service">Save</button>
+												</div>
+											</div>
+										</div>						
+									</div>
+								</form> 
+							</div>
+						</div>
+					</div>
+				</div>
+				
+			</section>
+			<!-- /.content -->
+			
+		</div>
+		<!-- /.content-wrapper -->
+
+		<script>
+			document.write(objApp.getFooter());
+		</script>
+		<!-- Printing footer -->
+	
+	</div>
+	<!-- ./wrapper -->
+	
+	<script>
+		$(function () {
+			//Initialize Select2 Elements
+			$(".select2").select2();
+
+			//Date picker
+			$('#effective_date').datepicker({
+			  autoclose: true
+			});
+			//Date picker
+			$('#expir_date').datepicker({
+			  autoclose: true
+			});
+		});
+	</script>
+	
+</body>
+</html>

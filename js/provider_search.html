@@ -1,0 +1,660 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+
+<!-- *#__dan__#* application js *#__dan__#* -->
+<script type="text/javascript" src="js/application.js"></script>
+<!-- *#__dan__#* application js *#__dan__#* -->
+<script type="text/javascript">	
+	document.write(objApp.getHeader());
+</script>
+<!-- load all js/css and other stuff -->
+
+<!-- *#__dan__#* live_circuit_util js *#__dan__#* -->
+<script type="text/javascript" src="js/manage_provider.js"></script>
+<!-- *#__dan__#* live_circuit_util js *#__dan__#* -->
+
+<!-- *#__dan__#* styles *#__dan__#* -->
+	<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+	<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+	<!--[if lt IE 9]>
+	<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+	<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+	<![endif]-->
+<!-- *#__dan__#* styles *#__dan__#* -->
+
+
+<body class="hold-transition skin-blue sidebar-mini">
+
+	<div class="wrapper">
+
+		<!-- Top menu bar with Branding -->
+		<script type="text/javascript">		
+			document.write(objApp.getTopBanner()); 
+		</script>
+		
+		<!-- Content Wrapper. Contains page content -->
+		<div class="content-wrapper">
+			
+			<!-- Content Header (Page header) -->
+			<section class="content-header">
+			  <h1>
+				Search Content Provider
+				<small>Subscription</small>
+			  </h1>
+			  <ol class="breadcrumb">
+				<li><a href="home"><i class="fa fa-home"></i> Home</a></li>
+				<li><i class="fa fa-bar-chart"></i> Subscription</li>
+				<li class="active">Search Content Provider</li>
+			  </ol>
+			</section>
+			
+			<!-- Main content -->
+			<section class="content">
+				
+				<div class="row">
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<div class="box">
+							<div id='flash-msg'></div>
+							<!-- <div class="box-header with-border">
+								<h3 class="box-title">Content Provider Detail</h3>
+							</div> -->
+							<div class="box-body">
+								<form class="form-horizontal" name="" id="">
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" id="provider_code">
+													<label for="provider_code" class="col-sm-4 control-label">Provider Code</label>
+													<div class="col-sm-8">
+														<input type="text" class="form-control" placeholder="Provider Code" id="provider_code" name="provider_code" title="Enter Provider Code">
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" id="provider_name">
+													<label for="provider_name" class="col-sm-4 control-label">Provider Name </label>
+													<div class="col-sm-8">
+														<input type="text" class="form-control" placeholder="Provider Name in English" id="provider_name_en" name="provider_name" title="Enter Provider Name in English">
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-12 col-sm-12 col-xs-12">
+												<div class="box-footer">
+													<button type="submit" class="btn btn-primary pull-right btnspace" name="css" id="search_provider">Search</button>
+												</div>
+											</div>
+										</div>						
+									</div>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<div class="box">
+							<div class="box-body">
+								<div class="box-body">
+								  <table id="example1" class="table table-bordered table-striped table-hover">
+									<thead>
+										<tr>
+											<th>Provider Code</th>
+											<th>Provider Name &#40;Eng&#41;</th>
+											<th>Provider Name &#40;Thai&#41;</th>
+											<th>Abbreviation</th>
+											<th>Actions</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td>CP-111</td>
+											<td>Content Provider Company</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-222</td>
+											<td>Content Provider Company1</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>2CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-333</td>
+											<td>Content Provider Company3</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>3CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-444</td>
+											<td>Content Provider Company4</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>4CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-555</td>
+											<td>Content Provider Company5</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>5CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-666</td>
+											<td>Content Provider Company6</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>6CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-777</td>
+											<td>Content Provider Company7</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>7CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-888</td>
+											<td>Content Provider Company8</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>8CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-999</td>
+											<td>Content Provider Company9</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>9CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-123</td>
+											<td>Content Provider Company123</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>123CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-111</td>
+											<td>Content Provider Company</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-222</td>
+											<td>Content Provider Company1</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>2CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-333</td>
+											<td>Content Provider Company3</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>3CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-444</td>
+											<td>Content Provider Company4</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>4CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-555</td>
+											<td>Content Provider Company5</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>5CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-666</td>
+											<td>Content Provider Company6</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>6CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-777</td>
+											<td>Content Provider Company7</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>7CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-888</td>
+											<td>Content Provider Company8</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>8CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-999</td>
+											<td>Content Provider Company9</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>9CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-123</td>
+											<td>Content Provider Company123</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>123CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-111</td>
+											<td>Content Provider Company</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-222</td>
+											<td>Content Provider Company1</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>2CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-333</td>
+											<td>Content Provider Company3</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>3CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-444</td>
+											<td>Content Provider Company4</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>4CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-555</td>
+											<td>Content Provider Company5</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>5CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-666</td>
+											<td>Content Provider Company6</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>6CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-777</td>
+											<td>Content Provider Company7</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>7CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-888</td>
+											<td>Content Provider Company8</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>8CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-999</td>
+											<td>Content Provider Company9</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>9CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-123</td>
+											<td>Content Provider Company123</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>123CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-111</td>
+											<td>Content Provider Company</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-222</td>
+											<td>Content Provider Company1</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>2CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-333</td>
+											<td>Content Provider Company3</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>3CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-444</td>
+											<td>Content Provider Company4</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>4CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-555</td>
+											<td>Content Provider Company5</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>5CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>CP-666</td>
+											<td>Content Provider Company6</td>
+											<td>บริษัท ผู้ให้บริการเนื้อหา</td>
+											<td>6CP111+123=qwert!@#</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+									</tbody>
+									<tfoot>
+										<tr>
+											<th>Provider Code</th>
+											<th>Provider Name &#40;Eng&#41;</th>
+											<th>Provider Name &#40;Thai&#41;</th>
+											<th>Abbreviation</th>
+											<th>Actions</th>
+										</tr>
+									</tfoot>
+								  </table>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+			</section>
+			<!-- /.content -->
+			
+		</div>
+		<!-- /.content-wrapper -->
+
+		<script>
+			document.write(objApp.getFooter());
+		</script>
+		<!-- Printing footer -->
+	
+	</div>
+	<!-- ./wrapper -->
+				
+	<!-- data table script -->
+	<script>
+	  $(function () {
+		$("#example1").DataTable();
+	  });
+	</script>
+	
+</body>
+</html>

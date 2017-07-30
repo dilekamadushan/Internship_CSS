@@ -1,0 +1,70 @@
+<erl>
+-export([out/1, report/3]).
+
+-include("ivr_conf.hrl"). 
+
+out(Arg) ->
+   Method = method(Arg),
+   %error_logger:info_msg("~p:~p ~p Request~n",[?MODULE, ?LINE, Method ]),  
+   handle(Method, Arg). 
+
+%get request method type
+method(Arg) ->
+   Rec = Arg#arg.req,
+   Rec#http_request.method.
+   
+handle('GET', Arg) ->
+   %error_logger:info_msg("~p:~p Enter into GET method~n",[?MODULE, ?LINE]); 
+   ok;  
+
+handle('POST', Arg) ->
+	
+	{ok,[RequestData|[SessionData]],_} = rfc4627:decode(Arg#arg.clidata),   
+	Action = binary_to_list(rfc4627:get_field(RequestData, "action", <<>>)),  
+	
+	RecSessionData = #session_data
+	{
+		username = ivr_common:toString(ivr_session:get_sess("name", Arg)),
+		uniqid   = ivr_common:toString(ivr_session:get_sess("uniqid", Arg))
+	},
+	
+	% Logging request data
+	%ivr_logger:debug(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Request:" ++ binary_to_list(Arg#arg.clidata)),
+	
+	report(Action, RequestData, RecSessionData).
+
+report("LOG_MONITOR", RequestData, RecSessionData) ->
+	LineCount = binary_to_list(rfc4627:get_field(RequestData, "lineCount",<<>>)),
+	StartLine = binary_to_list(rfc4627:get_field(RequestData, "startIndex",<<>>)),
+	LogPath = ?TRACE_LOG_PATH ++ ?TRACE_LOG_PREFIX,
+	GetTotLineCount = "wc -l ",
+	InitialTotVal = lists:nth(1, string:tokens(os:cmd(GetTotLineCount ++ LogPath), " ")),
+	case StartLine of
+		"0" ->
+			Command = "tail -n +" ++ InitialTotVal ++ " " ++ LogPath ++ " | head -n" ++ LineCount;
+		Value ->
+			Command = "tail -n +" ++ StartLine ++ " " ++ LogPath ++ " | head -n" ++ LineCount
+	end,
+
+	%error_logger:info_msg("##################### ~p ~n",[Command]),
+	LogData = os:cmd(Command),
+	NewInitVal = list_to_integer(InitialTotVal)+1,
+	Response = [{obj,[{startVal, integer_to_binary(NewInitVal)},{lines, list_to_binary(LogData)}]}],
+	%error_logger:info_msg("******************** ~p ~n",[{ehtml, rfc4627:encode(Response)}]),
+	{ehtml, rfc4627:encode(Response)};
+report("WRITE_TO_ADMIN_LOG", RequestData, RecSessionData) ->
+	LogAction = binary_to_list(rfc4627:get_field(RequestData, "log_action",<<>>)),
+	Response = [{obj,[{status, <<"ok">>},{message, <<"write to admin log">>}]}],
+	ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, " Trace log "++LogAction),
+	{ehtml, rfc4627:encode(Response)}.
+
+	
+get_formatted_date(DateTime) ->
+    {{Year,Month,Day},{_Hour,_Min,_Sec}} = DateTime,
+    io_lib:format("~4.10.0B-~2.10.0B-~2.10.0B",
+  	[Year, Month, Day]).
+
+
+</erl>
+
+

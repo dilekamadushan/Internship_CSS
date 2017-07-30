@@ -1,0 +1,260 @@
+<erl module=css_operator_manager>
+-export([out/1, manage_operator/4]). 
+
+-include("css_conf.hrl").
+-include("css_api.hrl").
+
+out(Arg) ->
+   Method = method(Arg),
+   error_logger:info_msg("~p:~p ~p Request~n",[?MODULE, ?LINE, Method ]),  
+   handle(Method, Arg). 
+
+method(Arg) ->
+   Rec = Arg#arg.req,
+   Rec#http_request.method.
+
+handle('GET', Arg) ->
+
+   case css_session:get_sess("name", Arg) of		
+		{error,no_session} ->
+			Response = <<"logout">>,
+			{ehtml, rfc4627:encode(Response)};	
+		Name ->	
+			C = (Arg#arg.headers)#headers.cookie,
+			SessionID = yaws_api:find_cookie_val(?SESSION_NAME, C),
+			{ok, SessionData} = yaws_api:cookieval_to_opaque(SessionID),	
+			{ok, Action} = yaws_api:getvar(Arg, "action"),			
+			RecSessionData = #session_data
+			{
+				username = css_common:toString(css_session:get_sess("name", Arg)),
+				uniqid   = css_common:toString(css_session:get_sess("uniqid", Arg))
+			},
+
+			error_logger:info_msg("~p:~p Action : ~p Request~n",[?MODULE, ?LINE, Action]),  
+
+			manage_operator(Action, SessionData, RecSessionData, Arg)
+   end;
+
+handle('POST', Arg) -> 
+
+	case css_session:get_sess("name", Arg) of		
+		{error,no_session} ->
+			Response = <<"logout">>,
+			{ehtml, rfc4627:encode(Response)};	
+		Name ->		
+			{ok,[RequestData|[SessionData]],_} = rfc4627:decode(Arg#arg.clidata), 						
+			Action = binary_to_list(rfc4627:get_field(RequestData, "action", <<>>)),  		
+			RecSessionData = #session_data
+			{
+				username = css_common:toString(css_session:get_sess("name", Arg)),
+				uniqid   = css_common:toString(css_session:get_sess("uniqid", Arg)),
+				app   	 = css_common:toString(css_session:get_sess("app", Arg))
+			},
+			manage_operator(Action, RequestData, RecSessionData, Arg)
+	end.
+
+-spec manage_operator(MethodPrefix :: '"SEARCH"'|'"GET_ALL_OPERATORS"' , RequestData :: list(), RecSessionData :: session_data(), Arg :: any()) -> {ehtml, Response :: list()}.   
+
+manage_operator("SEARCH", RequestData, RecSessionData, Arg) ->
+
+	error_logger:info_msg("SQL ---------- ~p:~n",["fffffffffff"]),
+	
+	{ok, OperatorName} 	= yaws_api:getvar(Arg, "operator_name"),
+	
+	{ok, LimitStart} 	= yaws_api:getvar(Arg, "start"),
+	{ok, LimitLength} 	= yaws_api:getvar(Arg, "length"),
+	{ok, Draw} 		= yaws_api:getvar(Arg, "draw"),
+	
+	error_logger:info_msg("Operator Search : OperatorName ~p ~n", [OperatorName]), 
+	
+	Username		= css_common:toString(css_session:get_sess("name", Arg)),
+	
+	Sql 			= "SELECT operator_name, smsc_name, operator_id FROM operator, smsc WHERE operator_name LIKE '%"++ OperatorName ++"%' AND operator.smsc_id = smsc.smsc_id ORDER BY operator_name LIMIT "++ LimitStart ++", "++ LimitLength,
+	TotalSql 		= "SELECT COUNT(operator_id) FROM operator, smsc WHERE operator_name LIKE '%"++ OperatorName ++"%' AND operator.smsc_id = smsc.smsc_id",
+	
+	error_logger:info_msg("SQL - ~p:~n",[Sql]), 
+	error_logger:info_msg("SQL - ~p:~n",[TotalSql]), 
+	
+	%Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+	
+	case css_mysql_odbc:connect() of  
+		{ok,Ref} ->	
+
+			case css_mysql_odbc:sql_query(Ref, TotalSql) of  
+				{TotalAa,TotalBb,TotalRes} ->
+					RecordsTotal = list_to_integer(element(1, lists:last(TotalRes)));
+				{error,_Reason} ->
+					RecordsTotal = 0;
+				_->
+				RecordsTotal = 0
+			end,
+		
+		   case css_mysql_odbc:sql_query(Ref, Sql) of  
+				{Aa,Bb,Res} ->
+					
+					css_logger:info(RecSessionData, "Operator Search : Operator Searched Successfully"),
+	
+					case get_all_records(Res, []) of 
+						[] ->
+							Response = {obj,[{draw, css_common:toBinary(Draw)},{recordsTotal, css_common:toBinary(0)},{recordsFiltered, css_common:toBinary(0)},{data, []}]};
+						Results ->
+							RecordsFiltered = RecordsTotal,	
+							Response = {obj,[{draw, css_common:toBinary(Draw)},{recordsTotal, css_common:toBinary(RecordsTotal)},{recordsFiltered, css_common:toBinary(RecordsFiltered)},{data, Results}]}
+					end;		
+				{error,Reason} ->				
+					css_logger:info(RecSessionData, "Operator Search : Operator Search Failed : " ++ css_common:toString(Reason)),	
+					Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+				_ ->				
+					css_logger:info(RecSessionData, "Operator Search : Operator Search Failed : Bad Rpc"),	
+					Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+				end,
+				css_mysql_odbc:disconnect(Ref);	
+		{error,Reason} ->				
+			css_logger:info(RecSessionData, "Channel Manage : Channel Search Failed : " ++ css_common:toString(Reason)),	
+			Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+		_ ->				
+			css_logger:info(RecSessionData, "Channel Manage : Channel Search Failed : Internal Error"),	
+			Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+		end,
+
+	{ehtml, rfc4627:encode(Response)};
+
+manage_operator("GET_ALL_OPERATORS", RequestData, RecSessionData, Arg) ->
+
+    error_logger:info_msg("SQL ---------- ~p:~n",["in getall providers method"]),
+	
+	Username	= css_common:toString(css_session:get_sess("name", Arg)),
+
+	Sql 		= "SELECT operator_id, operator_name FROM operator",
+	
+	error_logger:info_msg("SQL - ~p:~n",[Sql]),  
+		
+	case css_mysql_odbc:connect() of  
+		{ok,Ref} ->	
+		   case css_mysql_odbc:sql_query(Ref, Sql) of  
+				{Aa,Bb,Res} ->
+					css_logger:info(RecSessionData, "Operator Manager : Operator all records Successfully"),
+					
+					case get_all_records_for_operators(Res, []) of 
+						[] ->
+							Response = {obj,[{data, []}]};
+						Results ->
+						
+							Response = {obj,[{data, Results}]}
+					end;		
+				{error,Reason} ->				
+					css_logger:info(RecSessionData, "Operator Manage : Operator Search Failed : " ++ css_common:toString(Reason)),	
+					Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+				_ ->				
+					css_logger:info(RecSessionData, "Channel Manage : Operator Search Failed : Bad Rpc"),	
+					Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+				end,
+				css_mysql_odbc:disconnect(Ref);	
+		{error,Reason} ->				
+			css_logger:info(RecSessionData, "Operator Manage : Operator Search Failed : " ++ css_common:toString(Reason)),	
+			Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+		_ ->				
+			css_logger:info(RecSessionData, "Operator Manage : Operator Search Failed : Internal Error"),	
+			Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+		end,
+
+	{ehtml, rfc4627:encode(Response)};
+	
+manage_operator("DELETE_OPERATOR", RequestData, RecSessionData, Arg) ->
+
+	OperatorId 	= binary_to_list(rfc4627:get_field(RequestData, "operator_id", <<>>)),
+	Username	= css_common:toString(css_session:get_sess("name", Arg)),
+	
+	Sql 		= "DELETE FROM operator WHERE operator_id='"++ OperatorId ++"'",
+	
+	error_logger:info_msg("SQL - ~p:~n",[Sql]), 
+	
+	case css_mysql_odbc:connect() of  
+		{ok,Ref} ->	
+		   Ret = css_mysql_odbc:sql_query(Ref, Sql),  
+		   error_logger:info_msg("Ret - ~p:~n",[Ret]), 
+		   case Ret of  
+				{updated,1} ->
+					css_logger:info(RecSessionData, "Operator Manager : Operator Removed Successfully"),
+					Response = [{obj,[{status, <<"ok">>},{message, <<"Operator Deleted Successfully">>}]}];
+				{error,Reason} ->				
+					css_logger:info(RecSessionData, "Operator Manager : Operator Removal Failed : " ++ css_common:toString(Reason)),	
+					Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+				_ ->				
+					css_logger:info(RecSessionData, "Operator Manager : Operator Removal Failed : Bad Rpc"),	
+					Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+				end,
+				css_mysql_odbc:disconnect(Ref);	
+		{error,Reason} ->				
+			css_logger:info(RecSessionData, "Operator Manager : Operator Removal Failed : " ++ css_common:toString(Reason)),	
+			Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+		_ ->				
+			css_logger:info(RecSessionData, "Operator Manager : Operator Removal Failed : Internal Error"),	
+			Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+		end,
+	
+	{ehtml, rfc4627:encode(Response)};
+	
+manage_operator("CREATE", RequestData, RecSessionData, Arg) ->
+
+	OperatorName= binary_to_list(rfc4627:get_field(RequestData, "operator_name", <<>>)),
+	CDBValue 	= binary_to_list(rfc4627:get_field(RequestData, "cdb_value", <<>>)),
+	Description = binary_to_list(rfc4627:get_field(RequestData, "description", <<>>)),
+	SmsPlatform = binary_to_list(rfc4627:get_field(RequestData, "sms_platform", <<>>)),
+	
+	Username	= css_common:toString(css_session:get_sess("name", Arg)),
+	
+	Sql 		= "INSERT INTO operator ( operator_name, description, created_user ) VALUES (  '"++ OperatorName ++"', '"++ Description ++"','"++ Username ++"' )",
+	
+	error_logger:info_msg("SQL - ~p:~n",[Sql]), 
+	
+	case css_mysql_odbc:connect() of  
+		{ok,Ref} ->	
+		   Ret = css_mysql_odbc:sql_query(Ref, Sql),  
+		   error_logger:info_msg("Ret - ~p:~n",[Ret]), 
+		   case Ret of  
+				{updated,1} ->
+					css_logger:info(RecSessionData, "Operator Manager : Operator Created Successfully"),
+					Response = [{obj,[{status, <<"ok">>},{message, <<"Operator Created Successfully">>}]}];
+				{error,Reason} ->				
+					css_logger:info(RecSessionData, "Operator Manager : operator Creation Failed : " ++ css_common:toString(Reason)),	
+					Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+				_ ->				
+					css_logger:info(RecSessionData, "Operator Manager : Operator Creation Failed : Bad Rpc"),	
+					Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+				end,
+				css_mysql_odbc:disconnect(Ref);	
+		{error,Reason} ->				
+			css_logger:info(RecSessionData, "Operator Manager : Operator Creation Failed : " ++ css_common:toString(Reason)),	
+			Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+		_ ->				
+			css_logger:info(RecSessionData, "Operator Manager : Operator Creation Failed : Internal Error"),	
+			Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+		end,
+	
+	{ehtml, rfc4627:encode(Response)}.
+
+	
+
+get_all_records([], RecordList) ->
+	RecordList;	
+
+get_all_records([Row|Rest], RecordList) ->  
+
+	Tup =   [css_common:toBinary(element(1, Row)),
+			css_common:toBinary(element(2, Row)),
+			css_common:toBinary(element(3, Row))],
+	
+	UpdatedList = lists:concat([RecordList, [Tup]]),
+	get_all_records(Rest, UpdatedList).
+	
+get_all_records_for_operators([], RecordList) ->
+	RecordList;	
+get_all_records_for_operators([Row|Rest], RecordList) ->  
+	
+	Tup =   [css_common:toBinary(element(1, Row)), 
+			css_common:toBinary(element(2, Row))],  
+	
+	UpdatedList = lists:concat([RecordList, [Tup]]),
+	get_all_records_for_operators(Rest, UpdatedList). 	
+</erl>

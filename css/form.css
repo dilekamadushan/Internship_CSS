@@ -1,0 +1,37 @@
+@charset "utf-8";
+
+
+input[type=submit]:hover,input[type=reset]:hover,input[type=button]:hover,input[type=browse]:hover{
+	/*text-shadow: 0px 1px 0px #676b6c;*/
+	font-weight: bold;
+	border-radius: 4px;
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+   behavior: url(http://172.16.13.60:8090/lrs_admin_web/css/PIE.htc);
+	border: 1px solid #ffffff;
+	-moz-box-shadow: inset 0px 0px 8px 3px #c55000;
+	-webkit-box-shadow: inset 0px 0px 8px 3px #c55000;
+	box-shadow: inset 0px 0px 8px 3px #c55000;
+	background-color: #c55000;
+	cursor: pointer;
+}
+
+input[type=submit]:active, input[type=reset]:active, input[type=button]:active,input[type=browse]:active{
+position:relative;
+top:2px;
+color: #fqq;
+box-shadow:none;
+-moz-box-shadow:none;
+-webkit-box-shadow:none;
+	cursor: pointer;
+}
+
+input[type=submit]:focus, input[type=reset]:focus, input[type=button]:focus,input[type=browse]:focus{
+position:relative;
+top:2px;
+color: #fqq;
+box-shadow:none;
+-moz-box-shadow:none;
+-webkit-box-shadow:none;
+	cursor: pointer;
+}

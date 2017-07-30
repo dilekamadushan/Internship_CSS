@@ -1,0 +1,371 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="js/application.js"></script>
+<script>
+	document.write(objApp.getHeader());
+</script>
+
+<script type="text/javascript" src="js/user_manager.js"></script>
+<!-- load all js/css and other stuff -->
+<link href="css/login.css" rel="stylesheet" type="text/css"> 
+<style>
+.main-footer { display: none; }
+</style>
+
+<body class="hold-transition login-page">
+<div class="login-box">
+  <div class="login-logo">
+    <a href="#"><b>CSS</b>Admin</a>
+  </div>
+  <!-- /.login-logo -->
+  <div class="login-box-body">
+    <p class="login-box-msg">Sign in to start your session</p>
+
+    <form id="frm_login" method="POST">
+      <div class="form-group has-feedback">
+		<input id="user_id_log" type="text" placeholder="Username" data-validation-engine="validate[required] text-input" name="user_id_log" class="form-control" value="prabath">
+        <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
+      </div>
+      <div class="form-group has-feedback"> 
+		<input id="password" type="password" placeholder="Password" data-validation-engine="validate[required] text-input" name="password" class="form-control" value="test.123">
+        <span class="glyphicon glyphicon-lock form-control-feedback"></span>
+      </div>
+      <div class="row">
+        <div class="col-xs-8">
+          <!-- <div class="checkbox icheck">
+            <label>
+              <input type="checkbox"> Remember Me
+            </label>
+          </div> -->
+		  
+			<div class="checkbox checkboxPermis">
+				<label class="checkboxPermisLeft">
+					<input type="checkbox" class="minimal"> Remember Me
+				</label>
+			</div>
+        </div>
+        <!-- /.col -->
+        <div class="col-xs-4">
+          <button type="submit" class="btn btn-primary btn-block btn-flat">Sign In</button>
+        </div>
+        <!-- /.col -->
+      </div>
+    </form>
+    <!-- /.social-auth-links -->
+
+    <a href="#">I forgot my password</a><br>
+    <a href="#" class="text-center">Register a new membership</a>
+
+  </div>
+  <!-- /.login-box-body -->
+</div>
+<!-- /.login-box -->
+
+		<script>
+			document.write(objApp.getFooter());
+		</script>
+		<!-- Printing footer -->
+	
+<erl>
+
+-export([out/1, handle/2]). 
+
+-include("css_conf.hrl").
+-include("css_api.hrl"). 
+
+out(Arg) ->
+	Method = (Arg#arg.req)#http_request.method,
+	handle(Method, Arg).
+
+handle('GET', Arg) ->
+
+	error_logger:info_msg("~p:~n",["get------------"]),   
+
+	C = (Arg#arg.headers)#headers.cookie,
+	%case yaws_api:find_cookie_val("session_id", C) of
+	case [] of
+		[] ->
+			[{status, 200},{html, ""}];
+		SessionID ->
+			case yaws_api:cookieval_to_opaque(SessionID) of
+				{ok, SessionData} ->
+					[{status, 303},
+						{allheaders,
+							[{header, ["Location: ",?HOME_URL]}]},
+						{html, ""}
+					];
+				{error, no_session} ->
+					[{status, 200},{html, ""}]
+			end
+	end;
+
+handle('POST', Arg) ->
+	
+	Ip = css_common:get_ip(Arg),
+	
+	case yaws_api:postvar(Arg, "old_password") of
+		undefined ->
+		
+			LoginTime = calendar:datetime_to_gregorian_seconds(erlang:localtime()),
+			UniqId    = css_common:toString(LoginTime * random:uniform(9999)),
+			
+			error_logger:info_msg("session UniqId in ~p~n", [UniqId]),
+
+			{ok, UserId_} = yaws_api:postvar(Arg, "user_id_log"),
+			{ok, Password} = yaws_api:postvar(Arg, "password"),	
+			
+			UserId = css_common:toString(UserId_),
+			Pwd    = css_common:toString(Password),
+
+			RecSessionData = #session_data
+			{
+				username = UserId,
+				uniqid   = UniqId
+			},	
+			
+			error_logger:info_msg("~p:~n",["gggg----------"]),   
+
+			%css_logger:info(UserId, UniqId, "User login attempt - [" ++ Ip ++ "]"),	
+			
+			R = css_mysql_odbc:connect(),
+			
+			error_logger:info_msg("------~p:~n",[R]),   
+			
+			case R of  
+				{ok,Ref} -> 
+				
+				error_logger:info_msg("~p:~n",["get--fff--f---"]),   
+					
+					Sql1 = "SELECT WU.*,GROUP_CONCAT(UG.group_id) AS groups FROM webuser WU, usergroup UG,webuser_usergroup WUUG 
+								WHERE username = '" ++ UserId ++ "' AND password = '" ++ Pwd ++ "' 
+								AND WU.user_id =  WUUG.user_id AND UG.group_id = WUUG.group_id",
+					
+
+					Sql = "SELECT webuser.*,GROUP_CONCAT(usergroup.group_id) 
+							FROM webuser
+							INNER JOIN webuser_usergroup ON webuser_usergroup.user_id = webuser.user_id
+							INNER JOIN usergroup ON usergroup.group_id = webuser_usergroup.group_id 
+							WHERE username = '" ++ UserId ++ "' AND password = '" ++ Pwd ++ "'",
+					
+					error_logger:info_msg("Sql------------ ~p~n", [Sql]),
+					
+					Ret = css_mysql_odbc:sql_query(Ref, Sql),  
+					
+					error_logger:info_msg("Ret ~p~n", [Ret]),
+					
+					case Ret of  
+						{_,_,[]} ->
+						  
+							%css_common:event_log(UserId, UniqId, "", ?WEB_LOGIN, ?EDR_FAIL, ?LOGIN_ERROR),
+						
+							%css_logger:info(UserId, UniqId, "User not exist"),
+							Response = not_exists;
+						{_,_,[Res]} ->
+
+							error_logger:info_msg("Res -------- ~p~n", [Res]),
+							
+							Status = css_common:toString(element(9, Res)),
+							
+							if
+								Status == "0" ->
+									%css_logger:info(UserId, UniqId, "User account is temporarily disabled"),
+									%css_common:event_log(UserId, UniqId, "", ?WEB_LOGIN, ?EDR_FAIL, ?LOGIN_ERROR),
+									Response = disabled;
+								true ->			 			
+	
+									GroupIds = css_common:toString(element(14, Res)),
+									GroupIds1 = "1,2",
+									
+									error_logger:info_msg("GroupIds --- ~p~n", [GroupIds]),
+									
+									case get_permission(GroupIds,Ref) of
+										"" ->
+											%css_logger:info(UserId, UniqId, "User package error"),
+											%css_common:event_log(UserId, UniqId, "", ?WEB_LOGIN, ?EDR_FAIL, ?LOGIN_ERROR),
+											Response = error;
+										Permissions ->
+											
+											error_logger:info_msg("Permissions --- ~p~n", [Permissions]),
+											
+											set_last_access(Ref, UserId, RecSessionData), 
+											
+											SessionID = set_session(UserId, UniqId, Permissions, Res),
+											%css_common:event_log(UserId, UniqId, "", ?WEB_LOGIN, ?EDR_SUCCESS, ?DEFAULT_REASON),
+											Response = {authenticated, SessionID}	
+									end 
+							end;		
+							
+						{error,Reason} ->
+							Response = Reason;		
+						_ ->
+							Response = error		
+						end,
+						css_mysql_odbc:disconnect(Ref);	
+				{error,Reason} ->
+					Response = Reason;		
+				_ ->
+					Response = error			
+			end;
+			
+		{ok, OldPassword} ->
+
+			UserId = "-------",
+			UniqId = "-------",
+			
+			RecSessionData = #session_data
+			{
+				username = UserId,
+				uniqid   = UniqId
+			},			
+		
+			Response = error
+	end,
+
+	case Response of
+		{authenticated, NewSessionID} ->
+		
+			%css_logger:info(UserId, UniqId, "User login success"),	 					
+
+			SessionCookie = yaws_api:setcookie(?SESSION_NAME, NewSessionID, "/"),
+			
+			error_logger:info_msg("SessionCookie --- ~p~n", [SessionCookie]),
+
+			[{status, 303},
+				{allheaders,
+					[{header, ["Location: ", ?HOME_URL]}]},
+				{html, ""}, [SessionCookie] 
+			];
+		not_exists ->
+			[{status, 200},{html, "<div id='flash_msg'>not_exists</div>"}];		
+		disabled ->
+			[{status, 200},{html, "<div id='flash_msg'>disabled</div>"}];				
+		error ->
+			[{status, 200},{html, "<div id='flash_msg'>error</div>"}];
+		invalid_user ->
+			[{status, 200},{html, "<div id='flash_msg'>error</div>"}];
+		invalid_password ->
+			[{status, 200},{html, "<div id='flash_msg'>error</div>"}];
+		first_login ->
+			[{status, 200},{html, "<div id='flash_msg'>first_login</div>"}];
+		no_user_exists ->
+			[{status, 200},{html, "<div id='flash_msg'>no_user_exists</div>"}]
+	end.
+
+get_permission(GroupIds,Ref) ->
+ 
+	error_logger:info_msg("Ret2  -----GroupIds----> ~p:~n",[GroupIds]),
+ 
+	Sql = "SELECT GROUP_CONCAT(A.acl_name)  
+			FROM usergroup UG,usergroup_acl UGA,acl A  
+			WHERE UG.group_id IN (" ++ GroupIds ++ ") AND UG.status = 1 AND UG.group_id = UGA.group_id AND A.acl_id = UGA.acl_id",
+	
+	error_logger:info_msg("Ret2  -----Sql----> ~p:~n",[Sql]),
+	
+	Ret = css_mysql_odbc:sql_query(Ref, Sql),
+	
+	error_logger:info_msg("Ret2  -----Sql----> ~p:~n",[Sql]),
+	error_logger:info_msg("Ret2  ---------> ~p:~n",[Ret]),   
+	
+	case Ret of  
+		{_,_,[Permissions_]} ->
+			[PermissionsList_] 	= tuple_to_list(Permissions_), 
+			PermissionsList 	= string:tokens(PermissionsList_, ","),
+			Permissions 		= get_formatted_permission(PermissionsList, []);
+		{error,Reason} ->
+			Permissions = "";
+		_ ->
+			Permissions = ""	
+	end,
+
+	Permissions.
+	
+get_list_to_existing_atom(List) ->
+
+	try list_to_existing_atom(List) of
+		Val ->
+			Val
+	catch
+		_ : _ ->
+			list_to_atom(List)
+	end.
+
+get_formatted_permission([], RecordList) ->
+	RecordList;	
+get_formatted_permission([Row|Rest], RecordList) ->  
+
+	UpdatedList = lists:concat([RecordList, [list_to_atom(Row)]]),
+	get_formatted_permission(Rest, UpdatedList). 	
+	
+set_last_access(Ref, UserID, RecSessionData) ->
+	
+	{{GetYear,GetMonth,GetDay},{Hour,Min,Sec}} = erlang:localtime(),
+	
+	CurDate = css_common:toString(GetYear) ++ "-" ++ css_common:toString(GetMonth) ++ "-" ++ css_common:toString(GetDay),
+	CurTime = css_common:toString(Hour) ++ ":" ++ css_common:toString(Min) ++ ":" ++ css_common:toString(Sec),
+	
+	CurDateTime = CurDate ++ " " ++ CurTime, 
+	
+	Sql = "UPDATE users SET last_access_time = '" ++ CurDateTime ++ "' WHERE msisdn = " ++ UserID,
+	
+	case css_mysql_odbc:sql_query(Ref, Sql) of  
+		{updated,_} ->
+			%css_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Last access updated - [" ++ CurDateTime ++ "]"),
+			LastRes = "ok";		
+		{error,Reason} ->
+			%css_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Last access update failed - [" ++ CurDateTime ++ "]"),
+			LastRes = "error";
+		_ ->
+			%css_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Last access update failed - [" ++ CurDateTime ++ "]"),
+			LastRes = "error"	
+	end,
+
+	LastRes.		
+
+set_session(UserID, UniqueID, Permissions, Res) ->
+			
+	UserSession = #user_session{
+					app = css_login,
+					name = css_common:toString(UserID), 
+					uniqid = css_common:toString(UniqueID),
+					permissions = Permissions,
+					display_name = css_common:toString(UserID)
+				}, 
+					
+	SessionCookie = yaws_api:new_cookie_session(UserSession),
+
+	SessionCookie.
+
+</erl>
+
+<!----------------------------Fancy Box-------------------------------->
+<script type="text/javascript" src="css/source/jquery.fancybox.js?v=2.1.5"></script>
+<script type="text/javascript">
+		$(function () {
+			//iCheck for checkbox and radio inputs
+			$('input[type="checkbox"].minimal, input[type="radio"].minimal').iCheck({
+			  checkboxClass: 'icheckbox_minimal-blue',
+			  radioClass: 'iradio_minimal-blue'
+			});
+		});
+		
+		$(document).ready(function() {
+			
+			$('.fancybox').fancybox({
+				wrapCSS    : 'fancybox-custom', 
+				'width'         : 200,
+				'height'        : 100,				
+
+				openEffect : 'elastic',
+				openSpeed  : 150,
+
+				closeEffect : 'elastic',
+				closeSpeed  : 150
+			});
+
+		});
+</script>
+<!----------------------------Fancy Box--------------------------------> 
+
+</body>
+</html>

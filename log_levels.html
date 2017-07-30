@@ -1,0 +1,175 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="js/application.js"></script>
+<script type="">
+   document.write(objApp.getHeader());
+</script>
+<!-- load all js/css and other stuff -->
+<script type="text/javascript" src="js/other_conf_manager.js"></script>
+<body>
+
+	<script type="">
+      document.write(objApp.getTopBanner());
+   </script>
+	<!-- Printing top banner & login check -->
+
+	<div class="InBody">
+		<div class="InBodyIn">
+			<script type="">
+            document.write(objApp.getMainMenu());
+         </script>
+			<!-- Left Main Menu -->
+			<div class="bodyMid">
+				<div class="bodytopic">Configurations</div>
+				<div class="bodytopic-Sub">General Configurations</div>
+				<div id='flash-msg'></div>
+				<div class="bodyMid_cont">
+					<div class="bodytopic-Sub">
+						<table id="common-tbl" width="100%" border="0" align="center" cellpadding="0" cellspacing="0" class="insert">
+							<tr>
+								<td align="right">					
+									<input type="submit"
+										   name="export_csv" 
+										   id="export_csv" 
+										   value="Export All" />
+								</td>	
+							</tr>
+						</table>
+					</div>					
+					<div class="bodytopic-Sub1" id="common-head">Common Configurations</div>
+					<form name="frm_conf" id="frm_conf" action="">
+					<input type="hidden" id="charge_thrs" value="5000">
+						<div class="bdfill">							
+							<table id="common-tbl" width="82%" border="0" align="center" cellpadding="0"
+								cellspacing="0" class="insert">
+								<tr>
+									<td width="30%">Local APN<span class="required-field"></span></span></td>
+									<td width="20%" align="left">
+									<input type="text"
+										name="local_apn" id="local_apn"
+										data-validation-engine="validate[required,custom[onlyLetterNumber]]"
+										style="width: 80%" maxlength="10" />&nbsp
+									</td>
+									<td width="20%" align="right">SMS From<span class="required-field"></span></td>
+									<td width="20%" align="left"><input type="text"
+										name="sms_from" id="sms_from"
+										data-validation-engine="validate[required,custom[onlyLetterNumber]]"
+										style="width: 80%" maxlength="15" /></td>
+									<td width="20%"></td>	
+								</tr>
+								<tr>
+									<td>VLR GT<span class="required-field"></span></span></td>
+									<td align="left"><input type="text"
+										name="vlr_gt" id="vlr_gt"
+										data-validation-engine="validate[required,custom[integer],minSize[8],min[0]]"
+										style="width: 80%" maxlength="15"/>&nbsp
+									</td>
+									<td align="right">HLR GT<span class="required-field"></span></td>
+									<td align="left"><input type="text"
+										name="hrl_gt" id="hrl_gt"
+										data-validation-engine="validate[required,custom[integer],minSize[8],min[0]]"
+										style="width: 80%" maxlength="15"/>&nbsp</td>
+									<td></td>
+								</tr>
+								<tr>
+									<td>SGSN GT<span class="required-field"></span></span></td>
+									<td align="left"><input type="text"
+										name="sgsn_gt" id="sgsn_gt"
+										data-validation-engine="validate[required,custom[integer],minSize[8],min[0]]"
+										style="width: 80%" maxlength="15"/>&nbsp
+									</td>
+									<td align="right">Translation Type</td>
+									<td align="left"><input type="text"
+										name="trans_type" id="trans_type"
+										data-validation-engine="validate[required,custom[integer]]"
+										style="width: 80%" maxlength="5"/></td>
+									<td></td>									
+								</tr>	
+											
+								<tr>
+									<td height="10"></td>
+									<td></td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>
+								<tr>
+									<td></td>
+									<td align="left">
+									<input type="submit"
+										name="update_common" id="update_common" value="Update" /></td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>								
+							</table>
+		
+						</div>	
+
+					</form>
+
+						<div class="bodytopic-Sub1" id="sub-head">Subscribed User Configurations</div>	
+					<form name="frm_subscribed_conf" id="frm_subscribed_conf" action="">	
+						<div class="bdfill">
+							<table id="sub-tbl" width="82%" border="0" align="center" cellpadding="0"
+								cellspacing="0" class="insert">
+								<tr>
+									<td width="30%">Virtual Number Re-Allocation period<span class="required-field"></span></td>
+									<td width="20%" align="left"><input type="text"
+											name="virtual_no" id="virtual_no"
+											data-validation-engine="validate[required,custom[integer],min[0]]"
+											style="width: 30%" maxlength="3"/>&nbsp <span id="txt2">Days</span>
+									</td>
+									<td width="20%">Credit Expire Timeout<span class="required-field"></span></td>
+									<td width="30%" align="left">
+									<input type="text"
+											name="credit_timeout" id="credit_timeout"
+											data-validation-engine="validate[required,custom[integer],min[0]]"
+											style="width: 30%" maxlength="3" />&nbsp Days
+									</td>
+								</tr>								
+								<tr>
+									<td>Idle deactivation timeout<span class="required-field"></span></span></td>
+									<td align="left"><input type="text"
+										name="deact_timeout" id="deact_timeout"
+										data-validation-engine="validate[required,custom[integer],min[0]]"
+										style="width: 30%" maxlength="3" />&nbsp Days
+									</td>
+									<td>Recharge Timeout<span class="required-field"></span></td>
+									<td align="left">
+									<input type="text"
+											name="recharge_timeout" id="recharge_timeout"
+											data-validation-engine="validate[required,custom[integer],min[0]]"
+											style="width: 30%" maxlength="3" />&nbsp Days
+									</td>
+								</tr>
+							
+								<tr>
+									<td height="10"></td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>
+								<tr>
+									<td></td>
+									<td align="left"><input type="submit"
+										name="update_prof" id="update_sub_mgt" value="Update" /></td>
+									<td></td>
+									<td></td>
+								</tr>								
+							</table>
+														
+						</div>						
+						
+						</form>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript">
+		document.write(objApp.getFooter());
+	</script>
+	<!-- Printing footer -->
+</body>
+</html>

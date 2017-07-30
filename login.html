@@ -1,0 +1,72 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="js/application.js"></script>
+<script>
+	document.write(objApp.getHeader());
+</script>
+<!-- load all js/css and other stuff -->
+<script type="text/javascript" src="js/user_manager.js"></script>
+<body>
+	<div class="Log-header">
+		<div class="headlogo">
+			<div class="rightlogo"></div>
+		</div>
+	</div>
+	<div class="glowspot">
+		<div id='flash-msg'></div>
+	</div>
+
+	<div class="logBody">
+		<div class="adbanner">
+			<h1>Admin Login</h1>
+			Enter your user name and password
+		</div>
+		<div class="loginfo2">
+			<form id="frm_login" name="frm_login">
+				<table cellspacing="1" class="logtext" border="0">
+					<tr>
+						<th height="16">User name</th>
+						<th height="16">Password</th>
+						<th width="100" rowspan="3" align="left"><input
+							type="submit" name="login" id="login" value="Login" />
+						</th>
+						<tr>
+							<td height="16"><input type="text" name="username"
+								data-validation-engine="validate[required] text-input"
+								id="username" style="width: 137px" />
+							</td>
+							<td height="16"><input type="password" name="password"
+								data-validation-engine="validate[required] text-input"
+								id="password" style="width: 137px" />
+							</td>
+						</tr>
+						<tr>
+							<td height="16"></td>
+							<td height="16"></td>
+						</tr>
+						<tr>
+							<td class="text1"><img src="images/bulletBlk.png" width="6"
+								height="6" /> <a href="#" onClick="objUser.forgotPassword()">Forgot Password ?</a>
+							</td>
+							<td height="16" align="left" valign="top" class="text1"></td>
+							<td height="16" align="left" valign="top" class="text1"></td>
+						</tr>
+				</table>
+				<div id="view_dialog" title="Forgot Password">
+                     <div id="view-forgot-pw"></div>
+                    </div>
+			</form>
+		</div>
+		<div class="loginfo3">With the Unrelenting rise of Voip Services
+			Placing ever increasing Pressures on traditional revenue streams, it
+			is pivotal that operators extend across their own subscriber base and
+			capitalize on the highly lucrative international calling and roaming
+			revenue streams.</div>
+	</div>
+	<script>
+		document.write(objApp.getFooter());
+	</script>
+	<!-- Printing footer -->
+</body>
+</html>

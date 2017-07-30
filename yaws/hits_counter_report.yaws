@@ -1,0 +1,161 @@
+<erl>
+-export([out/1, hits_count/3]).
+
+-include("ivr_conf.hrl").
+out(Arg) ->
+   Method = method(Arg),
+   error_logger:info_msg("~p:~p ~p Request~n",[?MODULE, ?LINE, Method ]),  
+   handle(Method, Arg). 
+
+method(Arg) ->
+   Rec = Arg#arg.req,
+   Rec#http_request.method.
+   
+handle('GET', Arg) ->
+   error_logger:info_msg("~p:~p Enter into GET method~n",[?MODULE, ?LINE]);   
+
+handle('POST', Arg) ->
+	{ok,[RequestData|[SessionData]],_} = rfc4627:decode(Arg#arg.clidata),   
+	Action = binary_to_list(rfc4627:get_field(RequestData, "action", <<>>)),    
+	RecSessionData = #session_data
+	{
+		username = ivr_common:toString(ivr_session:get_sess("name", Arg)),
+		uniqid   = ivr_common:toString(ivr_session:get_sess("uniqid", Arg))
+	},
+	%ivr_logger:debug(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Request:" ++ binary_to_list(Arg#arg.clidata)),
+	hits_count(Action, RequestData, RecSessionData).
+
+hits_count("GET_REPORT_DATA", RequestData, RecSessionData) ->
+	Type = list_to_atom(string:to_lower(binary_to_list(rfc4627:get_field(RequestData, "type", <<>>)))),
+	LogType=list_to_atom(binary_to_list(rfc4627:get_field(RequestData, "log_type", <<>>))),
+	FromDate = binary_to_integer(rfc4627:get_field(RequestData, "from_date", <<>>)), 
+	ToDate = binary_to_integer(rfc4627:get_field(RequestData, "to_date", <<>>)), 
+	SearchingCategory=list_to_atom(binary_to_list(rfc4627:get_field(RequestData, "searching_category", <<>>))),
+	SearchData = binary_to_list(rfc4627:get_field(RequestData, "search_data", <<>>)), 
+	RequestsData=[list_to_atom(binary_to_list(rfc4627:get_field(RequestData, "request_data", <<>>)))],
+	GraphType=binary_to_list(rfc4627:get_field(RequestData, "graph_type", <<>>)), 
+	SearchDataList=make_search_data(string:tokens(SearchData,"|"),[]),
+	ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "search for "++atom_to_list(SearchingCategory)++" report"), 
+	case SearchDataList of
+		[[]] ->
+			ValidatedSearchDataList=[];
+		SearchDataList->
+			ValidatedSearchDataList=SearchDataList
+	end,
+	error_logger:info_msg("FINAL SEARCH LIST ~p",[SearchDataList]), 
+	erlang:set_cookie(?IVR_REPORT_NODE,?IVR_REPORT_COOKIE ),
+	case ivr_mediator:call(?IVR_REPORT_NODE, ?IVR_REPORT_MOD,  get_report_data,[Type,LogType,FromDate,ToDate,SearchingCategory,ValidatedSearchDataList,RequestsData]) of
+		
+%		case {ok,{{date_time,data_set}, [{16030613,[{total_tps,17},{peak,1},{average,1}]},{16030616,[{total_tps,196},{peak,2},{average,1}]}, {16030614,[{total_tps,108},{peak,2},{average,1}]}]}}   of
+		
+		{ok,[]} ->
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Get empty result for report search"),
+			Response =[{obj,[{status, <<"error">>},{reason, <<"No results found">>}]}];
+		
+		{ok,Result} ->
+			{Types,Results}=Result,
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Get  result for report search"),
+			Size=length(Results),
+			error_logger:info_msg("~p~n size",[Size]),
+		if
+			 Size<?MAX_RESULT_SET_SIZE orelse SearchingCategory==qos_report ->
+				if 
+					LogType == chan_utilization ->
+						error_logger:info_msg("chan_utilization"),
+						ProccessedResult = convert_circuit_result_data(Results,[]);
+					true ->
+						ProccessedResult = convert_result_data(Results,[])
+				end,
+				Response =ProccessedResult;
+			true->
+				ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Too much data found."),
+				Response=[{obj,[{status, <<"error">>},{reason,  <<"Use more filter to reduce the amount of data">>}]}]
+		end;
+		{error, Reason} ->
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "internal server error   when search for reports"),
+			error_logger:info_msg("enter in to error case"), 
+			Response = [{obj,[{status, <<"error">>},{reason, list_to_binary("errorr !")}]}];
+		_->	
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "internal server error   when search for reports"),	
+			Response = [{obj,[{status, <<"error">>},{reason, <<"An error occured">>}]}]
+			end,
+	{ehtml, rfc4627:encode(Response)};
+
+hits_count("EXPORT_CSV", RequestData, RecSessionData) ->
+	error_logger:info_msg("enter in to csv export ~n"), 
+	FileName =binary_to_list(rfc4627:get_field(RequestData, "name", <<>>)),	
+	CsvFile = ?TMP_PATH ++ FileName,
+	CsvUrl = ?TMP_URL ++ FileName,
+	Head = binary_to_list(rfc4627:get_field(RequestData, "message", <<>>)),	
+	error_logger:info_msg("get input data  ~p~n",[Head]), 		
+	case catch file:open(CsvFile, [read,write,append]) of
+		{ok, IoDevice}	->
+			error_logger:info_msg("file open ~n"), 	
+			file:write(IoDevice, Head),
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "export csv file of "++CsvUrl),
+			Response = [{obj,[{status, <<"ok">>},{message, <<"CSV File Created">>},{csv_url, list_to_binary(CsvUrl)}]}],
+			file:close(IoDevice);
+		_Else ->
+		ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "failed to export "++CsvUrl),				
+			error_logger:info_msg("can not open file ~n"),
+			Response = [{obj,[{status, <<"fail">>},{message, <<"CSV File Create Failed">>}]}]
+	end,
+	error_logger:info_msg("jsut return the out put ~n"),
+	{ehtml, rfc4627:encode(Response)}.
+make_search_data([],Result)->
+	Result;
+make_search_data([H|Rest],Result)->	
+	error_logger:info_msg("enter in to MAKE_SERCH_DATA ~n"), 
+	make_search_data(Rest,Result++[get_sub_list(string:tokens(H,"#"),[])]).
+
+get_sub_list([],Result)->
+	Result;
+get_sub_list([H|Rest],Result)->
+	error_logger:info_msg("Sub category ~p",[H]),
+	Data=string:tokens(H,":"),
+	Length=length(Data),
+	Name=list_to_atom(lists:nth(1,Data)),
+	if
+		Length==1 ->
+			SubData=[];
+		Name==shortcode ->
+			SubData=[{list_to_atom(lists:nth(1,Data)),[E|| E <-string:tokens(lists:nth(2,Data),",")]}];
+		true ->
+			SubData=[{list_to_atom(lists:nth(1,Data)),list_to_atom(lists:nth(2,Data))}]
+	end,
+	get_sub_list(Rest,Result++SubData).
+
+
+convert_result_data([],Result)->
+	Result;
+convert_result_data([H|Rest],Result)->
+	{ShortCode,TimeDigit,Data}=H,
+	JData=convert_sub_list(Data,[]),
+	JsonData={obj,[{short_code, ivr_common:toBinary(ShortCode)},{time_digit, ivr_common:toBinary(TimeDigit)},{data,[{obj,JData}]}]},
+	convert_result_data(Rest,Result++[JsonData]).
+
+convert_sub_list([],Result)->
+	Result;
+
+convert_sub_list([H|Rest],Result)->	
+	error_logger:info_msg("Sub List ~p",[H]),
+	JData={element(1,H), ivr_common:toBinary(element(2,H))},
+	convert_sub_list(Rest,Result++[JData]).
+	
+
+convert_circuit_result_data([],Result)->
+	error_logger:info_msg("Result ~p",[Result]),
+	Result;
+convert_circuit_result_data([H|Rest],Result)->
+	error_logger:info_msg("List ~p",[H]),
+	{TimeDigit,Data}=H,
+	JData=convert_sub_list(Data,[]),
+	JsonData={obj,[{time_digit, ivr_common:toBinary(TimeDigit)},{data,[{obj,JData}]}]},
+	convert_circuit_result_data(Rest,Result++[JsonData]).
+
+
+
+</erl>
+
+
+

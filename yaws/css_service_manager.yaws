@@ -1,0 +1,142 @@
+<erl module=css_service_manager>
+-export([out/1, manage_service/4]).  
+
+-include("css_conf.hrl"). 
+-include("css_api.hrl").
+
+out(Arg) ->
+   Method = method(Arg),
+   error_logger:info_msg("~p:~p ~p Request~n",[?MODULE, ?LINE, Method ]),  
+   handle(Method, Arg). 
+
+method(Arg) ->
+   Rec = Arg#arg.req,
+   Rec#http_request.method.
+   
+handle('GET', Arg) ->
+
+   case css_session:get_sess("name", Arg) of		
+		{error,no_session} ->
+			Response = <<"logout">>,
+			{ehtml, rfc4627:encode(Response)};	
+		Name ->	
+			C = (Arg#arg.headers)#headers.cookie,
+			SessionID = yaws_api:find_cookie_val(?SESSION_NAME, C),
+			{ok, SessionData} = yaws_api:cookieval_to_opaque(SessionID),	
+			{ok, Action} = yaws_api:getvar(Arg, "action"),
+		
+			RecSessionData = #session_data
+			{
+				username = css_common:toString(css_session:get_sess("name", Arg)),
+				uniqid   = css_common:toString(css_session:get_sess("uniqid", Arg))
+			},
+			manage_service(Action, SessionData, RecSessionData, Arg)
+   end;
+
+handle('POST', Arg) -> 
+
+	error_logger:info_msg("Action ------- - ~p:~n",["dd"]),
+
+	case css_session:get_sess("name", Arg) of		
+		{error,no_session} ->
+			Response = <<"logout">>,
+			{ehtml, rfc4627:encode(Response)};	
+		Name ->		
+			{ok,[RequestData|[SessionData]],_} = rfc4627:decode(Arg#arg.clidata), 						
+			Action = binary_to_list(rfc4627:get_field(RequestData, "action", <<>>)),  		
+			RecSessionData = #session_data
+			{
+				username = css_common:toString(css_session:get_sess("name", Arg)),
+				uniqid   = css_common:toString(css_session:get_sess("uniqid", Arg))
+			},
+			manage_service(Action, RequestData, RecSessionData, Arg)
+	end.
+	
+-spec manage_service(MethodPrefix :: '"CREATE"' , 
+				RequestData :: list(), RecSessionData :: session_data(), Arg :: any()) -> {ehtml, Response :: list()}.
+
+%%		
+%% Create Service
+%%
+manage_service("CREATE", RequestData, RecSessionData, Arg) ->
+
+	Service_name 		= 	binary_to_list(rfc4627:get_field(RequestData, "service_name", <<>>)),
+	Mo_code 			= 	binary_to_list(rfc4627:get_field(RequestData, "mo_code", <<>>)),
+	Description 		= 	binary_to_list(rfc4627:get_field(RequestData, "description", <<>>)),
+	Mt 					= 	binary_to_list(rfc4627:get_field(RequestData, "mt", <<>>)),
+	Provider 			= 	binary_to_list(rfc4627:get_field(RequestData, "provider", <<>>)),
+	Operator 			= 	binary_to_list(rfc4627:get_field(RequestData, "operator", <<>>)),
+	Effective_date 		= 	binary_to_list(rfc4627:get_field(RequestData, "effective_date", <<>>)),
+	Expiry_date 		= 	binary_to_list(rfc4627:get_field(RequestData, "expiry_date", <<>>)),
+	Subscribe_keyword 	= 	binary_to_list(rfc4627:get_field(RequestData, "subscribe_keyword", <<>>)),
+	Unsubscribe_keyword = 	binary_to_list(rfc4627:get_field(RequestData, "unsubscribe_keyword", <<>>)),
+	Sms_lang 			= 	binary_to_list(rfc4627:get_field(RequestData, "sms_lang", <<>>)),
+	Sender 				= 	binary_to_list(rfc4627:get_field(RequestData, "sender", <<>>)),
+	Blacklist 			= 	binary_to_list(rfc4627:get_field(RequestData, "blacklist", <<>>)),
+	Servicegroup_Id		=	binary_to_list(rfc4627:get_field(RequestData, "servicegroup_id", <<>>)),
+	
+	Username			= 	css_common:toString(css_session:get_sess("name", Arg)),
+
+	Sql = "INSERT INTO service ( service_name, description, servicegroup_id, provider_id, operator_id, service_code, effective_dttm, expire_dttm, sms_lang, sms_sender, created_user, created_dttm,  update_user ) VALUES (  '"++ Service_name ++"', '"++ Description ++"', "++ Servicegroup_Id ++" , "++ Provider ++", "++ Operator ++", '"++ Mo_code ++"', '"++ Effective_date ++"', '"++ Expiry_date ++"', '"++ Sms_lang ++"', '"++ Sender ++"', '"++ Username ++"', NOW(), '"++ Username ++"')",
+	
+	error_logger:info_msg("SQL - ~p:~n",[Sql]),
+	
+	case css_mysql_odbc:connect() of  
+		{ok,Ref} ->	
+		   Ret = css_mysql_odbc:sql_query(Ref, Sql),  
+		   error_logger:info_msg("Ret - ~p:~n",[Ret]), 
+		   case Ret of  
+				{updated,1} ->
+				
+					Sql_get_latest = "SELECT service_id FROM service ORDER BY created_dttm DESC LIMIT 1",
+					Ret1 = css_mysql_odbc:sql_query(Ref, Sql_get_latest),
+					
+					case Ret1 of  
+						{selected, FieldName, [{ServiceId}]} ->
+							case insert_MT_to_db(ServiceId, Username, Ref, string:tokens(Mt, ","), []) of 
+								[] ->
+									Response = [{obj,[{status, <<"ok">>},{message, <<"Service Created Successfully">>}]}];
+								_ ->
+									Response = [{obj,[{status, <<"ok">>},{message, <<"Service Failed in Loop">>}]}]
+							end;
+						{error,Reason} ->				
+							css_logger:info(RecSessionData, "Service Manager : Service Adding Failed : " ++ css_common:toString(Reason)),	
+							Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+						_ ->				
+							css_logger:info(RecSessionData, "Service Manager : Service Adding Failed : Bad Rpc"),	
+							Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]	
+					end;
+				{error,Reason} ->				
+					css_logger:info(RecSessionData, "Service Manager : Service Adding Failed : " ++ css_common:toString(Reason)),	
+					Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+				_ ->				
+					css_logger:info(RecSessionData, "Service Manager : Service Adding Failed : Bad Rpc"),	
+					Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+				end,
+				css_mysql_odbc:disconnect(Ref);	
+		{error,Reason} ->				
+			css_logger:info(RecSessionData, "Service Manager : Service Adding Failed : " ++ css_common:toString(Reason)),	
+			Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+		_ ->				
+			css_logger:info(RecSessionData, "Service Manager : Service Adding Failed : Internal Error"),	
+			Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+		end,
+		
+	{ehtml, rfc4627:encode(Response)}.
+	
+	
+insert_MT_to_db(ServiceId, Username, Ref, [], RecordList) ->
+	RecordList;	
+
+insert_MT_to_db(ServiceId, Username, Ref, [Row|Rest], RecordList) ->  
+	
+	Sql_insert_service_mt = "INSERT INTO service_mt ( service_id, mt_code, created_user ) VALUES ( "++ css_common:toString(ServiceId) ++", \'"++ Row ++"\', \'"++Username++"\' )",
+	Ret2 = css_mysql_odbc:sql_query(Ref, Sql_insert_service_mt),
+	
+	error_logger:info_msg("Special Logger - ~p:~n",[ServiceId]),
+	error_logger:info_msg("Special Logger_Response - ~p:~n",[Ret2]),
+	
+	UpdatedList = lists:delete(Row, RecordList),
+	insert_MT_to_db(ServiceId, Username, Ref, Rest, UpdatedList).
+
+</erl>

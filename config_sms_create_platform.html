@@ -1,0 +1,169 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+
+<!-- *#__dan__#* application js *#__dan__#* -->
+<script type="text/javascript" src="js/application.js"></script>
+<!-- *#__dan__#* application js *#__dan__#* -->
+<script type="text/javascript">	
+	document.write(objApp.getHeader());
+</script>
+<!-- load all js/css and other stuff -->
+
+<!-- *#__dan__#* live_circuit_util js *#__dan__#* -->
+<script type="text/javascript" src="js/manage_provider.js"></script>
+<!-- *#__dan__#* live_circuit_util js *#__dan__#* -->
+
+<!-- *#__dan__#* styles *#__dan__#* -->
+	<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+	<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+	<!--[if lt IE 9]>
+	<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+	<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+	<![endif]-->
+<!-- *#__dan__#* styles *#__dan__#* -->
+
+
+<body class="hold-transition skin-blue sidebar-mini">
+
+	<div class="wrapper">
+
+		<!-- Top menu bar with Branding -->
+		<script type="text/javascript">		
+			document.write(objApp.getTopBanner()); 
+		</script>
+		
+		<!-- Content Wrapper. Contains page content -->
+		<div class="content-wrapper">
+			
+			<!-- Content Header (Page header) -->
+			<section class="content-header">
+			  <h1>
+				Create SMS Platform
+				<small>Configuration &#62; SMS</small>
+			  </h1>
+			  <ol class="breadcrumb">
+				<li><a href="home"><i class="fa fa-home"></i> Home</a></li>
+				<li><i class="fa fa-bar-chart"></i> Configuration</li>
+				<li><i class="fa fa-bar-chart"></i> SMS</li>
+				<li class="active">Create SMS Platform</li>
+			  </ol>
+			</section>
+			
+			<!-- Main content -->
+			<section class="content">
+				
+				<div class="row">
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<div class="box">
+							<div id='flash-msg'></div>
+							<div class="box-header with-border">
+								<h3 class="box-title">SMS Platform Detail</h3>
+							</div>
+							<div class="box-body">
+								<form class="form-horizontal" name="frm_provider" id="frm_provider"> 
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label for="sms_platf_name" class="col-sm-4 control-label">SMS Platform Name <span class="req-fld">*</span></label>
+													<div class="col-sm-8">
+														<input type="text" class="form-control" placeholder="SMS Platform Name" id="sms_platf_name" name="sms_platf_name" title="Enter SMS Platform Name" data-validation-engine="validate[required,custom[integer]]"> 
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label for="sms_platf_desc" class="col-sm-4 control-label">Description</label>
+													<div class="col-sm-8">
+														<textarea class="form-control" rows="3" placeholder="Description" id="sms_platf_desc" name="sms_platf_desc" title="Enter Description"></textarea>
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" >
+													<label for="ip" class="col-sm-4 control-label">IP <span class="req-fld">*</span></label>
+													<div class="col-sm-8">
+														<input type="text" class="form-control" placeholder="IP" id="ip" name="ip" title="Enter IP" data-validation-engine="validate[required,custom[integer]]"> 
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" >
+													<label for="port" class="col-sm-4 control-label">Port <span class="req-fld">*</span></label>
+													<div class="col-sm-8">
+														<input type="text" class="form-control" placeholder="Port" id="port" name="port" title="Enter Port" data-validation-engine="validate[required,custom[integer]]"> 
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" >
+													<label for="sys_id" class="col-sm-4 control-label">System ID <span class="req-fld">*</span></label>
+													<div class="col-sm-8">
+														<input type="text" class="form-control" placeholder="System ID" id="sys_id" name="sys_id" title="Enter System ID" data-validation-engine="validate[required,custom[integer]]"> 
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" >
+													<label for="password" class="col-sm-4 control-label">Password <span class="req-fld">*</span></label>
+													<div class="col-sm-8">
+														<input type="text" class="form-control" placeholder="Password" id="password" name="password" title="Enter Password" data-validation-engine="validate[required,custom[integer]]"> 
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" >
+													<label for="sys_typ" class="col-sm-4 control-label">System Type <span class="req-fld">*</span></label>
+													<div class="col-sm-8">
+														<input type="text" class="form-control" placeholder="System Type" id="sys_typ" name="sys_typ" title="Enter System Type" data-validation-engine="validate[required,custom[integer]]"> 
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-12 col-sm-12 col-xs-12">
+												<div class="box-footer"> 
+													<button type="submit" class="btn btn-primary pull-right btnspace" name="create_provider" id="create_provider">Save</button>
+												</div>
+											</div>
+										</div>						
+									</div>
+								</form> 
+							</div>
+						</div>
+					</div>
+				</div>
+				
+			</section>
+			<!-- /.content -->
+			
+		</div>
+		<!-- /.content-wrapper -->
+
+		<script>
+			document.write(objApp.getFooter());
+		</script>
+		<!-- Printing footer -->
+	
+	</div>
+	<!-- ./wrapper -->
+	
+</body>
+</html>

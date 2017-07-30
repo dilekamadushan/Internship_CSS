@@ -1,0 +1,345 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+
+<!-- *#__dan__#* application js *#__dan__#* -->
+<script type="text/javascript" src="js/application.js"></script>
+<!-- *#__dan__#* application js *#__dan__#* -->
+<script type="text/javascript">	
+	document.write(objApp.getHeader());
+</script>
+<!-- load all js/css and other stuff -->
+
+<!-- *#__dan__#* live_circuit_util js *#__dan__#* -->
+<script type="text/javascript" src="js/log_search.js"></script>
+<!-- *#__dan__#* live_circuit_util js *#__dan__#* -->
+
+<!-- *#__dan__#* styles *#__dan__#* -->
+	<style>
+		div#mts_wrapper {
+			padding-bottom:50px;
+			background: #F2F2F2;
+		}
+
+		div#mts_length {
+			padding:10px; 
+			ont-style: normal;
+			font-size: 14px; 
+		}
+
+		div#mts_filter {
+			padding:10px;
+			ont-style: normal;
+			font-size: 14px; 
+		}
+		div#mts_info {
+			padding-left:15px; 
+			font-style: normal;
+			font-size: 14px;
+		}
+
+		div#mts_paginate {
+			padding-right:15px;
+		}
+	</style>
+	<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+	<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+	<!--[if lt IE 9]>
+	<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+	<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+	<![endif]-->
+<!-- *#__dan__#* styles *#__dan__#* -->
+
+
+<body class="hold-transition skin-blue sidebar-mini" onload="onloadFunc()">
+
+	<div class="wrapper">
+
+		<!-- Top menu bar with Branding -->
+		<script type="text/javascript">		
+			document.write(objApp.getTopBanner()); 
+		</script>
+		
+		<!-- Content Wrapper. Contains page content -->
+		<div class="content-wrapper">
+			
+			<!-- Content Header (Page header) -->
+			<section class="content-header">
+			  <h1>
+				CDR Log Search
+				<small>Reports and Logs</small>
+			  </h1>
+			  <ol class="breadcrumb">
+				<li><a href="home"><i class="fa fa-home"></i> Home</a></li>
+				<li><i class="fa fa-bar-chart"></i> Reports &amp; Logs</li>
+				<li class="active">CDR Log Search</li>
+			  </ol>
+			</section>
+			
+			<!-- Main content -->
+			<section class="content">
+				
+				<div class="row">
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<div class="box">
+							<div class="box-body no-padding">
+								<div class="callout callout-info">
+									<p>User able to select maximum, one hour period of time for searching</p>
+								</div>
+								<script type="">
+									$("#limitedRange").html(config.log_search_maximum_range_in_word);
+								</script>
+								<div id='flash-msg'></div>
+								<div id="dialog-confirm" title="Alert" style="display: none;">
+									<p>
+										<span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>
+										<span id="viewMsg"></span>
+									</p>
+								</div>
+								
+								<form class="form-horizontal" name="frm_log" id="frm_log">
+									<input type="hidden" name="log_type" id="log_type" value="ivr_cdr_log"/>
+									<div class="row">
+										<div class="box-body pad-frm-top">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label class="col-sm-4 control-label">Select Time Range <span class="req-fld">*</span></label>
+													<div class="col-sm-8">
+														<div class="input-group">
+															<div class="input-group-addon">
+																<i class="fa fa-clock-o"></i>
+															</div>
+															<input type="text" class="form-control pull-right" id="reservationtime" data-validation-engine="validate[required]">
+														</div>
+													</div>
+												</div>
+												<div class="form-group">
+													<label class="col-sm-4 control-label">Event Type</label>
+													<div class="col-sm-8">
+														<select class="form-control" id="cdr_event_type" name="cdr_event_type">
+															<script type="text/javascript">
+																objLog.getCdrEventType();
+															</script>
+														</select>
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label class="col-sm-4 control-label">Server ID</label>
+													<div class="col-sm-8">
+														<select class="form-control" id="server_id" name="server_id" >
+															<script type="text/javascript">
+																objLog.getServerId();
+															</script>
+														</select>
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label class="col-sm-4 control-label">Session ID</label>
+													<div class="col-sm-8">
+														<input type="text" class="form-control" placeholder="Session ID" id="session_id" name="session_id" data-validation-engine="validate[maxSize[50]]">
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label class="col-sm-4 control-label">Channel</label>
+													<div class="col-sm-8">
+														<input type="text" class="form-control" placeholder="Channel" id="channel" name="channel" data-validation-engine="validate[custom[onlyNumber],maxSize[4]]">
+													</div>
+												</div>
+											</div>
+											<div id="call_type-tr" class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label class="col-sm-4 control-label">Call Type</label>
+													<div class="col-sm-8">
+														<select class="form-control" id="call_type" name="call_type">
+															<script type="text/javascript">
+																objLog.getCallType();
+															</script>
+														</select>
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label class="col-sm-4 control-label">Call Category</label>
+													<div class="col-sm-8">
+														<select class="form-control" id="call_category" name="call_category">
+															<script type="text/javascript">
+																objLog.getCallCategory();
+															</script>
+														</select>
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label class="col-sm-4 control-label">Calling Party</label>
+													<div class="col-sm-8">
+														<input type="text" class="form-control" placeholder="Calling Party" id="calling" name="calling"  data-validation-engine="validate[maxSize[50]]">
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label class="col-sm-4 control-label">Called Party</label>
+													<div class="col-sm-8">
+														<input type="text" class="form-control" placeholder="Called Party" id="called" name="called" data-validation-engine="validate[maxSize[50]]">
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label class="col-sm-4 control-label">First Redirect Number</label>
+													<div class="col-sm-8">
+														<input type="text" class="form-control" placeholder="First Redirect Number" id="first_redirect_no" name="first_redirect_no" data-validation-engine="validate[maxSize[50]]">
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label class="col-sm-4 control-label">Last Redirect Number</label>
+													<div class="col-sm-8">
+														<input type="text" class="form-control" placeholder="Last Redirect Number" id="last_redirect_no" name="last_redirect_no" data-validation-engine="validate[maxSize[50]]">
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label class="col-sm-4 control-label">Required Result Fields</label>
+													<div class="col-sm-8">
+														<select multiple class="form-control" id="req_data">
+															<option value="" selected>All</option>
+															<option value="start_time">Start Time</option>
+															<option value="end_time">End Time</option>
+															<option value="server_ID">Server ID</option>
+															<option value="session_ID">Session ID</option>
+															<!-- <option value="type">Type</option> -->
+															<option value="calling">Calling Party</option>
+															<option value="called">Called Party</option>
+															<option value="calling_URI">Calling URI</option>
+															<option value="called_URI">Called URI</option>
+															<option value="product_channel">Product Channel</option>
+															<option value="direction">Direction</option>
+															<option value="answer_time">Answer Time</option>
+															<option value="cell">Cell</option>
+															<option value="first_redirect">First Redirect</option>
+															<option value="last_redirect">Last Redirect</option>
+															<option value="early_media">Early Media</option>
+															<option value="duration">Duration</option>
+															<option value="disconnected_reason">Disconnected Reason</option>
+															<option value="call_progress">Call Progress</option>
+														</select>
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-12 col-sm-12 col-xs-12">
+												<div class="box-footer">
+													<button type="submit" class="btn btn-primary pull-right btnspace" name="cdr_csv" id="cdr_csv">CSV</button>
+													<button type="submit" class="btn btn-primary pull-right btnspace" name="cdr_log_search" id="cdr_log_search">Search</button>
+												</div>
+											</div>
+										</div>						
+									</div>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<div class="box">
+							<div class="box-body no-padding">
+							
+								<div class="bdfill_tb">
+									<div id="wavenet_cam" class="ui-tabs-panel ui-widget-content ui-corner-bottom">					
+										<div  id="log_data_tbl"></div>
+										<input type="button" name="cdr_log_search_next" id="cdr_log_search_next" value="More" style="float: right; margin: 10px 5px 0 0;" />
+									</div>
+								</div>
+								
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<div id="alert" title="Result Not Found"></div>
+				<div id="viewAlert" title="Result Not Found"></div>
+
+				<!-- Dialog Box -->
+				<script>
+				$(document).ready(function() {
+					$("#alert").dialog({
+						modal: true
+					})
+					.dialog("widget")
+					.next(".ui-widget-overlay")
+					.css("background", "#000");
+
+					$("#viewAlert").dialog({
+						modal: true
+					})
+					.dialog("widget")
+					.next(".ui-widget-overlay")
+					.css("background", "#000");
+				});
+				</script>
+
+				<script>
+					$( "#alert" ).dialog({
+						autoOpen: false,
+						show: {
+							effect: "fade",
+							duration: 1000
+						},
+						hide: {
+							effect: "fade",
+							duration: 1000
+						}
+					});
+
+					$( "#viewAlert" ).dialog({
+						autoOpen: false,
+						show: {
+							effect: "fade",
+							duration: 1000
+						},
+						hide: {
+							effect: "fade",
+							duration: 1000
+						}
+					});
+				</script>
+		
+			</section>
+			<!-- /.content -->
+			
+		</div>
+		<!-- /.content-wrapper -->
+
+		<script>
+			document.write(objApp.getFooter());
+		</script>
+		<!-- Printing footer -->
+	
+	</div>
+	<!-- ./wrapper -->
+	
+	<script>
+		//Date range picker with time picker
+		$('#reservationtime').daterangepicker({timePicker: true, timePickerIncrement: 30, format: 'MM/DD/YYYY h:mm A'});
+	</script>
+	
+</body>
+</html>

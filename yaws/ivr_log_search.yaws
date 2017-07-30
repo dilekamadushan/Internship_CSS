@@ -1,0 +1,851 @@
+<erl>
+-export([out/1, log/4]).
+
+-include("ivr_conf.hrl").
+
+
+out(Arg) ->
+   Method = method(Arg),
+   error_logger:info_msg("~p:~p ~p Request~n",[?MODULE, ?LINE, Method ]), 
+   handle(Method, Arg). 
+
+%get request method type
+method(Arg) ->
+   Rec = Arg#arg.req,
+   Rec#http_request.method.
+   
+handle('GET', Arg) ->
+   error_logger:info_msg("~p:~p Enter into GET method~n",[?MODULE, ?LINE]);   
+
+handle('POST', Arg) ->
+	
+	{ok,[RequestData|[SessionData]],_} = rfc4627:decode(Arg#arg.clidata),   
+	Action = binary_to_list(rfc4627:get_field(RequestData, "action", <<>>)), 
+   
+	RecSessionData = #session_data
+	{
+		username = ivr_common:toString(ivr_session:get_sess("name", Arg)),
+		uniqid   = ivr_common:toString(ivr_session:get_sess("uniqid", Arg))
+	},	
+	
+	% Logging request data
+	%ivr_logger:debug(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Request:" ++ binary_to_list(Arg#arg.clidata)),
+	
+	log(Action, RequestData, RecSessionData, Arg).
+	
+
+log("ACT_SEARCH", RequestData, RecSessionData, Arg) ->
+	LogType 		= binary_to_list(rfc4627:get_field(RequestData, "log_type", <<>>)),
+	FromDate_ 		= binary_to_list(rfc4627:get_field(RequestData, "from_date", <<>>)),
+	ToDate_ 		= binary_to_list(rfc4627:get_field(RequestData, "to_date", <<>>)),
+	FromTs 			= binary_to_list(rfc4627:get_field(RequestData, "from_ts", <<>>)),	
+	ToTs		 	= binary_to_list(rfc4627:get_field(RequestData, "to_ts", <<>>)),	
+	SearchData_		= binary_to_list(rfc4627:get_field(RequestData, "search_data", <<>>)),
+	Data			= binary_to_list(rfc4627:get_field(RequestData, "data", <<>>)),	
+	Splitdata		= lists:map(fun(X)->list_to_atom(X) end,string:tokens(Data, ",")),
+	FromDate		= ivr_common:get_gregorian_timestamp(FromDate_),
+	ToDate			= ivr_common:get_gregorian_timestamp(ToDate_),
+	SrcData_		= SearchData_ ++ "|from_time," ++  ivr_common:toString(FromDate) ++ "|to_time," ++ ivr_common:toString(ToDate),
+	SData 			= string:tokens(SrcData_, "|"),
+	SearchRecord   	= get_search_data(SData, []),
+	Session_		= binary_to_list(rfc4627:get_field(RequestData, "session", <<>>)),
+	
+	if
+		Session_ == [] ->
+			LoginTime = calendar:datetime_to_gregorian_seconds(erlang:localtime()),
+			Session   = ivr_common:toString(LoginTime * random:uniform(9999)),
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Activity log search from "++FromDate_ ++" to "++ToDate_),
+			case Data of
+				"" ->
+					Ret = ivr_mediator:call(?CRS_REPORT_NODE, ?CRS_REPORT_SVR , get_activity_report,[Session, list_to_atom(LogType), list_to_integer(FromTs), list_to_integer(ToTs), SearchRecord, []]);
+				RequestFields ->
+					Ret = ivr_mediator:call(?CRS_REPORT_NODE, ?CRS_REPORT_SVR , get_activity_report,[Session, list_to_atom(LogType), list_to_integer(FromTs), list_to_integer(ToTs), SearchRecord, Splitdata])
+			end;			
+		true ->
+			Session   = Session_,
+			Ret = ivr_mediator:call(?CRS_REPORT_NODE, ?CRS_REPORT_SVR , get_activity_report,[Session])
+	end,	
+
+	case Ret of
+		{ok, [], eof} ->	
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "No activity log records."),
+			Response = [{obj,[{status, <<"error">>},{reason, <<"No records.">>}]}];
+		{ok,Res, State} ->			
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Some activity log records found."),
+			case Data of
+				"" ->
+					% Records  = get_activity_records(lists:reverse(lists:keysort(2, Res)), []),
+					Records  = map_tuples_api(lists:reverse(lists:keysort(1, Res)), list_to_tuple(?CRS_IVR_ACTIVITY_LOG_FIELDS), []),   
+					Response = [{obj,[{status, <<"ok">>},{message, Records}, {session, ivr_common:toBinary(Session)},{state, ivr_common:toBinary(State)}]}];
+				Else ->
+					Records  = map_tuples_api(lists:reverse(lists:keysort(1, Res)), list_to_tuple(Splitdata), []),  
+					Response = [{obj,[{status, <<"ok">>},{message, Records}, {session, ivr_common:toBinary(Session)}, {state, ivr_common:toBinary(State)}]}]
+			end;			
+		{error,no_matching_disklog} ->	
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "The selected date is not in range."),
+			Response = [{obj,[{status, <<"error">>},{reason, <<"No records.">>}]}];
+		_Error ->
+			ivr_logger:error(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, " internal server error"),	
+			Response = [{obj,[{status, <<"error">>},{reason, <<"Error..">>}]}]	
+	end,
+	
+	{ehtml, rfc4627:encode(Response)};
+
+%% Create/Update user
+log("ACT_SEARCH_CSV", RequestData, RecSessionData, Arg) ->
+
+	LogType 		= binary_to_list(rfc4627:get_field(RequestData, "log_type", <<>>)),
+	FromDate_ 		= binary_to_list(rfc4627:get_field(RequestData, "from_date", <<>>)),
+	ToDate_ 		= binary_to_list(rfc4627:get_field(RequestData, "to_date", <<>>)),
+	FromTs 			= binary_to_list(rfc4627:get_field(RequestData, "from_ts", <<>>)),	
+	ToTs		 	= binary_to_list(rfc4627:get_field(RequestData, "to_ts", <<>>)),	
+	SearchData_		= binary_to_list(rfc4627:get_field(RequestData, "search_data", <<>>)),
+	Data			= binary_to_list(rfc4627:get_field(RequestData, "data", <<>>)),	
+	Splitdata		= lists:map(fun(X)->list_to_atom(X) end,string:tokens(Data, ",")),	
+	FromDate		= ivr_common:get_gregorian_timestamp(FromDate_),
+	ToDate			= ivr_common:get_gregorian_timestamp(ToDate_),
+	LoginTime = calendar:datetime_to_gregorian_seconds(erlang:localtime()),
+	Session   = ivr_common:toString(LoginTime * random:uniform(9999)),
+
+	ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Activity log search Down load CSV from "++FromDate_ ++" to "++ToDate_),
+	
+	SrcData_		= SearchData_ ++ "|from_time," ++  ivr_common:toString(FromDate) ++ "|to_time," ++ ivr_common:toString(ToDate),
+	SData 			= string:tokens(SrcData_, "|"),
+	SearchRecord   	= get_search_data(SData, []),	
+
+	case Data of
+		"" ->
+			Ret = ivr_mediator:call(?CRS_REPORT_NODE, ?CRS_REPORT_SVR , export_search_data,[Session, list_to_atom(LogType), list_to_integer(FromTs), list_to_integer(ToTs), SearchRecord, []]);
+		RequestFields ->
+			Ret = ivr_mediator:call(?CRS_REPORT_NODE, ?CRS_REPORT_SVR , export_search_data,[Session,list_to_atom(LogType), list_to_integer(FromTs), list_to_integer(ToTs), SearchRecord, Splitdata])
+	end, 	
+			   
+	case Ret of
+		{ok,[]} ->	
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Activity log records not found."),
+			Response = [{obj,[{status, <<"error">>},{reason, <<"No records.">>}]}];	
+
+		{ok,FileName} ->	
+
+			CsvFile  = ?TMP_PATH ++ FileName,
+			CsvUrl   = ?TMP_URL ++ FileName,
+			Response = [{obj,[{status, <<"ok">>},{message, <<"CSV file created">>},{csv_url, list_to_binary(CsvUrl)}]}];
+
+		{error,no_matching_disklog} ->	
+			ivr_logger:error(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "The selected date is not in range."),
+			Response = [{obj,[{status, <<"error">>},{reason, <<"No records.">>}]}];			
+		_Error ->
+			ivr_logger:error(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Error " ++ ivr_common:toString(_Error)),	
+			Response = [{obj,[{status, <<"error">>},{reason, ivr_common:toBinary(_Error)}]}]	
+	end,
+	
+	{ehtml, rfc4627:encode(Response)};
+	
+%% Create/Update user
+log("LOG_SEARCH", RequestData, RecSessionData, Arg) ->  
+	FromDate= binary_to_list(rfc4627:get_field(RequestData, "search_date", <<>>)),
+	ToDate=	binary_to_list(rfc4627:get_field(RequestData, "search_to_date", <<>>)),
+	[GetDate, GetFromTime] =string:tokens(FromDate, " "),
+	[GetToDate, GetToTime] = string:tokens(ToDate, " "),
+	Keyword = binary_to_list(rfc4627:get_field(RequestData, "keyword", <<>>)),	
+	User = ivr_common:toString(ivr_session:get_sess("name", Arg)),
+	[Year,Month,Day] = string:tokens(GetDate, "/"),
+	[FrHour, FrMin, FrSec] = string:tokens(GetFromTime, ":"),
+	[ToYear, ToMonth, ToDay] = string:tokens(GetToDate, "/"),
+	[ToHour, ToMin, ToSec] = string:tokens(GetToTime, ":"),
+	Date = ivr_common:toString(Year) ++ ivr_common:toString(Month) ++ ivr_common:toString(Day),
+	LogFileDateSet = lists:seq(list_to_integer(Day), list_to_integer(ToDay)),
+	AdminLogNamesList = lists:map(fun(X) -> 
+						case string:len(ivr_common:toString(X)) < 2 of 
+							true ->
+								?LOG_PATH ++ ivr_common:toString(Year) ++ ivr_common:toString(Month) ++ "0" ++ ivr_common:toString(X) ++ ?LOG_FILE_PRIFIX ++ " ";
+							false ->
+								?LOG_PATH ++ ivr_common:toString(Year) ++ ivr_common:toString(Month) ++ ivr_common:toString(X) ++ ?LOG_FILE_PRIFIX ++ " "
+						end
+						end,
+						LogFileDateSet),
+
+	FilteredAdminLogList = lists:filtermap(fun(X) -> 
+								case filelib:is_file(string:strip(X, both, $ )) of 
+									true -> 
+										{true, X};
+									_ -> 
+										false 
+								end 
+							end, AdminLogNamesList),
+
+	LogTypeName = "Admin web action ",  
+	
+	if
+		User == "super_admin" ->		
+			Cmd = "awk '/" ++ Keyword ++ "/'  " ++ FilteredAdminLogList;
+		true ->
+			Cmd = "awk '/" ++ User ++ "/ && /" ++ Keyword ++ "/'  " ++ FilteredAdminLogList
+	end,
+	error_logger:error_msg("~p",[Cmd]),
+	case length(FilteredAdminLogList) > 0 of
+		true -> 
+			error_logger:info_msg("Passed~n"),
+			LogData = os:cmd(Cmd),
+				ivr_logger:debug(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, LogTypeName ++ " Log search - " ++ GetDate),
+			LogDataList = string:tokens(LogData, "\r\n"),	
+			case get_all_records(LogDataList, [], {{list_to_integer(Year), list_to_integer(Month), list_to_integer(Day)}, {list_to_integer(FrHour), list_to_integer(FrMin), list_to_integer(FrSec)}}, {{list_to_integer(ToYear), list_to_integer(ToMonth), list_to_integer(ToDay)}, {list_to_integer(ToHour), list_to_integer(ToMin), list_to_integer(ToSec)}}) of 
+				[] ->
+					ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid,  " Admin log records not found"),
+					Response = [{obj,[{status, <<"ok">>},{message, <<"">>}]}];
+				Results ->
+					ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid,  "Found some log records"),
+					Response = [{obj,[{status, <<"ok">>},{message, Results}]}]
+			end;
+		false ->
+			error_logger:info_msg("Failed~n"),
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Log file not exists"),
+			Response = [{obj,[{status, <<"error">>},{message, <<"Log file not exists">>}]}]
+	end,			
+		
+	{ehtml, rfc4627:encode(Response)};
+
+log("CDR_LOG_SEARCH", RequestData, RecSessionData, Arg) ->
+
+	LogType 		= binary_to_list(rfc4627:get_field(RequestData, "log_type", <<>>)),
+	FromDate_ 		= binary_to_list(rfc4627:get_field(RequestData, "from_date", <<>>)),
+	ToDate_ 		= binary_to_list(rfc4627:get_field(RequestData, "to_date", <<>>)),
+	FromTs 			= binary_to_list(rfc4627:get_field(RequestData, "from_ts", <<>>)),	
+	ToTs		 	= binary_to_list(rfc4627:get_field(RequestData, "to_ts", <<>>)),	
+	SearchData_		= binary_to_list(rfc4627:get_field(RequestData, "search_data", <<>>)),
+	ReqFields		= binary_to_list(rfc4627:get_field(RequestData, "search_fields", <<>>)),
+	ReqFieldsList	= string:tokens(ReqFields,","),
+	ReqFildsAtoms	= lists:map(fun(X) -> list_to_atom(X) end, ReqFieldsList),
+	Session_		= binary_to_list(rfc4627:get_field(RequestData, "session", <<>>)),
+
+	if
+		Session_ == [] ->
+			LoginTime = calendar:datetime_to_gregorian_seconds(erlang:localtime()),
+			Session   = ivr_common:toString(LoginTime * random:uniform(9999)),
+			FromDate		= ivr_common:get_gregorian_timestamp(FromDate_),
+			ToDate			= ivr_common:get_gregorian_timestamp(ToDate_),
+			SrcData_		= SearchData_ ++ "|from_time," ++  ivr_common:toString(FromDate) ++ "|to_time," ++ ivr_common:toString(ToDate),
+			SData 			= string:tokens(SrcData_, "|"),
+			SearchRecord   	= get_cdr_search_data(SData, []),	
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "CDR log search from "++FromDate_ ++" to "++ToDate_),
+			 case ReqFields of
+				"" ->
+					Ret = ivr_mediator:call(?CRS_REPORT_NODE, ?CRS_REPORT_SVR , get_activity_report,[Session,list_to_atom(LogType), list_to_integer(FromTs), list_to_integer(ToTs), SearchRecord, []]);
+				RequestFields ->
+					Ret = ivr_mediator:call(?CRS_REPORT_NODE, ?CRS_REPORT_SVR , get_activity_report,[Session,list_to_atom(LogType), list_to_integer(FromTs), list_to_integer(ToTs), SearchRecord, ReqFildsAtoms])
+			end;
+		true ->
+			Session   = Session_,
+			Ret = ivr_mediator:call(?CRS_REPORT_NODE, ?CRS_REPORT_SVR , get_activity_report,[Session])
+	end,	
+
+	case Ret of
+		{ok, [], eof} ->	
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, " CDR log records not found."),
+			Response = [{obj,[{status, <<"error">>},{reason, <<"No records.">>}]}];
+		{ok,Res, State} ->			
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Some CDR log search records found."),
+			
+			case ReqFields of
+				"" ->
+					Records  = map_tuples_api(lists:reverse(lists:keysort(1, Res)), list_to_tuple(?CRS_IVR_CDR_LOG_FIELDS), []), 
+					Response = [{obj,[{status, <<"ok">>},{message, Records},{session, ivr_common:toBinary(Session)}, {state, ivr_common:toBinary(State)}]}];
+				Else ->
+					Records  = map_tuples_api(lists:reverse(lists:keysort(1, Res)), list_to_tuple(ReqFildsAtoms), []), 
+					Response = [{obj,[{status, <<"ok">>},{message, Records}, {session, ivr_common:toBinary(Session)}, {state, ivr_common:toBinary(State)}]}]
+			end;			
+		{error,no_matching_disklog} ->	
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "The selected date is not in range."),
+			Response = [{obj,[{status, <<"error">>},{reason, <<"No records.">>}]}];
+
+		_Error ->
+			ivr_logger:error(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "internal server error"),	
+			Response = [{obj,[{status, <<"error">>},{reason, <<"internal server error">>}]}]	
+	end,
+	
+	{ehtml, rfc4627:encode(Response)};
+
+%% Create/Update user
+log("CDR_LOG_SEARCH_CSV", RequestData, RecSessionData, Arg) ->
+
+	LogType 		= binary_to_list(rfc4627:get_field(RequestData, "log_type", <<>>)),
+	FromDate_ 		= binary_to_list(rfc4627:get_field(RequestData, "from_date", <<>>)),
+	ToDate_ 		= binary_to_list(rfc4627:get_field(RequestData, "to_date", <<>>)),
+	FromTs 			= binary_to_list(rfc4627:get_field(RequestData, "from_ts", <<>>)),	
+	ToTs		 	= binary_to_list(rfc4627:get_field(RequestData, "to_ts", <<>>)),	
+	SearchData_		= binary_to_list(rfc4627:get_field(RequestData, "search_data", <<>>)),
+	ReqFields		= binary_to_list(rfc4627:get_field(RequestData, "search_fields", <<>>)),
+	ReqFieldsList	= string:tokens(ReqFields,","),
+	ReqFildsAtoms	= lists:map(fun(X) -> list_to_atom(X) end, ReqFieldsList),	
+	FromDate		= ivr_common:get_gregorian_timestamp(FromDate_),
+	ToDate			= ivr_common:get_gregorian_timestamp(ToDate_),
+	LoginTime = calendar:datetime_to_gregorian_seconds(erlang:localtime()),
+	Session   = ivr_common:toString(LoginTime * random:uniform(9999)),
+
+	ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "CDR log Download CSV from "++FromDate_ ++" to "++ToDate_),
+	SrcData_		= SearchData_ ++ "|from_time," ++  ivr_common:toString(FromDate) ++ "|to_time," ++ ivr_common:toString(ToDate),
+	SData 			= string:tokens(SrcData_, "|"),
+	SearchRecord   	= get_cdr_search_data(SData, []),	
+
+	case ReqFields of
+		"" ->
+			Ret = ivr_mediator:call(?CRS_REPORT_NODE, ?CRS_REPORT_SVR , export_search_data,[Session,list_to_atom(LogType), list_to_integer(FromTs), list_to_integer(ToTs), SearchRecord, []]);
+		RequestFields ->
+			Ret = ivr_mediator:call(?CRS_REPORT_NODE, ?CRS_REPORT_SVR , export_search_data,[Session,list_to_atom(LogType), list_to_integer(FromTs), list_to_integer(ToTs), SearchRecord, ReqFildsAtoms])
+	end,
+					   
+	case Ret of
+		{ok,[]} ->	
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, " CDR log records not found."),
+			Response = [{obj,[{status, <<"error">>},{reason, <<"No records.">>}]}];	
+		{ok,FileName} ->	
+			CsvFile  = ?TMP_PATH ++ FileName,
+			CsvUrl   = ?TMP_URL ++ FileName,
+			Response = [{obj,[{status, <<"ok">>},{message, <<"CSV file created">>},{csv_url, list_to_binary(CsvUrl)}]}];		
+		{error,no_matching_disklog} ->	
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "The selected date is not in range."),
+			Response = [{obj,[{status, <<"error">>},{reason, <<"No records.">>}]}];			
+		_Error ->
+			ivr_logger:error(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "internal server error  " ++ ivr_common:toString(_Error)),	
+			Response = [{obj,[{status, <<"error">>},{reason, ivr_common:toBinary(_Error)}]}]	
+	end,
+	
+	{ehtml, rfc4627:encode(Response)};
+
+%% Create/Update user
+log("LOG_SEARCH_CSV", RequestData, RecSessionData, Arg) ->
+
+	FromDate= binary_to_list(rfc4627:get_field(RequestData, "search_date", <<>>)),
+	ToDate=	binary_to_list(rfc4627:get_field(RequestData, "search_to_date", <<>>)),
+	Keyword 	= binary_to_list(rfc4627:get_field(RequestData, "keyword", <<>>)),	
+	User 	    = ivr_common:toString(ivr_session:get_sess("name", Arg)),
+	[GetDate, GetFromTime] =string:tokens(FromDate, " "),
+	[GetToDate, GetToTime] = string:tokens(ToDate, " "),
+	[Year,Month,Day] = string:tokens(GetDate, "/"),
+	[FrHour, FrMin, FrSec] = string:tokens(GetFromTime, ":"),
+	[ToYear, ToMonth, ToDay] = string:tokens(GetToDate, "/"),
+	[ToHour, ToMin, ToSec] = string:tokens(GetToTime, ":"),
+	Date = ivr_common:toString(Year) ++ ivr_common:toString(Month) ++ ivr_common:toString(Day),
+	LogFileDateSet = lists:seq(list_to_integer(Day), list_to_integer(ToDay)),
+	AdminLogNamesList = lists:map(fun(X) -> 
+					case string:len(ivr_common:toString(X)) < 2 of 
+						true ->
+							?LOG_PATH ++ ivr_common:toString(Year) ++ ivr_common:toString(Month) ++ "0" ++ ivr_common:toString(X) ++ ?LOG_FILE_PRIFIX ++ " ";
+						false ->
+							?LOG_PATH ++ ivr_common:toString(Year) ++ ivr_common:toString(Month) ++ ivr_common:toString(X) ++ ?LOG_FILE_PRIFIX ++ " "
+					end
+					end,
+					LogFileDateSet),
+
+	FilteredAdminLogList = lists:filtermap(fun(X) -> 
+								case filelib:is_file(string:strip(X, both, $ )) of 
+									true -> 
+										{true, X};
+									_ -> 
+										false 
+								end 
+							end, AdminLogNamesList),
+
+	LogTypeName = "Admin web action ",  
+	
+	if
+		User == "super_admin" ->		
+			Cmd = "awk '/" ++ Keyword ++ "/'  " ++ FilteredAdminLogList;
+		true ->
+			Cmd = "awk '/" ++ User ++ "/ && /" ++ Keyword ++ "/'  " ++ FilteredAdminLogList
+	end,	
+
+	case length(FilteredAdminLogList) > 0 of
+		true -> 
+			error_logger:info_msg("Passed~n"),
+			LogData = os:cmd(Cmd),
+
+			LogDataList = string:tokens(LogData, "\r\n"),
+			ivr_logger:debug(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, LogTypeName ++ " Log search - " ++ GetDate),
+			{_,_,Rand} = now(),
+			FileName 	= "Log_search_" ++ integer_to_list(Rand) ++ "_" ++ Date ++ ".csv",
+			CsvFile 	= ?TMP_PATH ++ FileName,
+			CsvUrl 		= ?TMP_URL ++ FileName,		
+
+			case catch file:open(CsvFile, [read,write,append]) of
+				{ok, IoDevice}	->
+
+					Head = "Date/Time,User,Unique ID,Message\n",
+					
+					file:write(IoDevice, Head),
+					get_csv_records(LogDataList, IoDevice, {{list_to_integer(Year), list_to_integer(Month), list_to_integer(Day)}, {list_to_integer(FrHour), list_to_integer(FrMin), list_to_integer(FrSec)}}, {{list_to_integer(ToYear), list_to_integer(ToMonth), list_to_integer(ToDay)}, {list_to_integer(ToHour), list_to_integer(ToMin), list_to_integer(ToSec)}}),
+
+					Response = [{obj,[{status, <<"ok">>},{message, <<"CSV File Created">>},{csv_url, list_to_binary(CsvUrl)}]}],
+					ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "CSV successfully generated"),
+					file:close(IoDevice);
+				_Else ->					
+					ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "CSV generate failed"),
+					Response = [{obj,[{status, <<"fail">>},{message, <<"CSV File Create Failed">>}]}]
+			end;		
+		false ->
+			error_logger:info_msg("Failed~n"),
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Log file not exists"),
+			Response = [{obj,[{status, <<"error">>},{message, <<"Log file not exists">>}]}]
+	end,	
+	{ehtml, rfc4627:encode(Response)};
+
+log("LOGS_BULK_DELETE", RequestData, RecSessionData, Arg) ->
+	Logs	= binary_to_list(rfc4627:get_field(RequestData, "logs", <<>>)),
+	LogList = string:tokens(Logs, "|"),
+	case bulk_delete(LogList, [], []) of
+		{ok, SuccessList, []} ->
+			Response = [{obj,[{status, <<"ok">>},{message, <<"Logs Deleted successfully..">>}, {success_list, list_to_binary(SuccessList)}]}],
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Logs " ++ SuccessList ++ " are deleted");
+		{ok,SuccessList,FailList} ->
+			Response = [{obj,[{status, <<"error">>},{reason, <<"Fail to delete some files">>}, {fail_list, list_to_binary(FailList)},{fail_list, list_to_binary(FailList)}]}],
+			ivr_logger:warning(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Logs are partially deleted." ++ ivr_common:toString(FailList) ++ " logs are not deleted.")
+	end,
+
+	{ehtml, rfc4627:encode(Response)};
+
+log("GET_WEB_SERVICE_DATA", RequestData, RecSessionData, Arg) ->	
+
+	LogType 		= binary_to_list(rfc4627:get_field(RequestData, "log_type", <<>>)),
+	FromDate_ 		= binary_to_list(rfc4627:get_field(RequestData, "from_date", <<>>)),
+	ToDate_ 		= binary_to_list(rfc4627:get_field(RequestData, "to_date", <<>>)),
+	FromTs 			= binary_to_list(rfc4627:get_field(RequestData, "from_ts", <<>>)),	
+	ToTs		 	= binary_to_list(rfc4627:get_field(RequestData, "to_ts", <<>>)),	
+	SearchData_		= binary_to_list(rfc4627:get_field(RequestData, "data", <<>>)),
+	FromDate		= ivr_common:get_gregorian_timestamp(FromDate_),
+	ToDate			= ivr_common:get_gregorian_timestamp(ToDate_),
+	SrcData_		= SearchData_ ++ "|from_time," ++  ivr_common:toString(FromDate) ++ "|to_time," ++ ivr_common:toString(ToDate),
+	SData 			= string:tokens(SrcData_, "|"),
+	SearchRecord   	= get_cdr_search_data(SData, []),
+	% error_logger:info_msg("Filters : ~p",[SearchRecord]),
+	Session_		= binary_to_list(rfc4627:get_field(RequestData, "session", <<>>)),
+	if
+		Session_ == [] ->
+			LoginTime = calendar:datetime_to_gregorian_seconds(erlang:localtime()),
+			Session   = ivr_common:toString(LoginTime * random:uniform(9999)),
+			FromDate		= ivr_common:get_gregorian_timestamp(FromDate_),
+			ToDate			= ivr_common:get_gregorian_timestamp(ToDate_),
+			SrcData_		= SearchData_ ++ "|from_time," ++  ivr_common:toString(FromDate) ++ "|to_time," ++ ivr_common:toString(ToDate),
+			SData 			= string:tokens(SrcData_, "|"),
+			SearchRecord   	= get_cdr_search_data(SData, []),	
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, LogType++"  log search for "++FromDate_++" to "++ToDate_),
+			
+			 Result = ivr_mediator:call(?CRS_REPORT_NODE, ?CRS_REPORT_SVR , get_activity_report,[Session,list_to_atom(LogType), list_to_integer(FromTs), list_to_integer(ToTs), SearchRecord, []]);
+		true ->
+			Session   = Session_,
+			Result = ivr_mediator:call(?CRS_REPORT_NODE, ?CRS_REPORT_SVR , get_activity_report,[Session])
+	end,	
+
+	case Result of
+		{ok,[], eof}->
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, LogType++"  Records not found"),
+			Response = [{obj,[{status, <<"error">>},{reason, <<"No Result Found">>}]}];
+		{ok,Res, State} ->	
+			Records  = get_web_service_log_records(lists:reverse(lists:keysort(2,Res)), [],LogType),  
+			Response = [{obj,[{status, <<"ok">>},{message, Records},{session, ivr_common:toBinary(Session)}, {state, ivr_common:toBinary(State)}]}],
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, LogType++" some  records found");
+		{error,no_matching_disklog} ->	
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "The selected date is not in range."),
+			Response = [{obj,[{status, <<"error">>},{reason, <<"No records.">>}]}];	
+		_Error->
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, LogType++" internal server error"),
+			Response = [{obj,[{status, <<"error">>},{reason, <<"Can not process data .Internal Server Error.">>}]}]
+
+	end,
+	
+	{ehtml, rfc4627:encode(Response)};
+
+log("GET_WEB_SERVICE_CSV", RequestData, RecSessionData, Arg) ->	
+
+	LogType 		= binary_to_list(rfc4627:get_field(RequestData, "log_type", <<>>)),
+	FromDate_ 		= binary_to_list(rfc4627:get_field(RequestData, "from_date", <<>>)),
+	ToDate_ 		= binary_to_list(rfc4627:get_field(RequestData, "to_date", <<>>)),
+	FromTs 			= binary_to_list(rfc4627:get_field(RequestData, "from_ts", <<>>)),	
+	ToTs		 	= binary_to_list(rfc4627:get_field(RequestData, "to_ts", <<>>)),	
+	SearchData_		= binary_to_list(rfc4627:get_field(RequestData, "data", <<>>)),
+	FromDate		= ivr_common:get_gregorian_timestamp(FromDate_),
+	ToDate			= ivr_common:get_gregorian_timestamp(ToDate_),
+	SrcData_		= SearchData_ ++ "|from_time," ++  ivr_common:toString(FromDate) ++ "|to_time," ++ ivr_common:toString(ToDate),
+	SData 			= string:tokens(SrcData_, "|"),
+
+	SearchRecord   	= get_cdr_search_data(SData, []),
+	%error_logger:info_msg("Filters : ~p",[SearchRecord]),
+	ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, LogType++" log download CSV "),	
+	LoginTime = calendar:datetime_to_gregorian_seconds(erlang:localtime()),
+	Session   = ivr_common:toString(LoginTime * random:uniform(9999)),
+	Result = ivr_mediator:call(?CRS_REPORT_NODE, ?CRS_REPORT_SVR , export_search_data,[Session, list_to_atom(LogType), list_to_integer(FromTs), list_to_integer(ToTs), SearchRecord, []]),
+	case Result of
+			{ok,[]} ->	
+				ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, " web service log records not found."),
+				Response = [{obj,[{status, <<"error">>},{reason, <<"No records.">>}]}];	
+			{ok,FileName} ->	
+				CsvFile  = ?TMP_PATH ++ FileName,
+				CsvUrl   = ?TMP_URL ++ FileName,
+				Response = [{obj,[{status, <<"ok">>},{message, <<"CSV file created">>},{csv_url, list_to_binary(CsvUrl)}]}];		
+			{error,no_matching_disklog} ->	
+				ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "The selected date is not in range."),
+				Response = [{obj,[{status, <<"error">>},{reason, <<"No records.">>}]}];				
+			_Error ->
+				ivr_logger:error(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "internal server error  " ++ ivr_common:toString(_Error)),	
+				Response = [{obj,[{status, <<"error">>},{reason, ivr_common:toBinary("Internal Server Error")}]}]	
+		end,
+
+	{ehtml, rfc4627:encode(Response)}.
+
+-spec get_all_records(ResultSet :: [tuple()], RecordList :: [tuple()], FromDate :: tuple(), ToDate :: tuple()) -> RecordList :: [tuple()].
+%% @doc Iterate user list return from API and prepare json formatted response list.
+%%
+get_all_records( [], RecordList, FromDate, ToDate) ->
+	RecordList;	
+get_all_records( [Row|Rest], RecordList, FromDate, ToDate) ->  	
+	RowData = string:tokens(Row, "|"),
+	RecordDate = lists:nth(1, string:tokens(lists:nth(1, RowData), " ")),
+	RecordTime = lists:nth(2, string:tokens(lists:nth(1, RowData), " ")),
+	RecordDateTup = {{list_to_integer(lists:nth(1, string:tokens(RecordDate, "-"))), list_to_integer(lists:nth(2, string:tokens(RecordDate, "-"))), list_to_integer(lists:nth(3, string:tokens(RecordDate, "-")))}, {list_to_integer(lists:nth(1, string:tokens(RecordTime, ":"))), list_to_integer(lists:nth(2, string:tokens(RecordTime, ":"))), list_to_integer(lists:nth(3, string:tokens(RecordTime, ":")))}},
+
+	case (calendar:datetime_to_gregorian_seconds(RecordDateTup) >= calendar:datetime_to_gregorian_seconds(FromDate)) andalso (calendar:datetime_to_gregorian_seconds(RecordDateTup) =< calendar:datetime_to_gregorian_seconds(ToDate)) of
+		true ->
+			% error_logger:info_msg("Record Date : ~p ~n From Date : ~p ~n To date : ~p ~n",[calendar:datetime_to_gregorian_seconds(RecordDateTup) , calendar:datetime_to_gregorian_seconds(FromDate), calendar:datetime_to_gregorian_seconds(ToDate)]), 
+			Tup = {obj,[ 
+				  {date_time, ivr_common:toBinary(lists:nth(1, RowData))},
+				  {user, ivr_common:toBinary(lists:nth(2, RowData))}, 
+				  {unique_id, ivr_common:toBinary(lists:nth(3, RowData))}, 
+				  {err_type, ivr_common:toBinary(lists:nth(4, RowData))}, 
+				  {message, ivr_common:toBinary(lists:nth(5, RowData))}
+				]},	
+			UpdatedList = lists:concat([RecordList, [Tup]]),
+			get_all_records( Rest, UpdatedList, FromDate, ToDate);
+		false ->
+			% error_logger:info_msg("Record Date : ~p ~n From Date : ~p ~n To date : ~p ~n",[calendar:datetime_to_gregorian_seconds(RecordDateTup) , calendar:datetime_to_gregorian_seconds(FromDate), calendar:datetime_to_gregorian_seconds(ToDate)]), 
+			get_all_records( Rest, RecordList, FromDate, ToDate)
+	end.
+
+-spec get_csv_records(ResultSet :: [tuple()], IoDevice :: term(), FromDate :: tuple(), ToDate :: tuple()) -> ok.
+%% @doc Iterate user list return from API and prepare json formatted response list.
+%%
+get_csv_records([], IoDevice, FromDate, ToDate) ->
+	ok; 
+get_csv_records([Row|Rest], IoDevice, FromDate, ToDate) ->  
+	RowData = string:tokens(Row, "|"),	
+	RecordDate = lists:nth(1, string:tokens(lists:nth(1, RowData), " ")),
+	RecordTime = lists:nth(2, string:tokens(lists:nth(1, RowData), " ")),
+	RecordDateTup = {{list_to_integer(lists:nth(1, string:tokens(RecordDate, "-"))), list_to_integer(lists:nth(2, string:tokens(RecordDate, "-"))), list_to_integer(lists:nth(3, string:tokens(RecordDate, "-")))}, {list_to_integer(lists:nth(1, string:tokens(RecordTime, ":"))), list_to_integer(lists:nth(2, string:tokens(RecordTime, ":"))), list_to_integer(lists:nth(3, string:tokens(RecordTime, ":")))}},
+
+	case (calendar:datetime_to_gregorian_seconds(RecordDateTup) >= calendar:datetime_to_gregorian_seconds(FromDate)) andalso (calendar:datetime_to_gregorian_seconds(RecordDateTup) =< calendar:datetime_to_gregorian_seconds(ToDate)) of
+		true ->
+			% error_logger:info_msg("Record Date : ~p ~n From Date : ~p ~n To date : ~p ~n",[calendar:datetime_to_gregorian_seconds(RecordDateTup) , calendar:datetime_to_gregorian_seconds(FromDate), calendar:datetime_to_gregorian_seconds(ToDate)]), 
+			Date_time 	= ivr_common:toString(lists:nth(1, RowData)), 
+			User 		= ivr_common:toString(lists:nth(2, RowData)),
+			Uniq_id		= ivr_common:toString(lists:nth(3, RowData)),
+			Message		= ivr_common:toString(lists:nth(5, RowData)),
+			Line = lists:concat([Date_time++","++User++","++Uniq_id++","++Message, "\n"]),
+			file:write(IoDevice, Line),
+			get_csv_records(Rest, IoDevice, FromDate, ToDate);
+		false ->
+			% error_logger:info_msg("Record Date : ~p ~n From Date : ~p ~n To date : ~p ~n",[calendar:datetime_to_gregorian_seconds(RecordDateTup) , calendar:datetime_to_gregorian_seconds(FromDate), calendar:datetime_to_gregorian_seconds(ToDate)]), 
+			get_csv_records(Rest, IoDevice, FromDate, ToDate)
+	end.
+	
+get_search_data( [], RecordList) ->
+	RecordList;	
+get_search_data( [Row|Rest], RecordList) ->  
+
+	RowData = string:tokens(Row, ","),	
+	
+	Param   = lists:nth(1, RowData),
+	Value 	= lists:nth(2, RowData),
+
+    case Param of  
+		"from_time" ->
+				Tup = {list_to_atom(Param),list_to_integer(Value)};
+		"to_time" ->
+				Tup = {list_to_atom(Param),list_to_integer(Value)};				
+		"serverid" ->
+				Tup = {list_to_atom(Param),ivr_common:toString(Value)};
+		"event_type" ->
+				Tup = {list_to_atom(Param),list_to_atom(Value)};
+		"channel" ->
+				Tup = {list_to_atom(Param),list_to_integer(Value)};
+		"sessionid" ->
+				Tup = {list_to_atom(Param),ivr_common:toString(Value)};
+		"type" ->
+				Tup = {list_to_atom(Param),list_to_atom(Value)};
+		"direction" ->
+				Tup = {list_to_atom(Param),ivr_common:toString(Value)};
+		"from" ->
+				Tup = {list_to_atom(Param),ivr_common:toString(Value)};
+		"to" ->
+				Tup = {list_to_atom(Param),ivr_common:toString(Value)};				
+		"module_name" ->
+				Tup = {list_to_atom(Param),ivr_common:toString(Value)};
+			_ ->
+				Tup = {list_to_atom(Param),ivr_common:toString(Value)}
+	end,		
+	
+    UpdatedList = lists:concat([RecordList, [Tup]]),
+	get_search_data( Rest, UpdatedList).
+
+get_cdr_search_data( [], RecordList) ->
+	RecordList;	
+get_cdr_search_data( [Row|Rest], RecordList) ->  
+
+	RowData = string:tokens(Row, ","),	
+	
+	Param   = lists:nth(1, RowData),
+	Value 	= lists:nth(2, RowData),
+
+    case Param of  
+		"from_time" ->
+				Tup = {list_to_atom(Param),list_to_integer(Value)};
+		"to_time" ->
+				Tup = {list_to_atom(Param),list_to_integer(Value)};				
+		"server_ID" ->
+				Tup = {list_to_atom(Param),ivr_common:toString(Value)};
+		"call_progress" ->
+				Tup = {list_to_atom(Param),list_to_atom(Value)};
+		"product_channel" ->
+				Tup = {list_to_atom(Param),list_to_integer(Value)};
+		"session_ID" ->
+				Tup = {list_to_atom(Param),ivr_common:toString(Value)};
+		"type" ->
+				Tup = {list_to_atom(Param),list_to_atom(Value)};
+		"direction" ->
+				Tup = {list_to_atom(Param),ivr_common:toString(Value)};
+		"from" ->
+				Tup = {list_to_atom(Param),ivr_common:toString(Value)};
+		"to" ->
+				Tup = {list_to_atom(Param),ivr_common:toString(Value)};				
+		"module_name" ->
+				Tup = {list_to_atom(Param),ivr_common:toString(Value)};
+		"description" ->
+				Tup = {list_to_atom(Param),ivr_common:toString(Value)};
+		"log_level" ->
+				Tup = {list_to_atom(Param),list_to_integer(Value)};
+		"loglevel" ->
+				Tup = {list_to_atom("log_level"),list_to_integer(Value)};
+		"service_id" ->
+				Tup = {list_to_atom(Param),list_to_integer(Value)};
+		"response_code" ->
+				Tup = {list_to_atom(Param),list_to_integer(Value)};		
+			_ ->
+				Tup = {list_to_atom(Param),ivr_common:toString(Value)}
+	end,		
+	
+    UpdatedList = lists:concat([RecordList, [Tup]]),
+	get_cdr_search_data( Rest, UpdatedList).
+
+get_activity_records( [], RecordList) ->
+	RecordList;	
+get_activity_records( [Row|Rest], RecordList) ->  
+	
+	Tup = {obj,[ 
+		  {date_time, ivr_common:toBinary(ivr_common:get_date_time(element(2, Row)))},
+		  {server_id, ivr_common:toBinary(element(4, Row))},
+		  {event_type, ivr_common:toBinary(element(3, Row))},
+		  {channel, ivr_common:toBinary(element(5, Row))},
+		  {session_id, ivr_common:toBinary(element(6, Row))},
+		  % {type, ivr_common:toBinary(element(7, Row))},
+		  {direction, ivr_common:toBinary(element(8, Row))},
+		  {from, ivr_common:toBinary(element(9, Row))},
+		  {to, ivr_common:toBinary(element(10, Row))},
+		  {module_name, ivr_common:toBinary(element(11, Row))},
+		  {description, ivr_common:toBinary(element(12, Row))}
+		]}, 	
+	
+    UpdatedList = lists:concat([RecordList, [Tup]]),
+	get_activity_records( Rest, UpdatedList).
+	
+act_call_type(CallType) ->
+    
+	case CallType of  
+		audio ->		
+			Res = "Audio";	
+		video ->		
+			Res = "Video";
+		fax ->		
+			Res = "Fax";	
+		both ->		
+			Res = "Both";
+		_ ->		
+			Res = "N/A"				
+	end,
+
+	Res.
+
+act_call_direction(CallDir) ->
+    
+	case CallDir of  
+		"inbound" ->		
+			Res = "Inbound";	
+		"outbound" ->		
+			Res = "Outbound";
+		_ ->		
+			Res = "N/A"				
+	end,
+
+	Res.	
+
+
+get_cdr_log_records( [], RecordList) ->
+	RecordList;	
+get_cdr_log_records( [Row|Rest], RecordList) ->  
+	
+	Tup = {obj,[ 
+		  {start_time, ivr_common:toBinary(ivr_common:get_date_time(Row#cdr_log.start_time))},
+		  {end_time, ivr_common:toBinary(ivr_common:get_date_time(Row#cdr_log.end_time))},
+		  {server_ID, ivr_common:toBinary(Row#cdr_log.server_ID)},
+		  {product_channel, ivr_common:toBinary(Row#cdr_log.product_channel)},
+		  {direction, ivr_common:toBinary(Row#cdr_log.direction)},
+		  {session_ID, ivr_common:toBinary(Row#cdr_log.session_ID)},
+		  % {type, ivr_common:toBinary(Row#cdr_log.type)},
+		  {answer_time, ivr_common:toBinary(Row#cdr_log.answer_time)},
+		  {calling, ivr_common:toBinary(Row#cdr_log.calling)},
+		  {called, ivr_common:toBinary(Row#cdr_log.called)},
+		  {calling_URI, ivr_common:toBinary(Row#cdr_log.calling_URI)},
+		  {called_URI, ivr_common:toBinary(Row#cdr_log.called_URI)},
+		  {cell, ivr_common:toBinary(Row#cdr_log.cell)},
+		  {first_redirect, ivr_common:toBinary(Row#cdr_log.first_redirect)},
+		  {last_redirect, ivr_common:toBinary(Row#cdr_log.last_redirect)},
+		  {early_media, ivr_common:toBinary(Row#cdr_log.early_media)},
+		  {duration, ivr_common:toBinary(Row#cdr_log.duration)},
+		  {disconnected_reason, ivr_common:toBinary(Row#cdr_log.disconnected_reason)},
+		  {call_progress, ivr_common:toBinary(Row#cdr_log.call_progress)}
+		]}, 	
+	
+    UpdatedList = lists:concat([RecordList, [Tup]]),
+	get_cdr_log_records( Rest, UpdatedList).
+	
+cdr_log_call_type(CallType) ->
+    
+	case CallType of  
+		audio ->		
+			Res = "Audio";	
+		video ->		
+			Res = "Video";
+		fax ->		
+			Res = "Fax";	
+		both ->		
+			Res = "Both";
+		_ ->		
+			Res = "N/A"				
+	end,
+
+	Res.
+
+cdr_log_call_direction(CallDir) ->
+    
+	case CallDir of  
+		"inbound" ->		
+			Res = "Inbound";	
+		"outbound" ->		
+			Res = "Outbound";
+		_ ->		
+			Res = "N/A"				
+	end,
+
+	Res.	
+
+map_tuples_api([], FeildsSet, ObjList) ->
+	ObjList;
+
+map_tuples_api([InputTupleList1Head | InputTupleList1Tail], FeildsSet, ObjList) ->	
+	NewObj = map_tuples_init(InputTupleList1Head, FeildsSet, 1, []),
+	map_tuples_api(InputTupleList1Tail, FeildsSet, lists:concat([ObjList, [NewObj]])).
+	
+map_tuples_init(InputTupleList1Head, FeildsSet, 1, []) ->
+	
+	CdrFullRec = list_to_tuple(?CRS_IVR_CDR_LOG_FIELDS),
+	ActFullRec = list_to_tuple(?CRS_IVR_ACTIVITY_LOG_FIELDS),
+	
+	if
+		FeildsSet == CdrFullRec orelse FeildsSet == ActFullRec ->		
+			[Head|Rest] = tuple_to_list(InputTupleList1Head),
+			RestTup     = list_to_tuple(Rest);
+		true ->
+			RestTup     = InputTupleList1Head
+	end,
+
+	map_tuples(RestTup, FeildsSet, 1, []). 	
+	
+map_tuples(InputTuple1, InputTuple2, Counter, NewTuple) ->
+	case length(tuple_to_list(InputTuple1)) >= Counter of
+		true ->
+			case element(Counter, InputTuple2) of
+				start_time ->
+					NewTuplLoc = {element(Counter, InputTuple2), ivr_common:toBinary(ivr_common:get_date_time(element(Counter, InputTuple1)))},
+					map_tuples(InputTuple1, InputTuple2, Counter+1, lists:concat([NewTuple, [NewTuplLoc]]));
+				end_time ->
+					NewTuplLoc = {element(Counter, InputTuple2), ivr_common:toBinary(ivr_common:get_date_time(element(Counter, InputTuple1)))},
+					map_tuples(InputTuple1, InputTuple2, Counter+1, lists:concat([NewTuple, [NewTuplLoc]]));
+				answer_time ->
+					try ivr_common:get_date_time(element(Counter, InputTuple1)) of
+						FormattedDateTime ->
+							NewTuplLoc = {element(Counter, InputTuple2), ivr_common:toBinary(FormattedDateTime)},
+							map_tuples(InputTuple1, InputTuple2, Counter+1, lists:concat([NewTuple, [NewTuplLoc]]))
+					catch 
+						error:badarith ->
+							NewTuplLoc = {element(Counter, InputTuple2), ivr_common:toBinary(element(Counter, InputTuple1))},
+							map_tuples(InputTuple1, InputTuple2, Counter+1, lists:concat([NewTuple, [NewTuplLoc]]))
+					end;
+				time ->
+					NewTuplLoc = {element(Counter, InputTuple2), ivr_common:toBinary(ivr_common:get_date_time(element(Counter, InputTuple1)))},
+					map_tuples(InputTuple1, InputTuple2, Counter+1, lists:concat([NewTuple, [NewTuplLoc]]));
+				OtherFields ->
+					NewTuplLoc = {element(Counter, InputTuple2), ivr_common:toBinary(element(Counter, InputTuple1))},
+					map_tuples(InputTuple1, InputTuple2, Counter+1, lists:concat([NewTuple, [NewTuplLoc]]))
+			end;
+		Else ->
+			{obj, NewTuple}
+	end.
+
+bulk_delete([], SuccessList, FailList) ->
+	{ok, SuccessList, FailList};
+
+bulk_delete([Log|Rest], SuccessList, FailList) ->
+	case crs_admin_db:delete_log(list_to_integer(Log)) of
+		{ok,deleted} ->
+			FailL = FailList,
+			SuccessL = SuccessList ++ "," ++ Log,
+			os:cmd("rm " ++ ?CDR_DOWNLOAD_PATH ++ Log ++ ".csv");
+		{error,Resons}->
+			FailL = FailList ++ "," ++ Log,
+			SuccessL 	= SuccessList
+	end,
+	bulk_delete(Rest, SuccessL, FailL).
+
+get_web_service_log_records( [], RecordList,_LogType) ->
+	RecordList;	
+get_web_service_log_records( [Row|Rest], RecordList,LogType) ->  
+	
+	case LogType of
+		"statistics_webservice_log" ->
+			{_,LogLevel}=lists:keyfind(Row#statistics_webservice_log.log_level, 1, ?WEB_SERVICE_LOG_LEVELS),
+			Tup = {obj,[ 
+				  {time_stamp, ivr_common:toBinary(ivr_common:get_date_time(Row#statistics_webservice_log.timestamp))},
+				  {log_level, ivr_common:toBinary(LogLevel)},
+				  {user_name, ivr_common:toBinary(Row#statistics_webservice_log.user_name)},
+				  {log, ivr_common:toBinary(Row#statistics_webservice_log.log)}
+				]};	
+		"service_mgt_webservice_log"->
+			{_,LogLevel}=lists:keyfind(Row#service_mgt_webservice_log.log_level, 1, ?WEB_SERVICE_LOG_LEVELS),
+			Tup = {obj,[ 
+					  {time_stamp, ivr_common:toBinary(ivr_common:get_date_time(Row#service_mgt_webservice_log.timestamp))},
+					  {log_level, ivr_common:toBinary(LogLevel)},
+					  {user_name, ivr_common:toBinary(Row#service_mgt_webservice_log.user_name)},
+					  {service_id, ivr_common:toBinary(Row#service_mgt_webservice_log.service_id)},
+					  {response_code, ivr_common:toBinary(Row#service_mgt_webservice_log.response_code)},
+					  {log, ivr_common:toBinary(Row#service_mgt_webservice_log.operation)}
+					]};
+		"list_management_webservice_log"->
+			{_,LogLevel}=lists:keyfind(Row#list_management_webservice_log.log_level, 1, ?WEB_SERVICE_LOG_LEVELS),
+			Tup = {obj,[ 
+					  {time_stamp, ivr_common:toBinary(ivr_common:get_date_time(Row#list_management_webservice_log.timestamp))},
+					  {log_level, ivr_common:toBinary(LogLevel)},
+					  {user_name, ivr_common:toBinary(Row#list_management_webservice_log.user_name)},
+					  {app_id, ivr_common:toBinary(Row#list_management_webservice_log.app_id)},
+					  {log, ivr_common:toBinary(Row#list_management_webservice_log.operation)}
+					]}
+	end, 
+    UpdatedList = lists:concat([RecordList, [Tup]]),
+	get_web_service_log_records( Rest, UpdatedList, LogType).
+	
+</erl>	

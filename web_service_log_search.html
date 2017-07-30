@@ -1,0 +1,232 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="js/application.js"></script>
+<style>
+	div#mts_wrapper {
+	    padding-bottom:40px;
+	    background: #F2F2F2;
+	}
+
+	div#mts_length {
+	    padding:10px; 
+	    ont-style: normal;
+	    font-size: 14px; 
+	}
+
+	div#mts_filter {
+	    padding:10px;
+	    ont-style: normal;
+	    font-size: 14px; 
+	}
+	div#mts_info {
+	    padding-left:15px; 
+	    font-style: normal;
+	    font-size: 14px;
+	}
+
+	div#mts_paginate {
+	    padding-right:15px;
+	    background: #F2F2F2;
+	}
+</style>
+<script type="">
+	document.write(objApp.getHeader());
+</script>
+<!-- load all js/css and other stuff -->
+<script type="text/javascript" src="js/log_search.js"></script>
+<body>
+	<script type="">
+		document.write(objApp.getTopBanner());
+	</script>
+	<!-- Printing top banner & login check -->
+
+	<div class="InBody">
+		<div class="InBodyIn">
+			<script type="">
+				document.write(objApp.getMainMenu());
+			</script>
+			<!-- Left Main Menu -->
+			<div class="bodyMid">
+				<div class="bodytopic">App log Search</div>
+				<div class="bodytopic-Sub">Web Services Log Search</div> 
+				<!--<div class="bodytopic-Sub">EDR Analyzer</div>-->
+				<div class="bodyMid_cont_edr">
+					<div class="bdfill">
+						<div class="customNotification" style="margin-bottom: 10px;">User able to select maximum, <span id="limitedRange"></span></div>
+						<script type="">
+							$("#limitedRange").html(config.web_service_log_search_maximum_range_in_word+" period of time for searching");
+						</script>
+						<div id='flash-msg'></div>
+						<!-- Flash Message -->
+						<form name="frm_web_log" id="frm_web_log" action="">
+							
+								<table border="0" align="center" cellpadding="0" cellspacing="0"
+									class="insert" width="100%">
+									<tr>								
+										<td width="30%">
+											From <span class="required-field"></span>
+										</td>
+										<td width="70%" align="left">											
+											<input type="text" readonly
+											id="webFromDate" data-validation-engine="validate[required]"/>
+											To<span class="required-field"></span>
+											<input type="text" readonly
+												id="webToDate" data-validation-engine="validate[required]"/> &nbsp&nbsp
+										</td>
+									</tr>
+									<tr style="display:none">								
+										<td width="30%">
+											From <span class="required-field"></span>
+										</td>
+										<td width="70%" align="left">											
+											<input type="text" readonly
+											id="fromDate" data-validation-engine="validate[required]"/>
+											To<span class="required-field"></span>
+											<input type="text" readonly
+												id="toDate" data-validation-engine="validate[required]"/> &nbsp&nbsp
+										</td>
+									</tr>
+									<tr style="display:none">								
+										<td width="30%">
+											From <span class="required-field"></span>
+										</td>
+										<td width="70%" align="left">											
+											<input type="text" readonly
+											id="adminFromDate" data-validation-engine="validate[required]"/>
+											To<span class="required-field"></span>
+											<input type="text" readonly
+												id="adminToDate" data-validation-engine="validate[required]"/> &nbsp&nbsp
+										</td>
+									</tr>
+									<tr>
+										<td>
+											Web Service
+										</td>
+										<td align="left" >
+											<select id="web_service" name="web_service" style="width: 200px;"></select>
+											<script type="text/javascript">
+												objLog.getWebServices();
+											</script>
+										</td>
+									</tr>			
+
+									<tr id="log_level_tr" name="log_level_tr">
+										<td>
+											Log Level
+										</td>
+										<td align="left" >
+											<select id="log_level" name="log_level" style="width: 75px;"></select>
+											<script type="text/javascript">
+												objLog.getLogLevel();
+											</script>
+										</td>
+									</tr>									
+									<tr id="user_name_tr" name="user_name_tr"> 
+										<td>
+											User Name
+										</td>
+										<td align="left">
+											<input type="text" id="user_name" style="width: 150px;" 
+												name="user_name" > 
+										</td>
+									</tr>
+									<tr id="app_id_tr" name="app_id_tr"> 
+										<td>
+											Application ID
+										</td>
+										<td align="left">
+											<input type="text" id="app_id" style="width: 150px;" 
+												name="app_id" data-validation-engine="validate[custom[integer]] text-input"> 
+										</td>
+									</tr>
+									<tr id="service_id_tr" name="service_id_tr"> 
+										<td>
+											Service ID
+										</td>
+										<td align="left">
+											<input type="text" id="service_id" style="width: 150px;" 
+												name="service_id" data-validation-engine="validate[custom[integer]] text-input"> 
+										</td>
+									</tr>
+									<tr id="response_code_tr" name="response_code_tr"> 
+										<td>
+											Response Code
+										</td>
+										<td align="left">
+											<input type="text" id="response_code" style="width: 150px;" 
+												name="response_code" data-validation-engine="validate[custom[integer]] text-input"> 
+										</td>
+									</tr>									
+									<tr>
+										<td colspan="2">&nbsp;</td>
+									</tr>
+									<tr>
+										<td></td>
+										<td align="left">
+											<input type="button"
+												name="web_log_search" id="web_log_search" value="Search" />&nbsp; 
+												&nbsp; <input type="button" name="web_log_csv" id="web_log_csv"
+											value="CSV" />
+										</td>
+									</tr>
+									<tr>
+										<td></td>
+										<td align="left" height="20">
+										</td>
+									</tr>									
+									<tr>
+										<td></td>
+										<td align="left">
+											<img id="uploading" src="images/loading.gif" style="display: none;"/>
+										</td> 
+									</tr>									
+								</table>
+						</form>
+					</div>
+					<div class="bdfill_tb">
+							<div  id="access_tbl"></div>
+							<input type="button" name="web_log_search_next" id="web_log_search_next" value="More" style="float: right; margin: 10px 5px 0 0;" />
+						<div id="view_dialog" title="Full Description">
+							<div id="view-pop1"></div>
+						</div>						
+					</div>
+				</div>
+
+			</div>
+		</div>
+	</div>
+		<div id="alert" title="Result Not Found"></div>
+		<div id="viewAlert" title="Result Not Found"></div>
+	<script>
+		$( "#alert" ).dialog({
+			autoOpen: false,
+			show: {
+				effect: "fade",
+				duration: 1000
+			},
+			hide: {
+				effect: "fade",
+				duration: 1000
+			}
+		});
+
+		$( "#viewAlert" ).dialog({
+			autoOpen: false,
+			show: {
+				effect: "fade",
+				duration: 1000
+			},
+			hide: {
+				effect: "fade",
+				duration: 1000
+			}
+		});
+
+	</script>
+	<script type="text/javascript">
+		document.write(objApp.getFooter());
+	</script>
+	<!-- Printing footer -->
+</body>
+</html>

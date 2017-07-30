@@ -1,0 +1,474 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+
+<!-- *#__dan__#* application js *#__dan__#* -->
+<script type="text/javascript" src="js/application.js"></script>
+<!-- *#__dan__#* application js *#__dan__#* -->
+<script type="text/javascript">	
+	document.write(objApp.getHeader());
+</script>
+<!-- load all js/css and other stuff -->
+
+<!-- *#__dan__#* live_circuit_util js *#__dan__#* -->
+<script type="text/javascript" src="js/access_code_create.js"></script>
+<!-- *#__dan__#* live_circuit_util js *#__dan__#* -->
+
+<!-- *#__dan__#* styles *#__dan__#* -->
+
+	<style type="text/css" media="screen">
+		div#mts_wrapper {
+			background:#ff8a3b;
+			padding-bottom:50px;
+		}
+
+		div#mts_length {
+			padding:10px; 
+			ont-style: normal;
+			font-size: 14px; 
+		}
+
+		div#mts_filter {
+			 padding:10px;
+			 ont-style: normal;
+			font-size: 14px; 
+		}
+		div#mts_info {
+			padding-left:15px; 
+			font-style: normal;
+			font-size: 14px;
+		}
+
+		div#mts_paginate {
+			padding-right:15px;
+		}
+		
+		.ui-dialog { width: auto !important; }
+	</style>
+	
+	<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+	<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+	<!--[if lt IE 9]>
+	<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+	<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+	<![endif]-->
+<!-- *#__dan__#* styles *#__dan__#* -->
+
+
+<body class="hold-transition skin-blue sidebar-mini">
+	
+	<div class="wrapper">
+
+		<!-- Top menu bar with Branding -->
+		<script type="text/javascript">		
+			document.write(objApp.getTopBanner()); 
+		</script>
+		
+		<!-- Content Wrapper. Contains page content -->
+		<div class="content-wrapper">
+			
+			<!-- Content Header (Page header) -->
+			<section class="content-header">
+			  <h1>
+				Manage Acces Codes
+				<small>Configurations</small>
+			  </h1>
+			  <ol class="breadcrumb">
+				<li><a href="home"><i class="fa fa-home"></i> Home</a></li>
+				<li><i class="fa fa-cogs"></i> Configurations</li>
+				<li class="active">Manage Acces Codes</li>
+			  </ol>
+			</section>
+			
+			<!-- Main content -->
+			<section class="content">
+				
+				<div class="row">
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<div class="box">
+							<div class="box-body no-padding">
+								<div id='flash-msg'></div>
+								<form class="form-horizontal" name="frm_hits_counter" id="frm_hits_counter">
+									<div class="row">
+										<div class="box-body pad-frm-top">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label class="col-sm-4 control-label">Timeframe</label>
+													<div class="col-sm-8">
+														<select class="form-control" id="type" name="type">
+															<option>Hourly</option>
+															<option>Daily</option>
+															<option>Monthly</option>
+															<option>Yearly</option>
+														</select>
+													</div>
+												</div>
+											</div>
+											<div id="category-tr" class="col-md-6 col-sm-12 col-xs-12 hide-tr">
+												<div class="form-group">
+													<label class="col-sm-4 control-label">Call Category</label>
+													<div class="col-sm-8">
+														<select class="form-control" id="category" name="category">
+															<option value="">Select</option>
+															<option value="inbound">Inbound</option>
+															<option value="outbound">Outbound</option>
+														</select>
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+			
+				<div class="InBody">
+					<div class="InBodyIn">
+						<script type="">
+							document.write(objApp.getMainMenu());
+						</script>
+						<!-- Left Main Menu -->
+						<div class="bodyMid">
+							<div class="bodytopic">Configurations</div>
+							<div class="bodytopic-Sub">Manage Access Codes</div>
+							<!--<div class="bodytopic-Sub">Add / Update Package</div>-->
+							<div class="bodyMid_cont">
+								<div class="bdfill" id="access_code_create_div">
+									<div id='flash-msg'></div>
+									<!-- Flash Message -->
+									<div id="dialog-confirm" title="Alert">
+										<p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span><span id="viewMsg"></span></p>
+									</div>
+									<div id="dialog-alert" title="Alert">
+										<p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span><span id="viewAlert"></span></p>
+									</div>
+									<form name="frm_crt_access_code" id="frm_crt_access_code" action="">
+										<table id="create-tbl" border="0" align="center" cellpadding="0" cellspacing="0"
+											class="insert">
+											<tr>
+												<div class="bodytopic-Sub" style="margin-bottom: 10px;">Common Configurations</div>
+											</tr>				
+											<tr>
+												<td width="15%">Access Code<span class="required-field"></span></td>
+												<td width="20%"><input type="text" name="acc_num"
+													id="acc_num"
+													data-validation-engine="validate[required, custom[accessCode]] text-input"
+													style="width: 100%" maxlength="30"/>
+												</td>
+												<td width="15%">DTMF<span class="required-field"></span></td>
+												<td width="20%" align="left">
+													<select id="dtmf" name="dtmf" class="drpdwn-select" style="width:100%">
+														<script>objAccessCode.getDtmfValues('#dtmf')</script>
+													</select>
+												</td>
+											</tr>
+											<tr>
+												<td width="15%">Description<span class="required-field"></span></td>
+												<td width="20%"><input type="text" name="description"
+													id="description"
+													data-validation-engine="validate[required] text-input"
+													style="width: 100%" maxlength="30"/>
+												</td>
+												<td width="15%"><lable id="pyld">DTMF Payload </lable></td>
+												<td width="20%"><input type="text" name="dtmf_pyld"
+													id="dtmf_pyld"
+													data-validation-engine="validate[custom[integer],max[127],min[96],required] text-input"
+													style="width: 100%" maxlength="30"/>
+												</td>
+											</tr>
+											<tr>
+												<td width="15%">Login URL<span class="required-field"></span></td>
+												<td width="20%">
+													<input type="text" name="login_url"id="login_url" data-validation-engine="validate[required] text-input" style="width: 100%" />
+												</td>
+												<td width="15%">Application Type<span class="required-field"></span></td>
+												<td width="20%" align="left">
+													<select id="app_type" name="app_type" class="drpdwn-select" style="width:100%">
+														<script>objAccessCode.getXmlTypes('#app_type')</script>
+													</select>
+												</td>
+											</tr>
+											<tr>
+												<td width="15%">Logout URL<span class="required-field"></span></td>
+												<td width="20%">
+													<input type="text" name="logout_url" id="logout_url" data-validation-engine="validate[required] text-input" style="width: 100%" />
+												</td>
+												<td width="15%"></span></td>
+													<td width="20%" align="left">
+														<div style="float: left" class="acc_code_status_div">
+															<input type="checkbox" name="stream_re_invite" id="stream_re_invite"/>
+															Stream Re-Invite
+														</div>
+												</td>
+											</tr>
+											<tr>
+												<td width="15%">Call Control Type<span class="required-field"></span></td>
+												<td width="20%" align="left">
+													<select id="cc_type" name="cc_type" class="drpdwn-select" style="width:100%">
+														<script>objAccessCode.getCallCtrlTypes('#cc_type')</script>
+													</select>
+												</td>
+												<td width="15%"></span></td>
+												<td width="20%">
+													<div style="float: left" class="acc_code_status_div">
+														<input type="checkbox" name="acc_code_status" id="acc_code_status"/>Activate the Access Code
+													</div>
+												</td>
+											</tr>
+											<tr>
+												<td width="15%">Access Type<span class="required-field"></span></td>
+													<td width="20%" align="left">
+														<select id="acc_type" name="acc_type" class="drpdwn-select" style="width:100%">
+															<option value="inbound" selected="selected">In Bound</option>
+															<option value="outbound">Out Bound</option>
+															<option value="both">Both</option>
+														</select>
+												</td>
+												<td width="15%"></td>
+													<td width="20%" align="left">
+														<div style="float: left" class="acc_code_status_div"><input type="checkbox" name="early_media" id="early_media"/>Early Media</div>
+												</td>
+											</tr>	
+											<tr>
+												<!--td width="15%">DCI Data<span class="required-field"></span></td>
+													<td width="20%" align="left">
+														<input type="text" name="dci_data" id="dci_data" style="width: 100%">
+												</td-->
+												<td width="15%">Adjacent Node <span class="required-field"></span></td>
+												<td width="20%">
+													<select  id="adjc_type" name="adjc_type" style="width:100%"></select>
+													<script type="text/javascript">
+													objAccessCode.getAdjNodeList();
+													</script>
+												</td>
+												<td width="15%"></span></td>
+													<td width="20%" align="left">
+														<div style="float: left" class="acc_code_status_div"><input type="checkbox" name="cnf_support" id="cnf_support"/>Conference Support
+												</td>
+											</tr>
+											<tr>
+												<td width="15%">Silence Detection Type<span class="required-field"></span></td>
+													<td width="20%" align="left">
+														<select id="silence_type" name="silence_type" class="drpdwn-select" style="width:100%">
+															<option value="1" selected="selected">Enable</option>
+															<option value="0">Disable</option>
+														</select>
+												</td>
+												
+												<td width="15%"></span></td>
+													<td width="20%" align="left">
+														<div style="float: left" class="acc_code_status_div"><input type="checkbox" name="gen_dtmf" id="gen_dtmf"/>
+															Generate DTMF
+														</div>
+												</td>
+											</tr>
+											<tr>
+												<td width="15%"> </td>
+												<td width="20%">
+												</td>
+												
+												<td width="15%"></span></td>
+												<td width="20%" align="left">
+													<div style="float: left" class="acc_code_status_div"><input type="checkbox" name="cnf_re_invite_support" id="cnf_re_invite_support"/>
+														Conference Re-Invite
+													</div>
+												</td>
+											</tr>
+											<tr>
+												<td colspan="6">&nbsp;</td>
+											</tr>
+										</table>
+										<table id="create-tbl2" border="0" align="center" cellpadding="0" cellspacing="0"
+											class="insert" width="80%">	
+											<tr>
+												<div class="bodytopic-Sub" style="margin-bottom: 10px;">Audio Codec Configurations</div>
+											</tr>					
+											<tr>
+												<!-- <td width="30%">Audio Codec List</td> -->
+												<td width="20%"></td>
+												<td width="15%">
+													<input type="hidden" name="audio_cdc_lst" id="audio_cdc_lst" readonly="readonly"
+														style="width: 100%" maxlength="30"/>
+												</td>
+												<td width="2%">	<input type="hidden" name="video_cdc_lst" id="video_cdc_lst" readonly="readonly"
+													style="width: 100%" maxlength="30"/>
+												</td>
+												
+												<td width="5%"></td>
+												<td width="10%"></td>
+												<td width="20%"></td>
+											 </tr>
+											<tr>
+											<td width="20%">	</td>
+												<td width="15%">G723	</td>
+												<td width="2%">	<input type="checkbox" name="check_g723" id="check_g723" style="float:left; margin-left:0;"></td>
+												<td width="5%"><input type="text" name="audio_g723" id="audio_g723" style="width: 100%; float: left; margin-left: 5px; display: block;" maxlength="30" autocomplete="off" data-validation-engine="validate[custom[integer],max[127],min[96],required] text-input">	</td>
+												<td width="10%"></td>
+											<td width="20%">	</td>
+											 
+											</tr>
+											<tr>
+											<td width="20%"></td>
+												<td width="15%">G729</td>
+												<td width="2%">	<input type="checkbox" name="check_g729" id="check_g729" style="float:left; margin-left:0;"></td>
+												<td width="5%"><input type="text" name="audio_g729" id="audio_g729" style="width: 50%; float: left; margin-left: 5px; display: block;" maxlength="30" autocomplete="off" data-validation-engine="validate[custom[integer],max[127],min[96],required] text-input"></td>
+												<td width="10%"></td>
+												<td width="20%"></td>
+											 
+											</tr>
+											<tr style="display:none">
+											
+												<td width="20%"></td>
+												<td width="15%">Wide Band AMR</td>
+												<td width="2%"><input  type="checkbox" name="check_amr" id="check_amr" style="float:left; margin-left:0;"></td>
+												<td width="5%"><span id="pload1" style="display:none">Payload </span></td>
+												<td width="10%"><input type="text" id="audio_amr" name="audio_amr"  style="width: 50%;float:left;margin-left:5px;" maxlength="30" data-validation-engine="validate[custom[integer],max[127],min[96],required] text-input"/></td>
+												<td width="20%"></td>
+											</tr>
+											<tr>
+											
+												<td width="20%"></td>
+												<td width="15%">Narrow Band AMR</td>
+												<td width="2%"><input type="checkbox" name="check_namr" id="check_namr" style="float:left; margin-left:0;"></td>
+												<td width="5%"><span id="pload2" style="display:none">Payload </span></td>
+												<td width="10%"><input type="text" name="audio_namr"
+													id="audio_namr"
+													style="width: 50%;float:left;margin-left:5px;" maxlength="30" data-validation-engine="validate[custom[integer],max[127],min[96],required] text-input"/></td>
+												<td width="20%"></td>
+												 
+											</tr>
+
+											<tr>
+											
+												<td width="20%"></td>
+												<td width="15%">G711 Mu law (0)</td>
+												<td width="2%"><input type="checkbox" name="check_mu_law" id="check_mu_law" style="float:left; margin-left:0;"></td>
+												<td width="5%"><input type="hidden" name="mu_law" id="mu_law"	value="0" readonly="readonly" style="width: 85%" maxlength="30" /></td>
+												<td width="10%"></td>
+												<td width="20%"></td>
+												 
+											</tr>
+											<tr>
+											
+												<td width="20%"></td>
+												<td width="15%">G711 A law (8)</td>
+												<td width="2%"><input type="checkbox" name="check_a_law" id="check_a_law" style="float:left; margin-left:0;"></td>
+												<td width="5%"><input type="hidden" name="a_law" id="a_law" value="8" readonly="readonly" style="width: 85%" 	maxlength="30"/></td>
+												<td width="10%"></td>
+												<td width="20%"></td>
+											 
+											</tr>
+											
+										</table>
+										<!--table id="create-tbl3" border="0" align="center" cellpadding="0" cellspacing="0"
+											class="insert" width="50%">	
+											<tr>
+												<div class="bodytopic-Sub" style="margin-bottom: 10px;">Video Codec Configurations</div>
+											</tr>	
+											<tr>
+												<td width="30%">mpeg4</td>
+												<td width="20%">
+													<input type="checkbox" name="check_mpeg4" id="check_mpeg4" style="float:left; margin-left:0;">
+													<input type="text" name="video_mpeg4" id="video_mpeg4" style="width:40%; float: left; margin-left: 5px; display: block;" maxlength="30" autocomplete="off" data-validation-engine="validate[custom[integer],max[127],min[96],required] text-input">
+												</td>
+												<td width="30%"></td>
+												<td width="20%"></td>
+											</tr>
+											<tr>
+												<td width="30%">h263</td>
+												<td width="20%">
+													<input type="checkbox" name="check_h263" id="check_h263" style="float:left; margin-left:0;">
+													<input type="text" name="video_h263" id="video_h263" style="width: 40%; float: left; margin-left: 5px; display: block;" maxlength="30" autocomplete="off" data-validation-engine="validate[custom[integer],max[127],min[96],required] text-input">
+												</td>
+												<td width="30%"></td>
+												<td width="20%"></td>
+											</tr>
+											<tr>
+												<td width="30%">h264</td>
+												<td width="20%">
+													<input type="checkbox" name="check_h264" id="check_h264" style="float:left; margin-left:0;">
+													<input type="text" name="video_h264" id="video_h264" style="width: 40%; float: left; margin-left: 5px; display: block;" maxlength="30" autocomplete="off" data-validation-engine="validate[custom[integer],max[127],min[96],required] text-input">
+												</td>
+												<td width="30%"></td>
+												<td width="20%"></td>
+											</tr>
+										</table-->
+										<table id="submit_tbl" width="30%" border="0" align="center" cellpadding="0"
+												cellspacing="0" class="insert">
+											<tr>
+												<td colspan="5">&nbsp;</td>
+											</tr>
+											<tr>
+												<td colspan="2" align="center" >
+												<td colspan="3" align="left" style="padding-left:20%;">
+												<input type="button" name="access_save" id="access_save" value="Save" />
+												<input type="button" name="access_update" id="access_update" value="Update" /> 
+												&nbsp;&nbsp;<input type="button" name="access_reset" id="access_reset" value="Reset" /> 
+												</td>
+											</tr>
+										</table>
+
+									</form>
+								</div>
+								<table id="sub-tbl" width="82%" border="0" align="center" cellpadding="0"
+												cellspacing="0" class="insert">
+									<div class="bdfill_tb">
+										<div id="access_tbl"></div>
+			<!--							<script type="">-->
+			<!--								objOthset.listChannels();-->
+			<!--							</script>-->
+										</div>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div id="dialog" title="Access Code Details"></div>
+	
+			</section>
+			<!-- /.content -->
+			
+		</div>
+		<!-- /.content-wrapper -->
+
+		<script>
+			document.write(objApp.getFooter());
+		</script>
+		<!-- Printing footer -->
+	
+	</div>
+	<!-- ./wrapper -->
+	
+	
+	<!-- Dialog Box -->
+	<script>
+	$(document).ready(function() {
+		$("#dialog").dialog({
+			modal: true
+		})
+		.dialog("widget")
+		.next(".ui-widget-overlay")
+		.css("background", "#000");
+	});
+	</script>
+
+	<script>
+		$( "#dialog" ).dialog({
+			autoOpen: false,
+			show: {
+				effect: "fade",
+				duration: 1000
+			},
+			hide: {
+				effect: "fade",
+				duration: 1000
+			}
+		});
+	</script>
+	
+</body>
+</html>

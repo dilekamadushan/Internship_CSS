@@ -1,0 +1,354 @@
+<erl>
+-export([out/1, dashboard/3]).
+
+-include("ivr_conf.hrl").
+
+out(Arg) ->
+   Method = method(Arg),
+   error_logger:info_msg("~p:~p ~p Request~n",[?MODULE, ?LINE, Method ]),
+   handle(Method, Arg). 
+
+method(Arg) ->
+   Rec = Arg#arg.req,
+   Rec#http_request.method.
+   
+handle('GET', Arg) ->
+   error_logger:info_msg("~p:~p Enter into GET method~n",[?MODULE, ?LINE]);   
+
+handle('POST', Arg) ->
+	{ok,[RequestData|[SessionData]],_} = rfc4627:decode(Arg#arg.clidata),   
+	Action = binary_to_list(rfc4627:get_field(RequestData, "action", <<>>)),
+	RecSessionData = #session_data
+	{
+		username = ivr_common:toString(ivr_session:get_sess("user_id", Arg)),
+		uniqid   = ivr_common:toString(ivr_session:get_sess("uniqid", Arg))
+	},	
+	
+	%ivr_logger:debug(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Request: " ++ Action),
+	
+	dashboard(Action, RequestData, RecSessionData).
+
+-spec dashboard(MethodPrefix :: '"GET_CHANMON_DATA"' | '"GET_TOP_FIVE_ACCESS_CODES"', RequestData :: list(), RecSessionData :: session_data()) -> {ehtml, Response :: list()}.
+
+% dashboard("GET_SYSTEM_USAGE", RequestData, RecSessionData) -> 
+
+% 	get_system_usage(),
+	
+% 	{ehtml, rfc4627:encode(Response)};
+
+dashboard("GET_CHANNEL_USAGE", RequestData, RecSessionData) -> 
+	{ok, List} = application:get_env(yaws_app, ivr_channel_monitor),
+    NodeName = get_atom_node_list(string:tokens(List, ","), []),
+	Response=get_channel_usage(NodeName,0,0,0),
+	{ehtml, rfc4627:encode(Response)};
+	
+ dashboard("GET_CURRENT_HITS", RequestData, RecSessionData) ->	
+	{ok, List} = application:get_env(yaws_app, ivr_channel_monitor),
+    NodeName = get_atom_node_list(string:tokens(List, ","), []),
+	Response= get_current_hits(NodeName,0),
+	{ehtml, rfc4627:encode(Response)};
+	
+dashboard("GET_CURRENT_CHANNELS", RequestData, RecSessionData) ->  
+	{ok, List} = application:get_env(yaws_app, ivr_channel_monitor),
+    NodeName = get_atom_node_list(string:tokens(List, ","), []),
+	Response= get_current_channels(NodeName,[]),
+	{ehtml, rfc4627:encode(Response)};
+
+dashboard("GET_WEBROOT_IP", RequestData, RecSessionData) ->  
+	Response = [{obj,[{status, <<"ok">>}, {ip, list_to_binary(?WS_WEB_ROOT)}]}],
+	{ehtml, rfc4627:encode(Response)};
+
+% dashboard("GET_TOTAL_CHANNELS", RequestData, RecSessionData) ->  
+	%Total= ivr_mediator:call(?IVR_NODE, ?HMP_MOD, get_chan_count, []),
+	% case application:set_env(yaws_app, total_ivr_channels, Total) of
+	% 	ok ->
+	% Response = [{obj,[{status, <<"ok">>},{response, <<"Total Channel count configuration set_env successful">>}]}];
+		% Else ->
+		% 	Response = [{obj,[{status, <<"error">>},{response, <<"Error in Total Channel count set_env">>}]}]
+		% end,
+	% {ehtml, rfc4627:encode(Response)};
+
+dashboard("GET_TOP_FIVE_SHORT_CODES", RequestData, RecSessionData) -> 
+
+	Date={date(),time()},
+	ToDaySeconds=calendar:datetime_to_gregorian_seconds(Date),
+	YesterDaySeconds=ToDaySeconds-(60*60*24),
+	{{FromYear,FromMonth,FromDay},_}=calendar:gregorian_seconds_to_datetime(YesterDaySeconds),
+	{{ToYear,ToMonth,ToDay},_}=Date,
+	FromDate=formatDate(FromYear,FromMonth,FromDay),
+	ToDate=formatDate(ToYear,ToMonth,ToDay),
+	case ivr_mediator:call(?IVR_REPORT_NODE, ?IVR_REPORT_MOD,  get_report_data,[daily,ivr_cdr_log,list_to_integer(FromDate),list_to_integer(ToDate),success_report,[],[hits]]) of
+		{ok,[]} ->
+			Response =[{obj,[{status, <<"error">>},{reason, <<"No results found">>}]}];
+		{ok,Result} ->
+			{Types,Results}=Result,
+			ProccessedResult=get_top_five_short_codes(Results,[]),
+			Response =ProccessedResult;
+		{error, Reason} ->
+			error_logger:info_msg("enter in to error case"), 
+			Response = [{obj,[{status, <<"error">>},{reason, list_to_binary("errorr !")}]}];
+		_->			
+			Response = [{obj,[{status, <<"error">>},{reason, <<"An error occured">>}]}]
+	end,
+	{ehtml, rfc4627:encode(Response)};
+	
+dashboard("RESTART_CHANNEL", RequestData, RecSessionData) -> 
+
+	 ChannelID 	= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "channel_id", <<>>))),
+	 ServerID 	= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "server_id", <<>>))),	
+	 NodeList	= binary_to_list(rfc4627:get_field(RequestData, "node", <<>>)),
+	 [{Node,Cookie}]=get_atom_node_list([NodeList],[]),
+	 erlang:set_cookie(Node, Cookie), 
+	 case ivr_mediator:call(Node, ?IVR_CHANNEL_MONITOR_LOG_MOD , restart_circuit,[ChannelID, ServerID]) of
+		ok ->
+		
+			ivr_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Successfully restarted the channel :" ++ integer_to_list(ChannelID)),	
+			Response = [{obj,[{status, <<"ok">>},{message, <<"Channel Successfully Restarted">>}]}];		
+
+		Res ->				
+			ivr_logger:error(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Failed to restart the channel :" ++ integer_to_list(ChannelID)),	
+			Response = [{obj,[{status, <<"error">>},{message, <<"Failed to Restart the Channel">>}]}]	
+	end,	
+	
+	{ehtml, rfc4627:encode(Response)}.
+	
+
+%% ========================== %%
+%% === Internal Functions === %%
+%% ========================== %%
+
+get_log_records_current_chan([], RecList,Node) ->
+	RecList;	
+get_log_records_current_chan([Row|Rest], RecList,Node) ->
+	StartTime = Row#cdr_log.start_time,
+	EndTime = Row#cdr_log.end_time,
+	ServerID = Row#cdr_log.server_ID,
+	ProductChannel = Row#cdr_log.product_channel,
+	Direction = Row#cdr_log.direction,
+	SessionID = Row#cdr_log.session_ID,
+	Type = Row#cdr_log.type,
+	AnswerTime = Row#cdr_log.answer_time,
+	Calling = Row#cdr_log.calling,
+	Called = Row#cdr_log.called,
+	CallingURI = Row#cdr_log.calling_URI,
+	CalledURI = Row#cdr_log.called_URI,
+	Cell = Row#cdr_log.cell,
+	FirstRedirect = Row#cdr_log.first_redirect,
+	LastRedirect = Row#cdr_log.last_redirect,
+	EarlyMedia =Row#cdr_log.early_media,
+	Duration = Row#cdr_log.duration,
+	DisconnectedReason = Row#cdr_log.disconnected_reason,
+	CallProgress = Row#cdr_log.call_progress,
+
+	if
+		 Direction /= "Idle" ->
+		 	{{EYY,EMM,EDD},{EHH,EMN,ESS}} = calendar:gregorian_seconds_to_datetime(StartTime), 
+		 	Emm = add_zero_prefix(EMM),
+		 	Edd = add_zero_prefix(EDD),
+		 	Ehh = add_zero_prefix(EHH),
+		 	Emn = add_zero_prefix(EMN),
+		 	Ess = add_zero_prefix(ESS),
+			EndStartTime = lists:concat([EYY,"-", Emm,"-", Edd, " ", Ehh, ":", Emn,":",Ess]);
+		true ->
+			{{EYY,EMM,EDD},{EHH,EMN,ESS}} = calendar:gregorian_seconds_to_datetime(EndTime), 
+		 	Emm = add_zero_prefix(EMM),
+		 	Edd = add_zero_prefix(EDD),
+		 	Ehh = add_zero_prefix(EHH),
+		 	Emn = add_zero_prefix(EMN),
+		 	Ess = add_zero_prefix(ESS),
+			EndStartTime = lists:concat([EYY,"-", Emm,"-", Edd, " ", Ehh, ":", Emn,":",Ess])
+	end,
+	
+	RptTup = {obj,[
+		%{startTimeRet, ivr_common:toBinary(ResStartTime)},
+		{endTimeRet, ivr_common:toBinary(EndStartTime)},
+		{serverID, ivr_common:toBinary(ServerID)},
+		{productChannel, ivr_common:toBinary(ProductChannel)},
+		{direction, ivr_common:toBinary(Direction)},
+		{sessionID, ivr_common:toBinary(SessionID)},
+		{type, ivr_common:toBinary(Type)},
+		{answerTime, ivr_common:toBinary(AnswerTime)},
+		{calling, ivr_common:toBinary(Calling)},
+		{called, ivr_common:toBinary(Called)},
+		{callingURI, ivr_common:toBinary(CallingURI)},
+		{calledURI, ivr_common:toBinary(CalledURI)},
+		{cell, ivr_common:toBinary(Cell)},
+		{firstRedirect, ivr_common:toBinary(FirstRedirect)},
+		{lastRedirect, ivr_common:toBinary(LastRedirect)},
+		{earlyMedia, ivr_common:toBinary(EarlyMedia)},
+		{duration, ivr_common:toBinary(Duration)},
+		{disconnectedReason, ivr_common:toBinary(DisconnectedReason)},
+		{callProgress, ivr_common:toBinary(CallProgress)},
+		{node, ivr_common:toBinary(Node)}
+	]},
+	UpdatedList = lists:concat([RecList, [RptTup]]),	
+	get_log_records_current_chan(Rest, UpdatedList,Node).
+
+get_chanmon_values([], ResponseList,Dialin, Dialout) ->
+	Total = ?TOTAL_IVR_CHANNELS,
+	RptTup = {obj,[
+		{total, list_to_binary(integer_to_list(Total))},
+		{dailin, list_to_binary(integer_to_list(Dialin))},
+		{dialout, list_to_binary(integer_to_list(Dialout))},
+		{idle, list_to_binary(integer_to_list(Total-(Dialin+Dialout)))}
+	]},
+	lists:concat([[RptTup],ResponseList]);
+	
+get_chanmon_values([Head | Tail], ResponseList, Dialin, Dialout)	->
+	%{30030,30,"Username","142","NA",63545947837,dialin,"3",acm,{iam,{0,0}},{acm,{17,0}},{anm,{0,0}},{tot,{0,0}},video}
+	{CallID,ChannelID,Aparty,Bparty,_,LastAccess,Status,ServerId,_,_,_,_,_,_} = Head,
+	{{YY,MM,DD},{HH,Mm,SS}} = calendar:gregorian_seconds_to_datetime(LastAccess),
+	LastAccesTime = lists:concat([YY,"-",MM,"-",DD," ", HH, ":", Mm, ":", SS]),
+	
+	case is_list(Aparty) of
+		true ->
+			AParty = list_to_binary(Aparty);
+		_ ->
+			AParty = atom_to_binary(Aparty, utf8)
+	end,
+	case is_list(Bparty) of
+		true ->
+			BParty = list_to_binary(Bparty);
+		_ ->
+			BParty = atom_to_binary(Bparty, utf8)
+	end,
+		
+	
+	RptTup = {obj,[
+		{channel, list_to_binary(integer_to_list(ChannelID))},
+		{aparty, AParty},
+		{bparty, BParty},
+		{last_access, list_to_binary(LastAccesTime)},
+		{status, atom_to_binary(Status, utf8)},
+		{call_id , list_to_binary(integer_to_list(CallID))}
+	]},
+	
+	case Status of
+		dialin ->
+			DialinCount = Dialin + 1,
+			DialoutCount = Dialout;
+		dialout ->
+			DialinCount = Dialin,
+			DialoutCount = Dialout + 1;
+		_ ->
+			DialinCount = Dialin,
+			DialoutCount = Dialout
+	end,		
+	UpdatedList = lists:concat([ResponseList, [RptTup]]),	
+	get_chanmon_values(Tail, UpdatedList, DialinCount, DialoutCount).
+	
+get_top_five_short_codes([],Result)->
+	FinalResult=make_top_five_binary_objects(lists:reverse(lists:keysort(2,Result)),[],5),
+	error_logger:error_msg("Final:~p~n",[lists:reverse(lists:keysort(2,Result))]),
+	FinalResult;
+
+get_top_five_short_codes([H|Rest],Result)->
+	  get_top_five_short_codes(Rest,Result++[{element(1,H),element(2,lists:nth(1,element(3,H)))}]).
+
+
+make_top_five_binary_objects([], BinaryList, Count) ->
+	BinaryList;	
+make_top_five_binary_objects(List, BinaryList, 0) ->
+	BinaryList;	
+make_top_five_binary_objects([{X,Y} | Tail], BinaryList, Count) ->
+	RptTup = {obj,[
+		{short_code, list_to_binary(X)},
+		{hits, list_to_binary(integer_to_list(Y))}
+	]},
+	UpdatedList = lists:concat([BinaryList, [RptTup]]),	
+	make_top_five_binary_objects(Tail, UpdatedList, Count-1).	
+
+
+formatDate(Year,Month,Day)->
+	SYear=string:sub_string(integer_to_list(Year),3),
+	SMonth="0"++integer_to_list(Month),
+	if
+		length(SMonth)==3 ->
+			TMonth=string:sub_string(SMonth,2);
+		true->
+			TMonth=SMonth
+	end,
+	SDay="0"++integer_to_list(Day),
+	if
+		length(SDay)==3 ->
+			TDay=string:sub_string(SDay,2);
+		true->
+			TDay=SDay
+	end,
+	Date=SYear++TMonth++TDay.
+
+
+get_channel_usage([],Dialins,Dialouts,TotalChanels) ->
+     [{obj,[{status, <<"ok">>}, {dialin, integer_to_binary(Dialins)}, {dialout, integer_to_binary(Dialouts)}, {totalChan, integer_to_binary(TotalChanels)}]}];
+get_channel_usage([Node|Rest],Dialins,Dialouts,TotalChanels) ->
+    erlang:set_cookie(element(1,Node), element(2,Node)), 
+    case ivr_mediator:call(element(1,Node), cdr_log_server_server, get_channel_usage, []) of
+        {ok, Dialin, Dialout} ->
+            case application:get_env(yaws_app, total_ivr_channels) of
+                {ok, TotalChan} ->
+                    NewDialins=Dialins+Dialin,
+                    NewDialouts=Dialouts+Dialout,
+                    get_channel_usage(Rest,NewDialins,NewDialouts,TotalChan);
+                undefined ->
+                     error_logger:error_msg("##### Can Not get Channel Usage from ~p : Reason:~p",[element(1,Node),"Internal error"]),
+                    get_channel_usage(Rest,Dialins,Dialouts,TotalChanels)
+            end;
+        _Error ->
+             error_logger:error_msg("##### Can Not Get Channel Usage from ~p : Reason:~p",[element(1,Node),_Error]),
+             get_channel_usage(Rest,Dialins,Dialouts,TotalChanels)
+    end.
+
+get_current_channels([],Results) ->
+	Response = [{obj,[{status, <<"ok">>}, {channel_monitor, Results}]}];
+get_current_channels([Node|Rest],Results) ->
+    erlang:set_cookie(element(1,Node), element(2,Node)),
+    case ivr_mediator:call(element(1,Node), cdr_log_server_server, get_channel_monitor_data,[]) of
+        {ok, {channels, Result}} ->
+        	StringNode=atom_to_list(element(1,Node))++"|"++atom_to_list(element(2,Node)),
+        	NewResults=Results++get_log_records_current_chan(Result, [],StringNode),
+            get_current_channels(Rest,NewResults);
+        {error, Reason} ->
+             error_logger:error_msg("##### Can Not Get Current Channels from ~p : Reason :  ~p",[element(1,Node),Reason]),
+             get_current_channels(Rest,Results)
+    end.
+
+get_current_hits([],Hits) ->  
+    lists:concat(["current_hits:", integer_to_list(Hits)]);
+get_current_hits([Node|Rest],Hits) -> 
+    erlang:set_cookie(element(1,Node), element(2,Node)), 
+    case  ivr_mediator:call(element(1,Node), cdr_log_server_server, get_current_hits, []) of
+        {ok, Hit} ->
+            NewHits=Hits+Hit,
+            get_current_hits(Rest,NewHits);
+        _Error ->
+            error_logger:error_msg("##### Can Not Get Hits counter from ~p :  Reason :~p",[element(1,Node),_Error]),
+            NewHits=Hits,
+            get_current_hits(Rest,NewHits)
+    end.
+
+get_atom_node_list([], NewAcc) ->
+    NewAcc;
+get_atom_node_list([First | Rest], Acc) ->
+    NewSet=string:tokens(First, "|"),
+    error_logger:info_msg("tokense data: ~p~n",[NewSet]),
+    NewAcc = Acc ++ [{get_list_to_existing_atom(lists:nth(1,NewSet)),get_list_to_existing_atom(lists:nth(2,NewSet))}],
+    get_atom_node_list(Rest, NewAcc).
+ 
+get_list_to_existing_atom(List) ->
+    try list_to_existing_atom(List) of
+        Val ->
+            Val
+    catch
+        _ : _ ->
+            list_to_atom(List)
+    end.
+
+add_zero_prefix(Number) ->
+	if
+		Number <10 ->
+		 	"0"++integer_to_list(Number); 
+		true ->
+		 	integer_to_list(Number)
+	end.
+
+</erl>

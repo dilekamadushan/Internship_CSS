@@ -1,0 +1,152 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="js/application.js"></script>
+<script type="text/javascript">	
+	document.write(objApp.getHeader());
+</script>
+<!-- load all js/css and other stuff -->
+<script type="text/javascript" src="js/report_manager.js"></script>
+<body>
+	<script type="text/javascript">		
+		document.write(objApp.getTopBanner());
+	</script>
+	<!-- Printing top banner & login check -->
+	<div class="InBody">
+		<div class="InBodyIn">
+			<script type="text/javascript">
+				document.write(objApp.getMainMenu());
+			</script>
+			<!-- Left Main Menu -->
+
+			<div class="bodyMid">
+				<div class="bodytopic">Reports and Logs</div>
+				<div class="bodytopic-Sub">Statistics</div>
+					<div class="bodyMid_cont">
+						<div class="bdfill">
+						<div id='flash-msg'></div>
+						<!-- Flash Message -->
+						<form name="frm_report" id="frm_report" action="">
+						<input type="hidden" name="report_type" id="report_type" value="statistics"/>
+							<table id="common-tbl" width="82%" border="0" align="center" cellpadding="0"
+								cellspacing="0" class="insert">
+								<tr>
+									<td width="20%">Date<span class="required-field"></span></span></td>
+									<td width="20%" align="left">
+									<input type="text" readonly
+										id="from_date" name="from_date" data-validation-engine="validate[required]"/>&nbsp
+									</td>
+									<td width="20%" align="right">Call Type<span class="required-field"></span></td>
+									<td width="20%" align="left">
+									<select name="call_type" id="call_type"
+											style="width: 70%">
+											<option value = "audio">Audio</option>
+									</select>							
+									</td>
+									<td width="30%"></td>	
+								</tr>
+								<tr>
+									<td>Call Category<span class="required-field"></span></span></td>
+									<td align="left">
+									<select name="category" id="category"
+											style="width: 70%">
+											<option value = "0">Dial In</option>
+											<option value = "1">Dial OUT</option>
+											<option value = "all">Both</option>
+									</select>
+									&nbsp
+									</td>
+									<td align="right"> Graph Type<span class="required-field"></span></td>
+									<td align="left">
+									<select name="graph_type" id="graph_type"
+											style="width: 90%">
+											<option value = "short_code">Access Code Wise</option>
+											<option value = "total">Total</option>
+									</select>
+									&nbsp
+									</td>
+									<td></td>
+								</tr>
+								<tr>
+									<td>Access Code<span class="required-field"></span></span></td>
+									<td align="left"><input type="text"
+										name="access_code" id="access_code"
+										data-validation-engine="validate[required,custom[integer],minSize[8],min[0]]"
+										style="width: 80%" maxlength="15"/>&nbsp
+									</td>
+									<td align="right">Stat By</td>
+									<td align="left">
+									<select name="stat_by" id="stat_by"
+									style="width: 70%">
+										<option value = "hour">Hourly</option>
+										<option value = "daily">Last 7 days (Only for selected month)</option>
+										<option value = "daily_mon">Last 30 days (Only for selected month)</option>
+										<option value = "month">Monthly (Only for selected year)</option>
+									</select>
+									</td>
+									<td></td>									
+								</tr>
+								<tr valign="top">
+									<td>Stat Options<span class="required-field"></span></span></td>
+									<td align="left">&nbsp
+									<div style="float: left"><input type="checkbox" name="stat_hits" id="stat_hits"/>
+									Hits</div><br>
+									<div style="float: left"><input type="checkbox" name="stat_dur_sec" id="stat_dur_sec"/>
+									Dur (Sec)</div><br>
+									<div style="float: left"><input type="checkbox" name="stat_dur_min" id="stat_dur_min"/>
+									Dur (Min)</div>									
+									</td>
+									<td align="right"></td>
+									<td align="left">
+									
+									</td>
+									<td></td>									
+								</tr>								
+											
+								<tr>
+									<td height="10"></td>
+									<td></td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>
+								<tr>
+									<td></td>
+									<td align="left">
+									<input type="submit"
+										name="search" id="search" value="Search" />&nbsp;										
+										</td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>								
+							</table>
+						</form>	
+						</div>
+
+						<div class="bdfill" id="statistics_hits_tbl" style="display: none;">
+						</div>
+						
+						<div class="bdfill" id="statistics_dur_tbl" style="display: none;">
+						</div>
+
+						<div class="bdfill" id="statistics_chrg_tbl" style="display: none;">
+						</div>							
+						
+				   </div>
+			</div>
+		</div>
+	</div>
+	
+
+	<script>
+		document.write(objApp.getFooter());
+	</script>
+	<!-- Printing footer -->
+</body>
+</html>
+
+
+
+
+

@@ -1,0 +1,217 @@
+<erl module=other_conf_manager>
+-export([out/1, other_config/3]).
+
+-include("conf.hrl"). 
+
+out(Arg) ->
+   Method = method(Arg),
+   error_logger:info_msg("~p:~p ~p Request~n",[?MODULE, ?LINE, Method ]),  
+   handle(Method, Arg). 
+
+%get request method type
+method(Arg) ->
+   Rec = Arg#arg.req,
+   Rec#http_request.method.
+   
+handle('GET', Arg) ->
+   error_logger:info_msg("~p:~p Enter into GET method~n",[?MODULE, ?LINE]);   
+
+handle('POST', Arg) ->
+	{ok,[RequestData|[SessionData]],_} = rfc4627:decode(Arg#arg.clidata),   
+	Action = binary_to_list(rfc4627:get_field(RequestData, "action", <<>>)),  
+  
+	RecSessionData = #session_data
+	{
+		username = common_fun:toString(lrs_session:get_sess("name", Arg)),
+		uniqid   = common_fun:toString(lrs_session:get_sess("uniqid", Arg))
+	},
+	
+	% Logging request data
+	logger:debug(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Request:" ++ binary_to_list(Arg#arg.clidata)),
+	
+	other_config(Action, RequestData, RecSessionData).
+
+%% Create/Update user
+other_config("UPDATE_COMM", RequestData, RecSessionData) ->
+
+	LocalApn 	= binary_to_list(rfc4627:get_field(RequestData, "local_apn", <<>>)),
+	SmsFrom	 	= binary_to_list(rfc4627:get_field(RequestData, "sms_from", <<>>)),
+	VlrGt 		= binary_to_list(rfc4627:get_field(RequestData, "vlr_gt", <<>>)),
+	HlrGt 		= binary_to_list(rfc4627:get_field(RequestData, "hrl_gt", <<>>)),
+	SgsnGt 		= binary_to_list(rfc4627:get_field(RequestData, "sgsn_gt", <<>>)),
+	TransType 	= binary_to_list(rfc4627:get_field(RequestData, "trans_type", <<>>)),	
+	
+	case mediator:call_ldr_server(ldr_admin, update_configuration,[[{?LOCAL_APN, LocalApn}, {?SMS_FROM_NUMBER, SmsFrom}, {?VLR_GT,VlrGt}, {?HLR_GT,HlrGt}, {?SGSN_GT, SgsnGt}, {?TRANSLATION_TYPE, list_to_integer(TransType)}]]) of	
+		{ok,done} ->
+			logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Common Configuration settings updated."),		
+			Response = [{obj,[{status, <<"ok">>},{reason, <<"Common Configurations Successfully Updated.">>}]}];
+		{error, Reason} ->				
+			logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Fail to update common configurations, Reason : " ++ atom_to_list(Reason)),	
+			Response = [{obj,[{status, <<"error">>},{reason, list_to_binary(atom_to_list(Reason))}]}]
+	end,
+	
+	{ehtml, rfc4627:encode(Response)};	
+	
+%% Create/Update Subs Mgt
+other_config("UPDATE_SUBS_MGT", RequestData, RecSessionData) ->
+
+	VirtualPeriod 	= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "virtual_no", <<>>))),
+	DeactTimeout	= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "deact_timeout", <<>>))),
+	CreditTimeout	= list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "credit_timeout", <<>>))),
+	RechargeTimeout = list_to_integer(binary_to_list(rfc4627:get_field(RequestData, "recharge_timeout", <<>>))),
+	
+	case mediator:call_ldr_server(ldr_admin, update_configuration,[[{?VIRTUAL_NUMBER_REALLOCATION_PERIOD, VirtualPeriod}, {?IDLE_DEACTIVATION_TIMEOUT, DeactTimeout}, {?CREDIT_EXPIRE_TIMEOUT,CreditTimeout}, {?RECHARGE_TIME_OUT,RechargeTimeout}]]) of	
+		{ok,done} ->
+			logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Subs Mgt Data settings updated."),		
+			Response = [{obj,[{status, <<"ok">>},{reason, <<"Subscribed User Details updated.">>}]}];
+		{error, Reason} ->				
+			logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Fail to update Subs Mgt Data settings, Reason : " ++ atom_to_list(Reason)),	
+			Response = [{obj,[{status, <<"error">>},{reason, list_to_binary(atom_to_list(Reason))}]}]
+	end,
+	
+	{ehtml, rfc4627:encode(Response)};
+	
+		
+%% Retrieve charging details
+other_config("GET_CONF", RequestData, RecSessionData) ->
+
+	case mediator:call_ldr_server(ldr_admin, get_all_configuration,[]) of
+		{ok, Res} ->
+			
+			LocalApn		= get_config(Res, ?LOCAL_APN),
+			SmsFrom			= get_config(Res, ?SMS_FROM_NUMBER),
+			VlrGt			= get_config(Res, ?VLR_GT),
+			HlrGt			= get_config(Res, ?HLR_GT),
+			SgsnGt			= get_config(Res, ?SGSN_GT),
+			TransType		= get_config(Res, ?TRANSLATION_TYPE),
+			VirPeriod		= get_config(Res, ?VIRTUAL_NUMBER_REALLOCATION_PERIOD),
+			DeactTimeout	= get_config(Res, ?IDLE_DEACTIVATION_TIMEOUT),
+			CreditTimeout	= get_config(Res, ?CREDIT_EXPIRE_TIMEOUT),
+			RechargeTimeout	= get_config(Res, ?RECHARGE_TIME_OUT),
+			
+			Response = [{obj,[
+				{local_apn, common_fun:toBinary(LocalApn)},
+				{sms_from, common_fun:toBinary(SmsFrom)},
+				{vlr_gt, common_fun:toBinary(VlrGt)},
+				{hrl_gt, common_fun:toBinary(HlrGt)},
+				{sgsn_gt, common_fun:toBinary(SgsnGt)},
+				{trans_type, common_fun:toBinary(TransType)},
+				{virtual_period, common_fun:toBinary(VirPeriod)},
+				{deact_timeout, common_fun:toBinary(DeactTimeout)},
+				{credit_timeout, common_fun:toBinary(CreditTimeout)},
+				{recharge_timeout, common_fun:toBinary(RechargeTimeout)}
+				]}];			
+		
+		{error, Reason} ->				
+			Response = [{obj,[{status, <<"error">>},{reason, ""}]}]	
+	end,		
+	{ehtml, rfc4627:encode(Response)};
+
+other_config("EXPORT_CSV", RequestData, RecSessionData) ->
+
+	case mediator:call_ldr_server(ldr_admin, get_all_configuration,[]) of
+		{ok, Res} ->
+			
+			LocalApn		= get_config(Res, ?LOCAL_APN),
+			SmsFrom			= get_config(Res, ?SMS_FROM_NUMBER),
+			VlrGt			= get_config(Res, ?VLR_GT),
+			HlrGt			= get_config(Res, ?HLR_GT),
+			SgsnGt			= get_config(Res, ?SGSN_GT),
+			TransType		= get_config(Res, ?TRANSLATION_TYPE),
+			VirPeriod		= get_config(Res, ?VIRTUAL_NUMBER_REALLOCATION_PERIOD),
+			DeactTimeout	= get_config(Res, ?IDLE_DEACTIVATION_TIMEOUT),
+			CreditTimeout	= get_config(Res, ?CREDIT_EXPIRE_TIMEOUT),
+			RechargeTimeout	= get_config(Res, ?RECHARGE_TIME_OUT),
+			
+			{_,_,Rand} = now(),
+			FileName = "general_configurations_" ++ integer_to_list(Rand) ++ ".csv",
+			CsvFile  = ?TMP_PATH ++ FileName,
+			CsvUrl   = ?TMP_URL ++ FileName,
+			logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "File path:" ++ CsvFile),
+			
+			case catch file:open(CsvFile, [read,write,append]) of
+				{ok, IoDevice}	->
+				
+					CommonHead = "\n \n General Configurations \n\n , Common Configurations \n\n",				
+					file:write(IoDevice, CommonHead),
+
+					Line1 = " , Local APN ," ++ LocalApn ++ " \n",
+					file:write(IoDevice, Line1),
+					
+					Line2 = " , SMS From ," ++ SmsFrom ++ " \n",
+					file:write(IoDevice, Line2),
+
+					Line3 = " , VLR GT ," ++ VlrGt ++ " \n",
+					file:write(IoDevice, Line3),
+
+					Line4 = " , HLR GT ," ++ HlrGt ++ " \n",
+					file:write(IoDevice, Line4),
+
+					Line5 = " , SGSN GT ," ++ SgsnGt ++ " \n",
+					file:write(IoDevice, Line5),
+					
+					LineTrans = " , Translation Type ," ++ common_fun:toString(TransType) ++ " \n",
+					file:write(IoDevice, LineTrans),					
+
+					SubHead = "\n \n , Subscribed User Configurations \n\n",				
+					file:write(IoDevice, SubHead),
+
+					Line6 = " , Virtual Number Re-Allocation period ," ++ integer_to_list(VirPeriod) ++ " Days \n",
+					file:write(IoDevice, Line6),
+					
+					Line7 = " , Credit Expire Timeout ," ++ integer_to_list(CreditTimeout) ++ " Days \n",
+					file:write(IoDevice, Line7),
+
+					Line8 = " , Idle deactivation timeout ," ++ integer_to_list(DeactTimeout) ++ " Days \n",
+					file:write(IoDevice, Line8),
+
+					Line9 = " , Recharge Timeout ," ++ common_fun:toString(RechargeTimeout) ++ " Days \n",
+					file:write(IoDevice, Line9),					
+
+					Response = [{obj,[{status, <<"ok">>},{message, <<"Configurations exported successfully">>},{csv_url, list_to_binary(CsvUrl)}]}],
+					file:close(IoDevice);
+				_Else ->
+					Response = [{obj,[{status, <<"fail">>},{message, <<"Configurations export failed">>}]}]
+			end;		
+		{error, Reason} ->				
+			Response = [{obj,[{status, <<"error">>},{reason, ""}]}]	
+	end,
+     
+	{ehtml, rfc4627:encode(Response)}.
+   
+get_config( Record, Conf) ->
+	
+	Res = lists:keysearch(Conf, 1, Record),
+	
+	if
+		Res == false ->
+			Value = "";
+		true ->
+			{_,{Param,Value}} = Res
+	end,
+
+	Value.
+   
+get_all_ggsn([], GgsnList, Type) ->
+	GgsnList;
+
+get_all_ggsn([Row|Rest], GgsnList, Type) ->
+
+	IP	= element(2, Row),
+	Port = element(3, Row),	
+
+	{Ip1,Ip2,Ip3,Ip4}   = IP,
+	Ip = integer_to_list(Ip1)++"."++integer_to_list(Ip2)++"."++integer_to_list(Ip3)++"."++integer_to_list(Ip4),	
+	
+	OperatorTup = {obj,[
+		{ip, list_to_binary(Ip)},
+		{port, list_to_binary(integer_to_list(Port))},
+		{type, list_to_binary(Type)}
+		]},
+		
+	UpdatedList = lists:concat([GgsnList, [OperatorTup]]),	
+
+	get_all_ggsn(Rest, UpdatedList, Type).
+	
+</erl>
+

@@ -1,0 +1,229 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+
+<!-- *#__dan__#* application js *#__dan__#* -->
+<script type="text/javascript" src="js/application.js"></script>
+<!-- *#__dan__#* application js *#__dan__#* -->
+<script type="text/javascript">	
+	document.write(objApp.getHeader());
+</script>
+<!-- load all js/css and other stuff -->
+
+<!-- *#__dan__#* live_circuit_util js *#__dan__#* -->
+<script type="text/javascript" src="js/manage_provider.js"></script>
+<!-- *#__dan__#* live_circuit_util js *#__dan__#* -->
+
+<!-- *#__dan__#* styles *#__dan__#* -->
+	<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+	<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+	<!--[if lt IE 9]>
+	<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+	<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+	<![endif]-->
+<!-- *#__dan__#* styles *#__dan__#* -->
+
+
+<body class="hold-transition skin-blue sidebar-mini">
+
+	<div class="wrapper">
+
+		<!-- Top menu bar with Branding -->
+		<script type="text/javascript">		
+			document.write(objApp.getTopBanner()); 
+		</script>
+		
+		<!-- Content Wrapper. Contains page content -->
+		<div class="content-wrapper">
+			
+			<!-- Content Header (Page header) -->
+			<section class="content-header">
+			  <h1>
+				General
+				<small>Configuration &#62; Application</small>
+			  </h1>
+			  <ol class="breadcrumb">
+				<li><a href="home"><i class="fa fa-home"></i> Home</a></li>
+				<li><i class="fa fa-bar-chart"></i> Configuration</li>
+				<li><i class="fa fa-bar-chart"></i> Application</li>
+				<li class="active">General</li>
+			  </ol>
+			</section>
+			
+			<!-- Main content -->
+			<section class="content">
+				
+				<div class="row">
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<div class="box">
+							<div id='flash-msg'></div>
+							<div class="box-header with-border">
+								<h3 class="box-title">General Configuration</h3>
+							</div>
+							<div class="box-body">
+								<form class="form-horizontal" name="frm_provider" id="frm_provider"> 
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" id="pattrn">
+													<label for="pattrn" class="col-sm-4 control-label">MSISDN Pattern<span class="req-fld">*</span><br/><i>seperate by new line</i></label>
+													<div class="col-sm-8">
+														<textarea class="form-control" rows="3" placeholder="MSISDN Pattern: seperate by new line" id="pattrn" name="pattrn" title="Enter MSISDN Pattern"></textarea>
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" id="url">
+													<label for="url" class="col-sm-4 control-label">Platform URL<span class="req-fld">*</span><br/><i>seperate by new line</i></label>
+													<div class="col-sm-8">
+														<textarea class="form-control" rows="3" placeholder="Platform URL: seperate by new line" id="url" name="url" title="Enter Platform URL"></textarea>
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" id="row">
+													<label for="row" class="col-sm-4 control-label">Row per Page <span class="req-fld">*</span></label>
+													<div class="col-sm-8">
+														<input type="text" class="form-control" placeholder="Row per Page" id="row" name="row" title="Enter Row per Page" data-validation-engine="validate[required,custom[integer]]"> 
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" id="export">
+													<label for="export" class="col-sm-4 control-label">Row Export <span class="req-fld">*</span></label>
+													<div class="col-sm-8">
+														<input type="text" class="form-control" placeholder="Row Export" id="export" name="export" title="Enter Row Export" data-validation-engine="validate[required,custom[integer]]"> 
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" id="intec">
+													<label for="intec" class="col-sm-4 control-label">Row Process per Batch &#40;Intect&#41; <span class="req-fld">*</span></label>
+													<div class="col-sm-8">
+														<input type="text" class="form-control" placeholder="Row Process per Batch &#40;Intect&#41;" id="intec" name="intec" title="Enter Row Process per Batch &#40;Intect&#41;" data-validation-engine="validate[required,custom[integer]]"> 
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" id="sms">
+													<label for="sms" class="col-sm-4 control-label">Row Process per Batch &#40;SMS&#41; <span class="req-fld">*</span></label>
+													<div class="col-sm-8">
+														<input type="text" class="form-control" placeholder="Row Process per Batch &#40;SMS&#41;" id="sms" name="sms" title="Enter Process per Batch &#40;SMS&#41;" data-validation-engine="validate[required,custom[integer]]"> 
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" id="dsd">
+													<label for="dsd" class="col-sm-4 control-label">DSD Command <span class="req-fld">*</span><br/><i>seperate by new line</i></label>
+													<div class="col-sm-8">
+														<textarea class="form-control" rows="3" placeholder="DSD Command: seperate by new line" id="dsd" name="dsd" title="Enter DSD Command"></textarea>
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" id="url">
+													<label for="ccn" class="col-sm-4 control-label">CCN Command <span class="req-fld">*</span><br/><i>seperate by new line</i></label>
+													<div class="col-sm-8">
+														<textarea class="form-control" rows="3" placeholder="CCN Command: seperate by new line" id="ccn" name="ccn" title="Enter CCN Command"></textarea>
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" id="cdb">
+													<label for="cdb" class="col-sm-4 control-label">CDB URL <span class="req-fld">*</span><br/><i>seperate by new line</i></label>
+													<div class="col-sm-8">
+														<textarea class="form-control" rows="3" placeholder="CDB URL: seperate by new line" id="cdb" name="cdb" title="Enter CDB URL"></textarea>
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" id="cdb_timeout">
+													<label for="cdb_timeout" class="col-sm-4 control-label">CDB Timeout <span class="req-fld">*</span></label>
+													<div class="col-sm-8">
+														<input type="text" class="form-control" placeholder="CDB Timeout" id="cdb_timeout" name="cdb_timeout" title="Enter CDB Timeout" data-validation-engine="validate[required,custom[integer]]"> 
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" id="cdb_prin">
+													<label for="cdb_prin" class="col-sm-4 control-label">CDB Principal <span class="req-fld">*</span></label>
+													<div class="col-sm-8">
+														<input type="text" class="form-control" placeholder="CDB Principal" id="cdb_prin" name="cdb_prin" title="Enter CDB Principal" data-validation-engine="validate[required,custom[integer]]"> 
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" id="cdb_cred">
+													<label for="cdb_cred" class="col-sm-4 control-label">CDB Credential <span class="req-fld">*</span></label>
+													<div class="col-sm-8">
+														<input type="text" class="form-control" placeholder="CDB Credential" id="cdb_cred" name="cdb_cred" title="Enter CDB Credential" data-validation-engine="validate[required,custom[integer]]"> 
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" id="usr_url">
+													<label for="usr_url" class="col-sm-4 control-label">Request User URL <span class="req-fld">*</span></label>
+													<div class="col-sm-8">
+														<input type="text" class="form-control" placeholder="Request User URL" id="usr_url" name="usr_url" title="Enter Request User URL" data-validation-engine="validate[required,custom[integer]]"> 
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-12 col-sm-12 col-xs-12">
+												<div class="box-footer"> 
+													<button type="submit" class="btn btn-primary pull-right btnspace" name="save_config" id="save_config">Save</button>
+												</div>
+											</div>
+										</div>						
+									</div>
+								</form> 
+							</div>
+						</div>
+					</div>
+				</div>
+				
+			</section>
+			<!-- /.content -->
+			
+		</div>
+		<!-- /.content-wrapper -->
+
+		<script>
+			document.write(objApp.getFooter());
+		</script>
+		<!-- Printing footer -->
+	
+	</div>
+	<!-- ./wrapper -->
+	
+</body>
+</html>

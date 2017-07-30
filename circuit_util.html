@@ -1,0 +1,299 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="js/application.js"></script>
+<script type="text/javascript">	
+	document.write(objApp.getHeader());
+</script>
+<!-- load all js/css and other stuff -->
+<script type="text/javascript" src="js/circuit_util.js"></script>
+<!-- <script type="text/javascript" src="js/exporting.js"></script> -->
+<body>
+	<script type="text/javascript">		
+		document.write(objApp.getTopBanner());
+	</script>
+	<!-- Printing top banner & login check -->
+	<div class="InBody">
+		<div class="InBodyIn">
+			<script type="text/javascript">
+				document.write(objApp.getMainMenu());
+
+			</script>
+			<!-- Left Main Menu -->
+
+			<div class="bodyMid">
+				<div class="bodytopic">Reports and Logs</div>
+				<div class="bodytopic-Sub">Circuit Utilization</div>
+					<div class="bodyMid_cont">
+						<div class="bdfill">
+						<div id='flash-msg'></div>
+						<!-- Flash Message -->
+
+						<form name="frm_circuit_util" id="frm_circuit_util" action="">				
+							<table border="0" align="center" cellpadding="0" cellspacing="0"
+								class="insert" width="100%">
+								<tr>
+									<td width="20%">Timeframe</td>
+									<td width="15%" align="left">
+									<select id="type" name="type" style="width: 75px;">
+										<option>Minutely</option>
+										<option>Hourly</option>
+										<option>Daily</option>
+										<option>Monthly</option>
+										<option>Yearly</option>
+									</select>
+									</td>
+									<td width="5%"></td>
+									<td width="10%"></td>
+									<td width="20%"></td>
+									<td width="20%"></td>
+								</tr>	
+										
+								<tr id="start_date-tr" class="hide-time-tr" >
+									<td>Start Date<span class="required-field"></td>
+									<td align="left"><input type="text" id="start_date" name="start_date" data-validation-engine="validate[required]" readonly>
+									</td>
+									<td></td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>
+								<tr id="start_time-tr" class="hide-time-tr" >
+									<td>Start Time</td>
+									<td align="left"><input type="text" id="start_time" name="start_time" readonly>
+									</td>
+									<td></td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>
+								<tr id="start_year-tr" class="hide-year-tr" >
+									<td>Start Year<span class="required-field"></td>
+									<td align="left"><select id="start_year" name="start_year" data-validation-engine="validate[required]">
+									</td>
+									<td></td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>		
+								<tr id="start_month-tr" class="hide-time-tr" >
+									<td>Start Month<span class="required-field"></td>
+									<td align="left"><select id="start_month" name="start_month" data-validation-engine="validate[required]">
+									</td>
+									<td></td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>	
+								<tr id="hours-tr" class="hide-time-tr" >
+									<td>Number of Hours </td>
+									<td align="left">
+										<select id="hours" name="hours" style="width: 75px;">	
+											<script type="text/javascript">
+												objCircuitUtil.getHours();
+											</script>
+										</select>
+									</td>
+									
+									<td></td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>								
+								<tr id="days-tr" class="hide-time-tr">
+									<td>Number of Days</td>
+									<td align="left">
+										<select id="days" name="days" style="width: 75px;">
+											<script type="text/javascript">
+												objCircuitUtil.getDays();
+											</script>	
+										</select>
+									</td>
+									<td></td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>
+								<tr id="months-tr" class="hide-tr" >
+									<td>Number of Months</td>
+									<td align="left">
+										<select id="months" name="months" style="width: 75px;">	
+											<script type="text/javascript">
+												objCircuitUtil.getMonths();
+											</script>
+										</select>
+									</td>
+									<td></td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>
+								<tr id="years-tr" class="hide-tr" >
+									<td>Number of Years</td>
+									<td align="left">
+										<select id="years" name="years" style="width: 75px;">	
+											<script type="text/javascript">
+												objCircuitUtil.getYears();
+											</script>
+										</select>
+									</td>
+									<td></td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>				
+								<tr>
+									<td colspan="6">&nbsp;</td>
+								</tr>
+								<tr>
+									<td width="15%"></td>
+									<td colspan="5" align="left">
+									<input type="submit"
+										name="graph" id="graph" value="Graph" /> &nbsp; 
+										&nbsp; <input type="submit" name="report" id="report"
+										value="Report" /> &nbsp; 
+										&nbsp; <input type="submit" name="csv" id="csv"
+										value="CSV" />
+									</td>
+								</tr>								
+							</table>
+						</form>
+						</div>
+						<div class="bdfill" id="graphs_badfill">
+							<form name="frm_gpr" id="frm_gpr" action="">
+								<div id="graphs" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+								<script type="text/javascript">
+										//objCircuitUtil.drawGraph();
+									</script>
+
+							</form>	
+						</div>
+						<div class="bdfill" id="tables_badfill">
+							<form name="frm_tbl" id="frm_tbl" action="">
+								<div id="tables" style="min-width: 310px; margin: 0 auto"></div>
+								<script type="text/javascript">
+										//objCircuitUtil.drawGraph();
+									</script>
+									
+							</form>	
+						</div>
+						<div class="bdfill" id="result_badfill">
+							<form name="frm_rsl" id="frm_rsl" action="">
+								<div id="dialogTables" style="min-width: 500px; max-height:500px; margin: 0 auto ;width:auto;"></div>
+									
+							</form>	
+						</div>
+	
+				   </div>
+			</div>
+		</div>
+	</div>
+
+	<div id="dialog" title="Detail Report"></div>
+		<div id="viewDialog" title="Detail Report"></div>
+
+	<!-- Dialog Box -->
+	<script>
+	$(document).ready(function() {
+		$("#dialog").dialog({
+			modal: true
+		})
+		.dialog("widget")
+		.next(".ui-widget-overlay")
+		.css("background", "#000");
+
+		$("#viewDialog").dialog({
+			modal: true
+		})
+		.dialog("widget")
+		.next(".ui-widget-overlay")
+		.css("background", "#000");
+	});
+	</script>
+
+	<script>
+		$( "#dialog" ).dialog({
+			autoOpen: false,
+			show: {
+				effect: "fade",
+				duration: 1000
+			},
+			hide: {
+				effect: "fade",
+				duration: 1000
+			}
+		});
+
+		$( "#viewDialog" ).dialog({
+			autoOpen: false,
+			show: {
+				effect: "fade",
+				duration: 1000
+			},
+			hide: {
+				effect: "fade",
+				duration: 1000
+			}
+		});
+
+	</script>
+
+
+
+	<div id="alert" title="Result Not Found"></div>
+		<div id="viewAlert" title="Result Not Found"></div>
+
+	<!-- Dialog Box -->
+	<script>
+	$(document).ready(function() {
+		$("#alert").dialog({
+			modal: true
+		})
+		.dialog("widget")
+		.next(".ui-widget-overlay")
+		.css("background", "#000");
+
+		$("#viewAlert").dialog({
+			modal: true
+		})
+		.dialog("widget")
+		.next(".ui-widget-overlay")
+		.css("background", "#000");
+	});
+	</script>
+
+	<script>
+		$( "#alert" ).dialog({
+			autoOpen: false,
+			show: {
+				effect: "fade",
+				duration: 1000
+			},
+			hide: {
+				effect: "fade",
+				duration: 1000
+			}
+		});
+
+		$( "#viewAlert" ).dialog({
+			autoOpen: false,
+			show: {
+				effect: "fade",
+				duration: 1000
+			},
+			hide: {
+				effect: "fade",
+				duration: 1000
+			}
+		});
+
+	</script>
+	
+	<script>
+		document.write(objApp.getFooter());
+	</script>
+	<!-- Printing footer -->
+
+
+</body>
+</html>

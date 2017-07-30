@@ -1,0 +1,259 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+
+<!-- *#__dan__#* application js *#__dan__#* -->
+<script type="text/javascript" src="js/application.js"></script>
+<!-- *#__dan__#* application js *#__dan__#* -->
+<script type="text/javascript">	
+	document.write(objApp.getHeader());
+</script>
+<!-- load all js/css and other stuff -->
+
+<!-- *#__dan__#* live_circuit_util js *#__dan__#* -->
+<script type="text/javascript" src="js/manage_provider.js"></script>
+<!-- *#__dan__#* live_circuit_util js *#__dan__#* -->
+
+<!-- *#__dan__#* styles *#__dan__#* -->
+	<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+	<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+	<!--[if lt IE 9]>
+	<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+	<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+	<![endif]-->
+<!-- *#__dan__#* styles *#__dan__#* -->
+
+
+<body class="hold-transition skin-blue sidebar-mini">
+
+	<div class="wrapper">
+
+		<!-- Top menu bar with Branding -->
+		<script type="text/javascript">		
+			document.write(objApp.getTopBanner()); 
+		</script>
+		
+		<!-- Content Wrapper. Contains page content -->
+		<div class="content-wrapper">
+			
+			<!-- Content Header (Page header) -->
+			<section class="content-header">
+			  <h1>
+				Intec
+				<small>Monitor</small>
+			  </h1>
+			  <ol class="breadcrumb">
+				<li><a href="home"><i class="fa fa-home"></i> Home</a></li>
+				<li><i class="fa fa-bar-chart"></i> Monitor</li>
+				<li class="active">Intec</li>
+			  </ol>
+			</section>
+			
+			<!-- Main content -->
+			<section class="content">
+				
+				<div class="row">
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<div class="box">
+							<div id='flash-msg'></div>
+							<!-- <div class="box-header with-border">
+								<h3 class="box-title">Subscribe Detail</h3>
+							</div> -->
+							<div class="box-body">
+								<form class="form-horizontal" name="frm_provider" id="frm_provider"> 
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" >
+													<label for="msisdn" class="col-sm-4 control-label">MSISDN</label>
+													<div class="col-sm-8">
+														<input type="text" 
+																class="form-control" 
+																placeholder="MSISDN" 
+																id="msisdn" 
+																name="msisdn" 
+																title="Enter MSISDN"   
+																data-validation-engine="validate[required,custom[integer]]">
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" >
+													<label for="status" class="col-sm-4 control-label">Status</label>
+													<div class="col-sm-8">
+														<select class="form-control select2" placeholder="Status" title="Select Status">
+															<option selected="selected">Active</option>
+															<option>Disabled</option>
+														</select>
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-12 col-sm-12 col-xs-12">
+												<div class="box-footer"> 
+													<button type="submit" class="btn btn-primary pull-right btnspace" name="create_provider" id="create_provider">Search</button>
+												</div>
+											</div>
+										</div>						
+									</div>
+								</form> 
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<div class="box">
+							<div class="box-body">
+								<table id="example1" class="table table-bordered table-striped table-hover">
+									<thead>
+										<tr>
+											<th style="width: 10% !important;">
+												<div class="checkbox checkboxPermis">
+													<label class="checkboxPermisLeft">
+														<input type="checkbox" class="minimal">
+													</label>
+												</div>
+											</th>
+											<th>MSISDN</th>
+											<th>Action</th>
+											<th>Status</th>
+											<th>Recieve</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td style="width: 10% !important;">
+												<div class="checkbox checkboxPermis">
+													<label class="checkboxPermisLeft">
+														<input type="checkbox" class="minimal">
+													</label>
+												</div>
+											</td>
+											<td>66800000001</td>
+											<td>DSD</td>
+											<td>PROCESS</td>
+											<td>25/04/2017 17:44:12</td>
+										</tr>
+										<tr>
+											<td style="width: 10% !important;">
+												<div class="checkbox checkboxPermis">
+													<label class="checkboxPermisLeft">
+														<input type="checkbox" class="minimal">
+													</label>
+												</div>
+											</td>
+											<td>668001230001</td>
+											<td>ABS</td>
+											<td>NEW</td>
+											<td>15/05/2017 12:42:10</td>
+										</tr>
+										<tr>
+											<td style="width: 10% !important;">
+												<div class="checkbox checkboxPermis">
+													<label class="checkboxPermisLeft">
+														<input type="checkbox" class="minimal">
+													</label>
+												</div>
+											</td>
+											<td>668012340002</td>
+											<td>CAD</td>
+											<td>FAIL</td>
+											<td>18/06/2017 12:42:10</td>
+										</tr>
+										<tr>
+											<td style="width: 10% !important;">
+												<div class="checkbox checkboxPermis">
+													<label class="checkboxPermisLeft">
+														<input type="checkbox" class="minimal">
+													</label>
+												</div>
+											</td>
+											<td>668001230001</td>
+											<td>CAY</td>
+											<td>FAIL</td>
+											<td>15/05/2017 12:42:10</td>
+										</tr>
+										<tr>
+											<td style="width: 10% !important;">
+												<div class="checkbox checkboxPermis">
+													<label class="checkboxPermisLeft">
+														<input type="checkbox" class="minimal">
+													</label>
+												</div>
+											</td>
+											<td>66800000001</td>
+											<td>CAZ</td>
+											<td>NEW</td>
+											<td>25/04/2017 17:44:12</td>
+										</tr>
+									</tbody>
+									<tfoot>
+										<tr>
+											<th style="width: 10% !important;">
+												<div class="checkbox checkboxPermis">
+													<label class="checkboxPermisLeft">
+														<input type="checkbox" class="minimal">
+													</label>
+												</div>
+											</th>
+											<th>MSISDN</th>
+											<th>Action</th>
+											<th>Status</th>
+											<th>Recieve</th>
+										</tr>
+									</tfoot>
+								</table>
+								<div class="row">
+									<div class="box-body boxpad">
+										<div class="col-md-12 col-sm-12 col-xs-12">
+											<div class="box-footer"> 
+												<button type="submit" class="btn btn-primary pull-right btnspace" name="delete" id="delete">Delete</button>
+												<button type="submit" class="btn btn-primary pull-right btnspace" name="submit" id="submit">Resubmit</button>
+											</div>
+										</div>
+									</div>						
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+			</section>
+			<!-- /.content -->
+			
+		</div>
+		<!-- /.content-wrapper -->
+
+		<script>
+			document.write(objApp.getFooter());
+		</script>
+		<!-- Printing footer -->
+	
+	</div>
+	<!-- ./wrapper -->
+	
+	<script>
+		$(function () {
+			//Initialize Select2 Elements
+			$(".select2").select2();
+			
+			//Datatable
+			$("#example1").DataTable();
+			
+			//iCheck for checkbox and radio inputs
+			$('input[type="checkbox"].minimal, input[type="radio"].minimal').iCheck({
+			  checkboxClass: 'icheckbox_minimal-blue',
+			  radioClass: 'iradio_minimal-blue'
+			});
+		});
+	</script>
+	
+</body>
+</html>

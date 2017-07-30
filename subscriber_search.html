@@ -1,0 +1,362 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+
+<!-- *#__dan__#* application js *#__dan__#* -->
+<script type="text/javascript" src="js/application.js"></script>
+<!-- *#__dan__#* application js *#__dan__#* -->
+<script type="text/javascript">	
+	document.write(objApp.getHeader());
+</script>
+<!-- load all js/css and other stuff -->
+
+<!-- *#__dan__#* live_circuit_util js *#__dan__#* -->
+<script type="text/javascript" src="js/manage_provider.js"></script>
+<!-- *#__dan__#* live_circuit_util js *#__dan__#* -->
+
+<!-- *#__dan__#* styles *#__dan__#* -->
+	<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+	<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+	<!--[if lt IE 9]>
+	<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+	<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+	<![endif]-->
+<!-- *#__dan__#* styles *#__dan__#* -->
+
+
+<body class="hold-transition skin-blue sidebar-mini">
+
+	<div class="wrapper">
+
+		<!-- Top menu bar with Branding -->
+		<script type="text/javascript">		
+			document.write(objApp.getTopBanner()); 
+		</script>
+		
+		<!-- Content Wrapper. Contains page content -->
+		<div class="content-wrapper">
+			
+			<!-- Content Header (Page header) -->
+			<section class="content-header">
+			  <h1>
+				Subscriber Search
+				<small>Subscription</small>
+			  </h1>
+			  <ol class="breadcrumb">
+				<li><a href="home"><i class="fa fa-home"></i> Home</a></li>
+				<li><i class="fa fa-bar-chart"></i> Subscription</li>
+				<li class="active">Subscriber Search</li>
+			  </ol>
+			</section>
+			
+			<!-- Main content -->
+			<section class="content">
+				
+				<div class="row">
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<div class="box">
+							<div id='flash-msg'></div>
+							<!-- <div class="box-header with-border">
+								<h3 class="box-title">Content Provider Detail</h3>
+							</div> -->
+							<div class="box-body">
+								<form class="form-horizontal" name="frm_provider" id="frm_provider"> 
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" id="subs_msisdn">
+													<label for="subs_msisdn" class="col-sm-4 control-label">MSISDN <span class="req-fld">*</span></label>
+													<div class="col-sm-8">
+														<input type="text" 
+																class="form-control" 
+																placeholder="MSISDN" 
+																id="subs_msisdn" 
+																name="subs_msisdn" 
+																title="Enter MSISDN"   
+																data-validation-engine="validate[required,custom[integer]]"> 
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-12 col-sm-12 col-xs-12">
+												<div class="box-footer"> 
+													<button type="submit" class="btn btn-primary pull-right btnspace" name="create_provider" id="create_provider">Search</button>
+												</div>
+											</div>
+										</div>						
+									</div>
+								</form> 
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<div class="box">
+							<div class="box-header with-border">
+								<h3 class="box-title">Subscriber Detail</h3>
+							</div>
+							<div class="box-body">
+								<table class="table table-bordered table-striped table-hover">
+									<tbody>
+										<tr>
+											<td><b>MSISDN</b></td>
+											<td>66840793683</td>
+										</tr>
+										<tr>
+											<td><b>Operator</b></td>
+											<td>TrueMove</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<div class="box">
+							<div class="box-header with-border">
+								<h3 class="box-title">Current Service</h3>
+							</div>
+							<div class="box-body">
+								<table id="example1" class="table table-bordered table-striped table-hover">
+									<thead>
+										<tr>
+											<th>Service</th>
+											<th>Service Category</th>
+											<th>MO Service ID</th>
+											<th>Provider</th>
+											<th>Operator</th>
+											<th>Subscribe Date</th>
+											<th>Subscribe Channel</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td>CP3rd_SUB_01</td>
+											<td>Content Provider</td>
+											<td>MO_SUB</td>
+											<td>CP Third Parties 01</td>
+											<td>TrueMove</td>
+											<td>05/06/2017 16:20:24</td>
+											<td>WEB&#91;Admin&#93;</td>
+										</tr>
+										<tr>
+											<td>CP3rd_SUB_02</td>
+											<td>Content Provider</td>
+											<td>MO_SUB</td>
+											<td>CP Third Parties 02</td>
+											<td>TrueMove</td>
+											<td>05/07/2017 08:20:06</td>
+											<td>CP Third Parties 02</td>
+										</tr>
+										<tr>
+											<td>CP3rd_SUB_03</td>
+											<td>Content Provider</td>
+											<td>MO_SUB</td>
+											<td>CP Third Parties 03</td>
+											<td>TrueMove</td>
+											<td>05/06/2017 16:20:24</td>
+											<td>WEB&#91;Admin&#93;</td>
+										</tr>
+										<tr>
+											<td>CP3rd_SUB_04</td>
+											<td>Content Provider</td>
+											<td>MO_SUB</td>
+											<td>CP Third Parties 04</td>
+											<td>TrueMove</td>
+											<td>05/07/2017 08:20:06</td>
+											<td>CP Third Parties 02</td>
+										</tr>
+										<tr>
+											<td>CP3rd_SUB_05</td>
+											<td>Content Provider</td>
+											<td>MO_SUB</td>
+											<td>CP Third Parties 05</td>
+											<td>TrueMove</td>
+											<td>05/06/2017 16:20:24</td>
+											<td>WEB&#91;Admin&#93;</td>
+										</tr>
+										<tr>
+											<td>CP3rd_SUB_06</td>
+											<td>Content Provider</td>
+											<td>MO_SUB</td>
+											<td>CP Third Parties 06</td>
+											<td>TrueMove</td>
+											<td>05/07/2017 08:20:06</td>
+											<td>CP Third Parties 02</td>
+										</tr>
+									</tbody>
+									<tfoot>
+										<tr>
+											<th>Service</th>
+											<th>Service Category</th>
+											<th>MO Service ID</th>
+											<th>Provider</th>
+											<th>Operator</th>
+											<th>Subscribe Date</th>
+											<th>Subscribe Channel</th>
+										</tr>
+									</tfoot>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<div class="box">
+							<div class="box-header with-border">
+								<h3 class="box-title">Subscriber History &#40;Last 10 Records&#41;</h3>
+							</div>
+							<div class="box-body">
+								<table class="table table-bordered table-striped table-hover">
+									<thead>
+										<tr>
+											<th>Date</th>
+											<th>Action</th>
+											<th>Description</th>
+											<th>Channel</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td>25/07/2017 10:22:38</td>
+											<td>MO</td>
+											<td>Create subscriber via MO request</td>
+											<td>CP Third Parties 04</td>
+										</tr>
+										<tr>
+											<td>24/07/2017 10:22:38</td>
+											<td>MO</td>
+											<td>Create subscriber via MO request</td>
+											<td>CP Third Parties 03</td>
+										</tr>
+										<tr>
+											<td>22/07/2017 10:22:38</td>
+											<td>MO</td>
+											<td>Create subscriber via MO request</td>
+											<td>CP Third Parties 02</td>
+										</tr>
+										<tr>
+											<td>21/07/2017 10:22:38</td>
+											<td>MO</td>
+											<td>Create subscriber via MO request</td>
+											<td>CP Third Parties 01</td>
+										</tr>
+									</tbody>
+									<tfoot>
+										<tr>
+											<th>Date</th>
+											<th>Action</th>
+											<th>Description</th>
+											<th>Channel</th>
+										</tr>
+									</tfoot>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<div class="box">
+							<div class="box-header with-border">
+								<h3 class="box-title">Subscription History &#40;Last 10 Records&#41;</h3>
+							</div>
+							<div class="row">
+								<div class="box-body boxpad">
+									<div class="col-md-12 col-sm-12 col-xs-12">
+										<div class="box-header with-border">
+											<button type="submit" class="btn btn-success pull-right btnspace" name="create_provider" id="create_provider">Export</button>
+										</div>
+									</div>
+								</div>						
+							</div>
+							<div class="box-body">
+								<table class="table table-bordered table-striped table-hover">
+									<thead>
+										<tr>
+											<th>Date</th>
+											<th>Service</th>
+											<th>MO Service ID</th>
+											<th>Action</th>
+											<th>Description</th>
+											<th>Channel</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td>22/07/2017 10:22:38</td>
+											<td>CP3rd_SUB_01</td>
+											<td>MO_SUB_01</td>
+											<td>UNSUBSCRIBE</td>
+											<td>Unsubscribe service via console</td>
+											<td>WEB&#91;Admin&#93;</td>
+										</tr>
+										<tr>
+											<td>21/07/2017 10:22:38</td>
+											<td>CP3rd_SUB_02</td>
+											<td>MO_SUB_02</td>
+											<td>UNSUBSCRIBE</td>
+											<td>Unsubscribe service via console</td>
+											<td>WEB&#91;Admin&#93;</td>
+										</tr>
+										<tr>
+											<td>21/07/2017 10:22:38</td>
+											<td>CP3rd_SUB_03</td>
+											<td>MO_SUB_03</td>
+											<td>UNSUBSCRIBE</td>
+											<td>Unsubscribe service via console</td>
+											<td>WEB&#91;Admin&#93;</td>
+										</tr>
+									</tbody>
+									<tfoot>
+										<tr>
+											<th>Date</th>
+											<th>Service</th>
+											<th>MO Service ID</th>
+											<th>Action</th>
+											<th>Description</th>
+											<th>Channel</th>
+										</tr>
+									</tfoot>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+			</section>
+			<!-- /.content -->
+			
+		</div>
+		<!-- /.content-wrapper -->
+
+		<script>
+			document.write(objApp.getFooter());
+		</script>
+		<!-- Printing footer -->
+	
+	</div>
+	<!-- ./wrapper -->
+	
+	<script>
+		$(function () {
+			//Datatable
+			$("#example1").DataTable();
+		});
+	</script>
+	
+</body>
+</html>

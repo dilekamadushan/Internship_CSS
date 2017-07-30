@@ -1,0 +1,223 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+
+<!-- *#__dan__#* application js *#__dan__#* -->
+<script type="text/javascript" src="js/application.js"></script>
+<!-- *#__dan__#* application js *#__dan__#* -->
+<script type="text/javascript">	
+	document.write(objApp.getHeader());
+</script>
+<!-- load all js/css and other stuff -->
+
+<!-- *#__dan__#* live_circuit_util js *#__dan__#* -->
+<script type="text/javascript" src="js/manage_provider.js"></script>
+<!-- *#__dan__#* live_circuit_util js *#__dan__#* -->
+
+<!-- *#__dan__#* styles *#__dan__#* -->
+	<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+	<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+	<!--[if lt IE 9]>
+	<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+	<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+	<![endif]-->
+<!-- *#__dan__#* styles *#__dan__#* -->
+
+
+<body class="hold-transition skin-blue sidebar-mini">
+
+	<div class="wrapper">
+
+		<!-- Top menu bar with Branding -->
+		<script type="text/javascript">		
+			document.write(objApp.getTopBanner()); 
+		</script>
+		
+		<!-- Content Wrapper. Contains page content -->
+		<div class="content-wrapper">
+			
+			<!-- Content Header (Page header) -->
+			<section class="content-header">
+			  <h1>
+				Subscription Report
+				<small>Reports</small>
+			  </h1>
+			  <ol class="breadcrumb">
+				<li><a href="home"><i class="fa fa-home"></i> Home</a></li>
+				<li><i class="fa fa-bar-chart"></i> Reports</li>
+				<li class="active">Subscription Report</li>
+			  </ol>
+			</section>
+			
+			<!-- Main content -->
+			<section class="content">
+				
+				<div class="row">
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<div class="box">
+							<div id='flash-msg'></div>
+							<!-- <div class="box-header with-border">
+								<h3 class="box-title">Content Provider Detail</h3>
+							</div> -->
+							<div class="box-body">
+								<form class="form-horizontal" name="frm_provider" id="frm_provider"> 
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label for="provider_name" class="col-sm-4 control-label">Provider Name</label>
+													<div class="col-sm-8">
+														<select class="form-control select2" placeholder="Provider Name" title="Select Provider Name">
+															<option selected="selected">Content Provider_01</option>
+															<option>Content Provider_02</option>
+															<option>CP_03</option>
+															<option>CP_04</option>
+															<option>Cont_Prov_05</option>
+															<option>Cont_Prov_06</option>
+														</select>
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" >
+													<label for="srv_name" class="col-sm-4 control-label">Service Name</label>
+													<div class="col-sm-8">
+														<select class="form-control select2" placeholder="Service Name" title="Select Service Name">
+															<option selected="selected">Service 01</option>
+															<option>Service 02</option>
+															<option>Service 03</option>
+															<option>Service 04</option>
+															<option>Service 05</option>
+															<option>Service 06</option>
+														</select>
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label for="sub_frm_rng" class="col-sm-4 control-label">From Date Range</label>
+													<div class="col-sm-8">
+														<div class="input-group">
+														  <div class="input-group-addon">
+															<i class="fa fa-calendar"></i>
+														  </div>
+														  <input type="text" class="form-control pull-right" id="subsrangefrm" placeholder="Subscription From Date Range" title="Select Subscription From Date Range">
+														</div>
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label for="sub_to_rng" class="col-sm-4 control-label">To Date Range</label>
+													<div class="col-sm-8">
+														<div class="input-group">
+														  <div class="input-group-addon">
+															<i class="fa fa-calendar"></i>
+														  </div>
+														  <input type="text" class="form-control pull-right" id="subsrangeto" placeholder="Subscription To Date Range" title="Select Subscription To Date Range">
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-12 col-sm-12 col-xs-12">
+												<div class="box-footer"> 
+													<button type="submit" class="btn btn-primary pull-right btnspace" name="create_provider" id="create_provider">Search</button>
+												</div>
+											</div>
+										</div>						
+									</div>
+								</form> 
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<div class="box">
+							<div class="row">
+								<div class="box-body boxpad">
+									<div class="col-md-12 col-sm-12 col-xs-12">
+										<div class="box-header with-border">
+											<button type="submit" class="btn btn-success pull-right btnspace" name="create_provider" id="create_provider">Export</button>
+										</div>
+									</div>
+								</div>						
+							</div>
+							<div class="box-body">
+								<table id="example1" class="table table-bordered table-striped table-hover">
+									<thead>
+										<tr>
+											<th>Service Name</th>
+											<th>Provider</th>
+											<th>2017/07</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td>AF2V1</td>
+											<td>True Digital Entertainment</td>
+											<td>2</td>
+										</tr>
+										<tr>
+											<td>&nbsp;</td>
+											<td>Summary</td>
+											<td>2</td>
+										</tr>
+									</tbody>
+									<tfoot>
+										<tr>
+											<th>Service Name</th>
+											<th>Provider</th>
+											<th>2017/07</th>
+										</tr>
+									</tfoot>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+			</section>
+			<!-- /.content -->
+			
+		</div>
+		<!-- /.content-wrapper -->
+
+		<script>
+			document.write(objApp.getFooter());
+		</script>
+		<!-- Printing footer -->
+	
+	</div>
+	<!-- ./wrapper -->
+	
+	<script>
+		$(function () {
+			//Initialize Select2 Elements
+			$(".select2").select2();
+
+			//Date range picker with time picker
+			$('#subsrangefrm').daterangepicker();
+			
+			//Date range picker with time picker
+			$('#subsrangeto').daterangepicker();
+			<!-- $('#subsrange').daterangepicker({timePicker: true, timePickerIncrement: 30, format: 'MM/DD/YYYY h:mm A'}); -->
+					
+			//Datatable
+			$("#example1").DataTable();
+		});
+	</script>
+	
+</body>
+</html>

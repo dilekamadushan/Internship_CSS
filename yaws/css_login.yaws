@@ -1,0 +1,314 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="../js/application.js"></script>
+<script>
+	document.write(objApp.getHeader());
+</script>
+<!-- load all js/css and other stuff -->
+<link href="../css/login.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="../js/user_manager.js"></script>
+<!----------------------------Fancy Box-------------------------------->
+<script type="text/javascript" src="../css/source/jquery.fancybox.js?v=2.1.5"></script>
+<script type="text/javascript">
+		$(document).ready(function() {
+			
+			$('.fancybox').fancybox({
+				wrapCSS    : 'fancybox-custom', 
+				'width'         : 200,
+				'height'        : 100,				
+
+				openEffect : 'elastic',
+				openSpeed  : 150,
+
+				closeEffect : 'elastic',
+				closeSpeed  : 150
+			});
+
+		});
+</script>
+<!----------------------------Fancy Box--------------------------------> 
+<body class="loginBG">
+<div id="main_wrapper">
+	<div style="background: none; opacity: 0.9; filter: alpha(opacity=90);" class="Log-header">
+		<div id="logo">
+			<div id="orgLogo">
+				<img height="53px" src="images/tigo_logo.png">
+			</div>
+		</div>
+	</div>
+			
+	<div id="flash-msg"></div>
+	
+	<div class="LoginOuter">
+		<div class="LoginLogoCont">
+			<div class="LogoCont" style="top:0;">
+				<div class="loginFormHead">Login</div>
+				<!--<img width="150px" height="150px" src="images/wave_vmail_logo_new.png" title="Wavenet CAM Admin" alt="Common Authentication Module powered by Wavenet International">-->
+			</div>
+			
+			<div class="LoginFormCont" style="font-size: 12px; text-align:center;">
+				Please login using your Phone number and PIN 
+
+				<form id="frm_login" method="POST">
+					<div>
+						<div class="formInputDiv"> 
+							<input id="user_id_log" type="text" placeholder="Phone number" data-validation-engine="validate[required] text-input" name="user_id_log" class="textBoxLargeUN" value="">
+						</div>
+						<div class="formInputDiv">
+							<input id="password" type="password" placeholder="Password" style="width: 137px;" data-validation-engine="validate[required] text-input" name="password" class="textBoxLargePWD" value="">
+						</div>
+					</div>
+					<div class="Notes">
+						<div style="width:50% !important; float:left; margin-top: 23px;font-size: 13px;">
+							<a class="fancybox" href="#pw_pop" onClick="objUser.confirmSend()">Forgot PIN ?</a>
+						</div>
+						<div class="formInputDiv" style="width:45% !important; float:right;">
+							<input id="login" class="main-buttons" type="submit" tabindex="3" value="Login" name="login" title="Login" style="float: left; font-size: 14px; padding: 4% 2% !important; width: 100% !important; margin: 0 0 4%; background: #287bbc !important;">
+						</div>
+					</div>
+				</form>
+				<br>
+			</div>
+			
+		</div>
+
+	</div>
+	<div id="pw_pop" style="width:430px;height:200px"></div>  
+
+</div>
+	
+<erl>
+
+-export([out/1, handle/2]). 
+
+-include("vmail_conf.hrl").
+-include("vmail_api.hrl"). 
+
+out(Arg) ->
+	Method = (Arg#arg.req)#http_request.method,
+	handle(Method, Arg).
+
+handle('GET', Arg) ->
+	C = (Arg#arg.headers)#headers.cookie,
+	%case yaws_api:find_cookie_val("session_id", C) of
+	case [] of
+		[] ->
+			[{status, 200},{html, ""}];
+		SessionID ->
+			case yaws_api:cookieval_to_opaque(SessionID) of
+				{ok, SessionData} ->
+					[{status, 303},
+						{allheaders,
+							[{header, ["Location: ",?HOME_URL]}]},
+						{html, ""}
+					];
+				{error, no_session} ->
+					[{status, 200},{html, ""}]
+			end
+	end;
+
+handle('POST', Arg) ->
+	
+	Ip = vmail_common:get_ip(Arg),
+
+	case yaws_api:postvar(Arg, "old_password") of
+		undefined ->
+		
+			LoginTime = calendar:datetime_to_gregorian_seconds(erlang:localtime()),
+			UniqId    = vmail_common:toString(LoginTime * random:uniform(9999)),
+			
+			error_logger:info_msg("session UniqId in ~p~n", [UniqId]),
+
+			{ok, UserId_} = yaws_api:postvar(Arg, "user_id_log"),
+			{ok, Password} = yaws_api:postvar(Arg, "password"),	
+			
+			UserId = vmail_common:toString(UserId_),
+			Pwd    = vmail_common:toString(Password),
+
+			RecSessionData = #session_data
+			{
+				username = UserId,
+				uniqid   = UniqId
+			},	
+
+			vmail_logger:info(UserId, UniqId, "User login attempt - [" ++ Ip ++ "]"),	
+			
+			case vmail_mysql_odbc:connect() of  
+				{ok,Ref} -> 
+					
+					Sql = "SELECT * FROM users WHERE msisdn = " ++ UserId ++ " AND pin = '" ++ Pwd ++ "'",
+					
+					case vmail_mysql_odbc:sql_query(Ref, Sql) of  
+						{_,_,[]} ->
+						  
+							%vmail_common:event_log(UserId, UniqId, "", ?WEB_LOGIN, ?EDR_FAIL, ?LOGIN_ERROR),
+						
+							vmail_logger:info(UserId, UniqId, "User not exist"),
+							Response = not_exists;
+						{_,_,[Res]} ->
+
+							Status = vmail_common:toString(element(3, Res)),
+							
+							if
+								Status == "1" ->
+									vmail_logger:info(UserId, UniqId, "User account is temporarily disabled"),
+									vmail_common:event_log(UserId, UniqId, "", ?WEB_LOGIN, ?EDR_FAIL, ?LOGIN_ERROR),
+									Response = disabled;
+								true ->						
+	
+									PkgId = vmail_common:toString(element(2, Res)),
+									
+									case get_package(PkgId,Ref) of
+										"" ->
+											vmail_logger:info(UserId, UniqId, "User package error"),
+											vmail_common:event_log(UserId, UniqId, "", ?WEB_LOGIN, ?EDR_FAIL, ?LOGIN_ERROR),
+											Response = error;
+										Package ->
+											
+											set_last_access(Ref, UserId, RecSessionData), 
+											
+											SessionID = set_session(UserId, UniqId, Package, Res),
+											vmail_common:event_log(UserId, UniqId, "", ?WEB_LOGIN, ?EDR_SUCCESS, ?DEFAULT_REASON),
+											Response = {authenticated, SessionID}	
+									end
+							end;		
+							
+						{error,Reason} ->
+							Response = Reason;		
+						_ ->
+							Response = error		
+						end,
+						vmail_mysql_odbc:disconnect(Ref);	
+				{error,Reason} ->
+					Response = Reason;		
+				_ ->
+					Response = error			
+			end;
+			
+		{ok, OldPassword} ->
+
+			UserId = "-------",
+			UniqId = "-------",
+			
+			RecSessionData = #session_data
+			{
+				username = UserId,
+				uniqid   = UniqId
+			},			
+		
+			Response = error
+	end,
+
+	case Response of
+		{authenticated, NewSessionID} ->
+		
+			vmail_logger:info(UserId, UniqId, "User login success"),	 					
+
+			SessionCookie = yaws_api:setcookie(?SESSION_NAME, NewSessionID, "/"),
+
+			[{status, 303},
+				{allheaders,
+					[{header, ["Location: ", ?HOME_URL]}]},
+				{html, ""}, [SessionCookie]
+			];
+		not_exists ->
+			[{status, 200},{html, "<div id='flash_msg'>not_exists</div>"}];		
+		disabled ->
+			[{status, 200},{html, "<div id='flash_msg'>disabled</div>"}];				
+		error ->
+			[{status, 200},{html, "<div id='flash_msg'>error</div>"}];
+		invalid_user ->
+			[{status, 200},{html, "<div id='flash_msg'>error</div>"}];
+		invalid_password ->
+			[{status, 200},{html, "<div id='flash_msg'>error</div>"}];
+		first_login ->
+			[{status, 200},{html, "<div id='flash_msg'>first_login</div>"}];
+		no_user_exists ->
+			[{status, 200},{html, "<div id='flash_msg'>no_user_exists</div>"}]
+	end.
+
+get_package(PkgID,Ref) ->
+
+	Sql = "SELECT * FROM packages WHERE package_id = " ++ PkgID,
+	
+	case vmail_mysql_odbc:sql_query(Ref, Sql) of  
+		{_,_,[ResPkg]} ->
+			PackageRes = ResPkg;		
+		{error,Reason} ->
+			PackageRes = "";
+		_ ->
+			PackageRes = ""	
+	end,
+
+	PackageRes.	
+	
+set_last_access(Ref, UserID, RecSessionData) ->
+	
+	{{GetYear,GetMonth,GetDay},{Hour,Min,Sec}} = erlang:localtime(),
+	
+	CurDate = vmail_common:toString(GetYear) ++ "-" ++ vmail_common:toString(GetMonth) ++ "-" ++ vmail_common:toString(GetDay),
+	CurTime = vmail_common:toString(Hour) ++ ":" ++ vmail_common:toString(Min) ++ ":" ++ vmail_common:toString(Sec),
+	
+	CurDateTime = CurDate ++ " " ++ CurTime, 
+	
+	Sql = "UPDATE users SET last_access_time = '" ++ CurDateTime ++ "' WHERE msisdn = " ++ UserID,
+	
+	case vmail_mysql_odbc:sql_query(Ref, Sql) of  
+		{updated,_} ->
+			vmail_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Last access updated - [" ++ CurDateTime ++ "]"),
+			LastRes = "ok";		
+		{error,Reason} ->
+			vmail_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Last access update failed - [" ++ CurDateTime ++ "]"),
+			LastRes = "error";
+		_ ->
+			vmail_logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Last access update failed - [" ++ CurDateTime ++ "]"),
+			LastRes = "error"	
+	end,
+
+	LastRes.		
+
+set_session(UserID, UniqueID, PkgData, Profile) ->
+			
+	UserSession = #vmail_session{
+					user_id = vmail_common:toString(UserID), 
+					uniqid = vmail_common:toString(UniqueID),
+					pkg = vmail_common:toString(element(1, PkgData)),					
+					vm_avail = vmail_common:toString(element(3, PkgData)),
+					msg_count= vmail_common:toString(element(4, PkgData)),
+					saved_days= vmail_common:toString(element(6, PkgData)),
+					msg_restore= vmail_common:toString(element(7, PkgData)),					
+					callb_avail= vmail_common:toString(element(12, PkgData)),
+					callb_count= vmail_common:toString(element(13, PkgData)),
+					mca_avail= vmail_common:toString(element(15, PkgData)),
+					sms_alert_avail= vmail_common:toString(element(16, PkgData)),
+					email_alert_avail= vmail_common:toString(element(17, PkgData)),
+					ivr_alert_avail= vmail_common:toString(element(18, PkgData)),
+					noti_sche_avail= vmail_common:toString(element(19, PkgData)),
+					rec_greet_avail= vmail_common:toString(element(25, PkgData)),
+					pre_greet_avail= vmail_common:toString(element(20, PkgData)),
+					status_greet_avail= vmail_common:toString(element(26, PkgData)),
+					fwd_msg_to_email = vmail_common:toString(element(21, PkgData)),
+					canned_sms = vmail_common:toString(element(24, PkgData)),
+					read_receipt = vmail_common:toString(element(27, PkgData)),
+					email_address = vmail_common:toString(element(5, Profile)),
+					language = vmail_common:toString(element(9, Profile)),
+					mms_forwarding = vmail_common:toString(element(29, PkgData)),
+					email_forwarding = vmail_common:toString(element(30, PkgData))
+				},
+					
+	SessionCookie = yaws_api:new_cookie_session(UserSession),
+
+	SessionCookie.
+
+</erl>
+
+	<script>
+		document.write(objApp.getFooter());
+		var base_url = window.location.origin;
+	document.write("<script type='text/javascript' src='"+base_url+"common_admin/js/user_manager.js'/>");
+	document.write("<script type='text/javascript' src='"+base_url+"common_admin/js/application.js'/>");
+	</script>
+	<!-- Printing footer -->
+</body>
+</html>

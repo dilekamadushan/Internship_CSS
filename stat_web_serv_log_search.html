@@ -1,0 +1,91 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="js/application.js"></script>
+<script type="">
+	document.write(objApp.getHeader());
+</script>
+<!-- load all js/css and other stuff -->
+<script type="text/javascript" src="js/log_search.js"></script>
+<body>
+	<script type="">
+		document.write(objApp.getTopBanner());
+	</script>
+	<!-- Printing top banner & login check -->
+
+	<div class="InBody">
+		<div class="InBodyIn">
+			<script type="">
+				document.write(objApp.getMainMenu());
+			</script>
+			<!-- Left Main Menu -->
+			<div class="bodyMid">
+				<div class="bodytopic">Log Search</div>
+				<!--<div class="bodytopic-Sub">EDR Analyzer</div>-->
+				<div class="bodyMid_cont_edr">
+					<div class="bdfill">
+						<div id='flash-msg'></div>
+						<!-- Flash Message -->
+						<form name="frm_log" id="frm_log" action="">
+						<input type="hidden" name="type" id="type" value="ggsn"/>
+							<table border="0" align="center" cellpadding="0" cellspacing="0"
+								class="insert" width="100%">
+								<tr>								
+									<td width="30%">Date<span class="required-field"></span></td>
+									<td width="70%" align="left">
+									<input type="text" readonly
+										id="fromTime" data-validation-engine="validate[required]"/> &nbsp&nbsp
+									
+									</td>
+								</tr>																
+								<tr>
+									<td>Log Type<span class="required-field"></span></td>
+									<td align="left"><select name="types" id="types"></select>
+									</td>
+									<script type="text/javascript">
+										objLog.getLogTypes(); 
+									</script>
+								</tr>
+								<tr>
+									<td>Keyword<span class="required-field"></span></td>
+									<td align="left">
+									<input type="text"
+										name="keyword"
+										data-validation-engine="validate[required] text-input"
+										id="keyword" style="width: 20%" maxlength="15"/>
+									</td>
+								</tr>
+							
+								<tr>
+									<td colspan="2">&nbsp;</td>
+								</tr>
+								<tr>
+									<td></td>
+									<td align="left">
+									<input type="submit"
+										name="search" id="search" value="Search" />&nbsp; 
+										
+										&nbsp; <input type="submit" name="csv" id="csv"
+										value="CSV" />
+									</td>
+								</tr>								
+							</table>
+						</form>
+					</div>
+
+
+					<div class="bdfill_tb">
+						<div  id="log_data_tbl"></div>
+					</div>
+				</div>
+
+
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript">
+		document.write(objApp.getFooter());
+	</script>
+	<!-- Printing footer -->
+</body>
+</html>

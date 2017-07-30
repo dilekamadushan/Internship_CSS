@@ -1,0 +1,217 @@
+<erl module=css_channel_manager>
+-export([out/1, manage_channel/4]).  
+
+-include("css_conf.hrl"). 
+-include("css_api.hrl").
+
+out(Arg) ->
+   Method = method(Arg),
+   error_logger:info_msg("~p:~p ~p Request~n",[?MODULE, ?LINE, Method ]),  
+   handle(Method, Arg). 
+
+method(Arg) ->
+   Rec = Arg#arg.req,
+   Rec#http_request.method.
+   
+handle('GET', Arg) ->
+
+   case css_session:get_sess("name", Arg) of		
+		{error,no_session} ->
+			Response = <<"logout">>,
+			{ehtml, rfc4627:encode(Response)};	
+		Name ->	
+			C = (Arg#arg.headers)#headers.cookie,
+			SessionID = yaws_api:find_cookie_val(?SESSION_NAME, C),
+			{ok, SessionData} = yaws_api:cookieval_to_opaque(SessionID),	
+			{ok, Action} = yaws_api:getvar(Arg, "action"),
+		
+			RecSessionData = #session_data
+			{
+				username = css_common:toString(css_session:get_sess("name", Arg)),
+				uniqid   = css_common:toString(css_session:get_sess("uniqid", Arg))
+			},
+			manage_channel(Action, SessionData, RecSessionData, Arg)
+   end;
+
+handle('POST', Arg) -> 
+
+	error_logger:info_msg("SQL - ~p:~n",["ffffffffffff"]),
+
+	case css_session:get_sess("name", Arg) of		
+		{error,no_session} ->
+			Response = <<"logout">>,
+			{ehtml, rfc4627:encode(Response)};	
+		Name ->		
+			{ok,[RequestData|[SessionData]],_} = rfc4627:decode(Arg#arg.clidata), 						
+			Action = binary_to_list(rfc4627:get_field(RequestData, "action", <<>>)),  		
+			RecSessionData = #session_data
+			{
+				username = css_common:toString(css_session:get_sess("name", Arg)),
+				uniqid   = css_common:toString(css_session:get_sess("uniqid", Arg)),
+				app   	 = css_common:toString(css_session:get_sess("app", Arg))
+			},
+			manage_channel(Action, RequestData, RecSessionData, Arg)
+	end.
+	
+-spec manage_channel(MethodPrefix :: '"ADD_NUMBER"'|'"UPDATE_NUMBER"' | '"DELETE_NUMBER"' | '"SEARCH_NUMBERS"' | '"GET_ALL_NUMBERS"' | '"GENERATE_CSV"' | '"GENERATE_XLS"', 
+				RequestData :: list(), RecSessionData :: session_data(), Arg :: any()) -> {ehtml, Response :: list()}.
+
+%%	
+%% Add Channel
+%%
+manage_channel("CREATE", RequestData, RecSessionData, Arg) ->
+
+	ChannelName = binary_to_list(rfc4627:get_field(RequestData, "channel_name", <<>>)),
+	KeyWord 	= binary_to_list(rfc4627:get_field(RequestData, "key_word", <<>>)),
+	SmsNotify 	= binary_to_list(rfc4627:get_field(RequestData, "notify_sms", <<>>)),
+	Username	= css_common:toString(css_session:get_sess("name", Arg)),
+	
+	Sql 		= "INSERT INTO channel ( channel_name, sender_name, created_user, notify_sms ) VALUES (  '"++ ChannelName ++"', '"++ KeyWord ++"', '"++ Username ++"' , "++ SmsNotify ++" )",
+	
+	error_logger:info_msg("SQL - ~p:~n",[Sql]), 
+	
+	case css_mysql_odbc:connect() of  
+		{ok,Ref} ->	
+		   Ret = css_mysql_odbc:sql_query(Ref, Sql),  
+		   error_logger:info_msg("Ret - ~p:~n",[Ret]), 
+		   case Ret of  
+				{updated,1} ->
+					css_logger:info(RecSessionData, "Channel Manager : Channel Added Successfully"),
+					Response = [{obj,[{status, <<"ok">>},{message, <<"Channel Created Successfully">>}]}];
+				{error,Reason} ->				
+					css_logger:info(RecSessionData, "Channel Manager : Channel Adding Failed : " ++ css_common:toString(Reason)),	
+					Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+				_ ->				
+					css_logger:info(RecSessionData, "Channel Manager : Channel Adding Failed : Bad Rpc"),	
+					Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+				end,
+				css_mysql_odbc:disconnect(Ref);	
+		{error,Reason} ->				
+			css_logger:info(RecSessionData, "Channel Manager : Channel Adding Failed : " ++ css_common:toString(Reason)),	
+			Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+		_ ->				
+			css_logger:info(RecSessionData, "Channel Manager : Channel Adding Failed : Internal Error"),	
+			Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+		end,
+	
+	{ehtml, rfc4627:encode(Response)};
+
+%%	
+%% Remove Channel
+%%
+manage_channel("DELETE_CHANNEL", RequestData, RecSessionData, Arg) ->
+
+	ChannelId 	= binary_to_list(rfc4627:get_field(RequestData, "channel_id", <<>>)),
+	
+	Sql 		= "DELETE FROM channel WHERE channel_id='"++ ChannelId ++"'",
+	
+	error_logger:info_msg("SQL - ~p:~n",[Sql]), 
+	
+	case css_mysql_odbc:connect() of  
+		{ok,Ref} ->	
+		   Ret = css_mysql_odbc:sql_query(Ref, Sql),  
+		   error_logger:info_msg("Ret - ~p:~n",[Ret]), 
+		   case Ret of  
+				{updated,1} ->
+					css_logger:info(RecSessionData, "Channel Manager : Channel Removed Successfully"),
+					Response = [{obj,[{status, <<"ok">>},{message, <<"Channel Created Successfully">>}]}];
+				{error,Reason} ->				
+					css_logger:info(RecSessionData, "Channel Manager : Channel Removal Failed : " ++ css_common:toString(Reason)),	
+					Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+				_ ->				
+					css_logger:info(RecSessionData, "Channel Manager : Channel Removal Failed : Bad Rpc"),	
+					Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+				end,
+				css_mysql_odbc:disconnect(Ref);	
+		{error,Reason} ->				
+			css_logger:info(RecSessionData, "Channel Manager : Channel Removal Failed : " ++ css_common:toString(Reason)),	
+			Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+		_ ->				
+			css_logger:info(RecSessionData, "Channel Manager : Channel Removal Failed : Internal Error"),	
+			Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+		end,
+	
+	{ehtml, rfc4627:encode(Response)};
+
+	
+%%		
+%% Get all the numbers in Blacklist
+%%
+manage_channel("SEARCH", RequestData, RecSessionData, Arg) ->
+
+ error_logger:info_msg("SQL ---------- ~p:~n",["fffffffffff"]),
+
+	{ok, SearchValue}	= yaws_api:getvar(Arg, "search[value]"),
+	{ok, Order} 		= yaws_api:getvar(Arg, "order[0][column]"),
+	{ok, OrderDirection}= yaws_api:getvar(Arg, "order[0][dir]"),
+	{ok, LimitStart} 	= yaws_api:getvar(Arg, "start"),
+	{ok, LimitLength} 	= yaws_api:getvar(Arg, "length"),
+	{ok, Draw} 			= yaws_api:getvar(Arg, "draw"),
+	
+	{ok, ChannelName} 	= yaws_api:getvar(Arg, "channel_name"),
+	{ok, KeyWord} 		= yaws_api:getvar(Arg, "key_word"),
+	Username			= css_common:toString(css_session:get_sess("name", Arg)),
+	
+	Sql 		= "SELECT * FROM channel WHERE channel_name LIKE '%"++ ChannelName ++"%' AND sender_name LIKE '%"++ KeyWord ++"%' ORDER BY channel_name LIMIT "++ LimitStart ++", "++ LimitLength,
+	TotalSql 	= "SELECT COUNT(*) FROM channel WHERE channel_name LIKE '%"++ ChannelName ++"%' AND sender_name LIKE '%"++ KeyWord ++"%' ORDER BY channel_name",
+	
+	error_logger:info_msg("SQL - ~p:~n",[Sql]), 
+	error_logger:info_msg("SQL - ~p:~n",[TotalSql]), 
+		
+	case css_mysql_odbc:connect() of  
+		{ok,Ref} ->	
+			
+			case css_mysql_odbc:sql_query(Ref, TotalSql) of  
+				{TotalAa,TotalBb,TotalRes} ->
+					RecordsTotal = list_to_integer(element(1, lists:last(TotalRes)));
+				{error,_Reason} ->
+					RecordsTotal = 0;
+				_->
+				RecordsTotal = 0
+			end,
+		
+		   case css_mysql_odbc:sql_query(Ref, Sql) of  
+				{Aa,Bb,Res} ->
+					css_logger:info(RecSessionData, "Channel Manage : Channel Surched Successfully"),
+					
+					case get_all_records(Res, []) of 
+						[] ->
+							Response = {obj,[{draw, css_common:toBinary(Draw)},{recordsTotal, css_common:toBinary(0)},{recordsFiltered, css_common:toBinary(0)},{data, []}]};
+						Results ->
+							RecordsFiltered = RecordsTotal,	
+							Response = {obj,[{draw, css_common:toBinary(Draw)},{recordsTotal, css_common:toBinary(RecordsTotal)},{recordsFiltered, css_common:toBinary(RecordsFiltered)},{data, Results}]}
+					end;		
+				{error,Reason} ->				
+					css_logger:info(RecSessionData, "Channel Manage : Channel Search Failed : " ++ css_common:toString(Reason)),	
+					Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+				_ ->				
+					css_logger:info(RecSessionData, "Channel Manage : Channel Search Failed : Bad Rpc"),	
+					Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+				end,
+				css_mysql_odbc:disconnect(Ref);	
+		{error,Reason} ->				
+			css_logger:info(RecSessionData, "Channel Manage : Channel Search Failed : " ++ css_common:toString(Reason)),	
+			Response = [{obj,[{status, <<"error">>},{message, css_common:toBinary(css_common:get_error(Reason))}]}];
+		_ ->				
+			css_logger:info(RecSessionData, "Channel Manage : Channel Search Failed : Internal Error"),	
+			Response = [{obj,[{status, <<"error">>},{message, <<"Temporary Error">>}]}]			
+		end,
+
+	{ehtml, rfc4627:encode(Response)}.
+
+-spec get_all_records(ResultSet :: [tuple()], RecordList :: [tuple()]) -> RecordList :: [tuple()].
+%% @doc Iterate user list return from API and prepare json formatted response list.
+%%
+get_all_records([], RecordList) ->
+	RecordList;	
+get_all_records([Row|Rest], RecordList) ->  
+
+	Tup =   [css_common:toBinary(element(2, Row)),
+			 css_common:toBinary(element(3, Row)),
+			 css_common:toBinary(element(4, Row)),
+			 css_common:toBinary(element(1, Row))],
+	
+	UpdatedList = lists:concat([RecordList, [Tup]]),
+	get_all_records(Rest, UpdatedList). 	
+
+</erl>

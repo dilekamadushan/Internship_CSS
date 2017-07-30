@@ -1,0 +1,139 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+
+<!-- *#__dan__#* application js *#__dan__#* -->
+<script type="text/javascript" src="js/application.js"></script>
+<!-- *#__dan__#* application js *#__dan__#* -->
+<script type="text/javascript">	
+	document.write(objApp.getHeader());
+</script>
+
+<script type="text/javascript" src="js/channel_manager.js"></script>
+
+
+
+<body class="hold-transition skin-blue sidebar-mini">
+
+	<div class="wrapper">
+
+		<!-- Top menu bar with Branding -->
+		<script type="text/javascript">		
+			document.write(objApp.getTopBanner()); 
+		</script>
+		
+		<!-- Content Wrapper. Contains page content -->
+		<div class="content-wrapper">
+			
+			<!-- Content Header (Page header) -->
+			<section class="content-header">
+			  <h1>
+				Create Channel
+				<small>Subscription</small>
+			  </h1>
+			  <ol class="breadcrumb">
+				<li><a href="home"><i class="fa fa-home"></i> Home</a></li>
+				<li><i class="fa fa-bar-chart"></i> Subscription</li>
+				<li class="active">Create Channel</li>
+			  </ol>
+			</section>
+			
+			<!-- Main content -->
+			<section class="content">
+				
+				<div class="row">
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<div class="box">
+							<div id='flash-msg'></div>
+							<!-- <div class="box-header with-border">
+								<h3 class="box-title">Content Provider Detail</h3>
+							</div> -->
+							<div class="box-body">
+								<form class="form-horizontal" name="frm_channel" id="frm_channel"> 
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group">
+													<label for="channel_name" class="col-sm-4 control-label">Channel Name <span class="req-fld">*</span></label>
+													<div class="col-sm-8">
+														<input type="text" 
+														class="form-control" 
+														placeholder="Channel Name" 
+														id="channel_name"
+														name="code" 
+														title="Enter Channel Name" 
+														data-validation-engine="validate[required]"> 
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" >
+													<label for="keyword" class="col-sm-4 control-label">Keyword &#40;Eng&#41; <span class="req-fld">*</span></label>
+													<div class="col-sm-8">
+														<input type="text" 
+														class="form-control" 
+														placeholder="Keyword" 
+														id="keyword" 
+														name="keyword" 
+														title="Enter Keyword"
+														data-validation-engine="validate[required]">
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" >
+													<label for="keyword" class="col-sm-4 control-label">SMS Subscription</label>
+													<div class="col-sm-8">
+														<div class="checkbox checkboxPermis">
+														<label class="checkboxPermisLeft">
+															<input type="checkbox" class="minimal" id="sms_notify_check"> <span class="checkboxTxtPad">Notify SMS Subscription</span>
+														</label>
+													</div>
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-12 col-sm-12 col-xs-12">
+												<div class="box-footer"> 
+													<button type="submit" class="btn btn-primary pull-right btnspace" name="create_channel" id="create_channel">Save</button>
+												</div>
+											</div>
+										</div>						
+									</div>
+								</form> 
+							</div>
+						</div>
+					</div>
+				</div>
+				
+			</section>
+			<!-- /.content -->
+			
+		</div>
+		<!-- /.content-wrapper -->
+
+		<script>
+			document.write(objApp.getFooter());
+		</script>
+		<!-- Printing footer -->
+	
+	</div>
+	<!-- ./wrapper -->
+	
+	<script>
+		$(function () {
+			//iCheck for checkbox and radio inputs
+			$('input[type="checkbox"].minimal, input[type="radio"].minimal').iCheck({
+			  checkboxClass: 'icheckbox_minimal-blue',
+			  radioClass: 'iradio_minimal-blue'
+			});
+		});
+	</script>
+	
+</body>
+</html>

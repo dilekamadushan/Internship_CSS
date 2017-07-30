@@ -1,0 +1,249 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+
+<!-- *#__dan__#* application js *#__dan__#* -->
+<script type="text/javascript" src="js/application.js"></script>
+<!-- *#__dan__#* application js *#__dan__#* -->
+<script type="text/javascript">	
+	document.write(objApp.getHeader());
+</script>
+<!-- load all js/css and other stufffffff -->
+
+<!-- *#__dan__#* live_circuit_util js *#__dan__#* -->
+<script type="text/javascript" src="js/webuser_manager.js"></script>
+<!-- *#__dan__#* live_circuit_util js *#__dan__#* -->
+
+<!-- *#__dan__#* styles *#__dan__#* -->
+	<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+	<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+	<!--[if lt IE 9]>
+	<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+	<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+	<![endif]-->
+<!-- *#__dan__#* styles *#__dan__#* -->
+
+
+<body class="hold-transition skin-blue sidebar-mini">
+
+	<div class="wrapper">
+
+		<!-- Top menu bar with Branding -->
+		<script type="text/javascript">		
+			document.write(objApp.getTopBanner()); 
+		</script>
+		
+		<!-- Content Wrapper. Contains page content -->
+		<div class="content-wrapper">
+			
+			<!-- Content Header (Page header) -->
+			<section class="content-header">
+			  <h1>
+				Search User
+				<small>User</small>
+			  </h1>
+			  <ol class="breadcrumb">
+				<li><a href="home"><i class="fa fa-home"></i> Home</a></li>
+				<li><i class="fa fa-bar-chart"></i> User</li>
+				<li class="active">Search User</li>
+			  </ol>
+			</section>
+			
+			<!-- Main content -->
+			<section class="content">
+				
+				<div class="row">
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<div class="box">
+							<div id='flash-msg'></div>
+							<!-- <div class="box-header with-border">
+								<h3 class="box-title">Content Provider Detail</h3>
+							</div> -->
+							<div class="box-body">
+								<form class="form-horizontal" name="frm_provider" id="frm_provider"> 
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" id="usr_usrnm">
+													<label for="usr_usrnm" class="col-sm-4 control-label">Username</label>
+													<div class="col-sm-8">
+														<input type="text" 
+																class="form-control" 
+																placeholder="Username" 
+																id="usr_usrnm" 
+																name="usr_usrnm" 
+																title="Enter Username"   
+																data-validation-engine="validate[required,custom[integer]]"> 
+													</div>
+												</div>
+											</div>
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" id="usr_grp_name">
+													<label for="usr_grp" class="col-sm-4 control-label">Group Name</label>
+													<div class="col-sm-8">
+														<select class="form-control select2" id="group_names" placeholder="Group Name" title="Select Group Name">
+														
+														</select>
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div id ="test">
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-6 col-sm-12 col-xs-12">
+												<div class="form-group" id="usr_prov_name">
+													<label for="usr_prov_name" class="col-sm-4 control-label">Provider Name</label>
+													<div class="col-sm-8">
+														<select class="form-control select2" placeholder="Provider Name" title="Select Provider Name">
+														
+														</select>
+													</div>
+												</div>
+											</div>
+										</div>						
+									</div>
+									<div class="row">
+										<div class="box-body boxpad">
+											<div class="col-md-12 col-sm-12 col-xs-12">
+												<div class="box-footer"> 
+													<button type="submit" class="btn btn-primary pull-right btnspace" name="create_provider" id="create_provider">Search</button>
+												</div>
+											</div>
+										</div>						
+									</div>
+								</form> 
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<div class="box">
+							<div class="box-body">
+								<div class="box-body">
+								  <table id="search_user_tbl" class="table table-bordered table-striped table-hover">
+									<thead>
+										<tr>
+											<th>Username</th>
+											<th>Group Name</th>
+											<th>Description</th>
+											<th>Provider Name</th>
+											<th>Actions</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td>Admin</td>
+											<td>Administrator</td>
+											<td>Admin User</td>
+											<td>&dash;</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>user2</td>
+											<td>Administrator</td>
+											<td>&dash;</td>
+											<td>CP MIGRATION 2</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>cpuser1</td>
+											<td>Administrator, CPGroup_01</td>
+											<td>&dash;</td>
+											<td>CP MIGRATION 3</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td>user3</td>
+											<td>CPGroup_03</td>
+											<td>&dash;</td>
+											<td>True Digital Entertainment</td>
+											<td>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Edit" data-original-title="Edit">
+													<i class="fa fa-edit"></i>
+												</button>
+												<button type="button" class="btn btn-box-tool btn-box-table-inner" data-toggle="tooltip" title="Delete" data-original-title="Delete">
+													<i class="fa fa-trash-o"></i>
+												</button>
+											</td>
+										</tr>
+									</tbody>
+									<tfoot>
+										<tr>
+											<th>Username</th>
+											<th>Group Name</th>
+											<th>Description</th>
+											<th>Provider Name</th>
+											<th>Actions</th>
+										</tr>
+									</tfoot>
+								  </table>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+			</section>
+			<!-- /.content -->
+			
+		</div>
+		<!-- /.content-wrapper -->
+
+		<script>
+			document.write(objApp.getFooter());
+		</script>
+		<!-- Printing footer -->
+	
+	</div>
+	<!-- ./wrapper -->
+	
+	
+	<!-- /.the edit modal -->
+	
+	
+	
+	
+	
+	
+	
+	
+	<script>
+		$(function () {
+			//Initialize Select2 Elements
+			$(".select2").select2();
+			
+			//Datatable
+			$("#example1").DataTable();
+		});
+	</script>
+	
+</body>
+</html>

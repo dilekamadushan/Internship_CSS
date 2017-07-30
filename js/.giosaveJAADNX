@@ -1,0 +1,334 @@
+
+/** To store user permissions. Global variable **/
+gPermissions = "";
+
+/*
+ * Application class which handle GUI structure generating
+ * functionalities
+ */
+function Application() {
+	
+}
+
+/*Function to handle IE Compatibility*/
+
+function getInternetExplorerVersion()
+// Returns the version of Internet Explorer or a -1
+// (indicating the use of another browser).
+{
+  var rv = -1; // Return value assumes failure.
+  if (navigator.appName == 'Microsoft Internet Explorer')
+  {
+    var ua = navigator.userAgent;
+    var re  = new RegExp("MSIE ([0-9]{1,}[\.0-9]{0,})");
+    if (re.exec(ua) != null)
+      rv = parseFloat( RegExp.$1 );
+  }
+  return rv;
+}
+
+
+function checkVersion()
+{
+  var msg = "You're not using Internet Explorer.";
+  var ver = getInternetExplorerVersion();
+
+  if ( ver > -1 )
+  {
+    if ( ver >= 8.0 ) 
+      msg = "You're using a recent copy of Internet Explorer."
+    else
+      msg = "You should upgrade your copy of Internet Explorer.";
+  }
+  return ver;
+}
+
+/*End of the function set to handle IE Compatibility*/
+
+
+/**   
+ * Having difficulties to keep permissions on cookie or session
+ * So load permissions on each page request
+ */
+Application.prototype.loadPermissions = function() {
+
+	var request_data = '{"action":"GET_SESSION_INFO"}';
+	var response_data = obj_common.ajaxRequest("yaws/yaws_session.yaws", request_data);
+	
+	gPermissions = response_data[0].permissions;
+}
+
+
+// Header HTML part
+Application.prototype.getHeader = function() { 
+	
+	var header = ''
+
+	+ '<head>'
+		+ '<title>WaveNET | IVR ADMIN</title>'
+		+ '<link rel="icon" href="images/favicon.ico" type="image/x-icon" />'
+//		+ '<link rel="Shortcut Icon" href="http://10.1.80.25:8090/ldr/images/favicon.ico" type="image/x-icon" />'
+		
+		// Jquery library
+		//+ '<script src="js/extensions/jquery-1.6.2.min.js" type="text/javascript"></script>'
+		+ '<script src="js/extensions/jquery-1.8.3.min.js" type="text/javascript"></script>'
+		// Jquery cookie management
+		+ '<script src="js/extensions/jquery.cookie.js" type="text/javascript"></script>'
+		+ '<script src="js/themes/jquery.ui.datepicker.js"></script>'		
+
+
+		// Accordion 
+		//+ '<link rel="stylesheet" href="css/themes/jquery.ui.accordion.css">'
+		//+ '<link rel="stylesheet" href="css/themes/demos.css">'
+		+ '<link rel="stylesheet" href="css/themes/jquery-ui.css">'
+		//+ '<script src="js/themes/jquery.ui.core.js"></script>'
+		//+ '<script src="js/themes/jquery.ui.widget.js"></script>'
+		//+ '<script src="js/themes/jquery.ui.accordion.js"></script>'		
+		
+		// Jquery session management
+		+ '<script src="js/extensions/jquery.session.js" type="text/javascript"></script>'
+		
+			
+		// Jquery validation engine
+		+ '<link rel="stylesheet" href="js/extensions/jq_validator_engine/validationEngine.jquery.css" type="text/css" />'
+		+ '<script type="text/javascript" src="js/extensions/jq_validator_engine/jquery.validationEngine.js"></script>'
+		+ '<script type="text/javascript" src="js/extensions/jq_validator_engine/jquery.validationEngine-en.js"></script>'		
+		
+		// Jquery animated menu
+		+ '<link rel="stylesheet" href="css/animated-menu.css" />'
+		+ '<link rel="stylesheet" href="js/extensions/jq_slide_out_menu/slide-out-menu.css" type="text/css"  />'	
+		+ '<script src="js/extensions/jq_slide_out_menu/slide-out-menu.js" type="text/javascript"></script>'		
+		
+		// Jquery UI Dialog
+		+ '<script type="text/javascript" src="js/extensions/jq_ui_dialog/jquery-ui.js"></script>'
+		+ '<link rel="stylesheet" href="js/extensions/jq_ui_dialog/jquery-ui.css" type="text/css"  />'
+		
+		// Jquery Pagination
+		+ '<script type="text/javascript" src="js/extensions/jq_smartpaginator/smartpaginator.js"></script>'
+		+ '<link rel="stylesheet" href="js/extensions/jq_smartpaginator/smartpaginator.css" type="text/css"/>'
+		
+		// Jquery Ajax File Upload
+		+ '<script type="text/javascript" src="js/extensions/jq_ajax_upload/ajaxupload.3.5.js"></script>'
+		+ '<link rel="stylesheet" href="js/extensions/jq_ajax_upload/styles.css" type="text/css"/>'		
+
+		// Highcharts
+		+ '<script type="text/javascript" src="js/extensions/highcharts/js/highcharts.js"></script>'
+		+ '<script type="text/javascript" src="js/extensions/highcharts/js/highcharts-more.js"></script>'
+		+ '<script type="text/javascript" src="js/jquery-ui.min.js"></script>'
+		+ '<link rel="stylesheet" href="css/facybox.css" type="text/css" />'
+		+ '<script type="text/javascript" src="js/facybox.js"></script>'
+//		+ '<script type="text/javascript" src="js/exporting.js"></script>'
+
+		
+		// Custom files
+		+ '<script type="text/javascript" src="js/config/config.js"></script>'
+		+ '<script type="text/javascript" src="js/common.js"></script>'
+		+ '<link rel="stylesheet" href="css/style.css" type="text/css" />'
+
+		// Form component styles
+		+ '<link rel="stylesheet" href="css/form.css" type="text/css" />'
+		
+		// Time picker
+		+ '<link rel="stylesheet" href="js/extensions/jq_calendar/jquery.ui.datepicker.css" type="text/css" />'
+		+ '<script type="text/javascript" src="js/extensions/jq_time_picker/jquery-ui-timepicker-addon.js"></script>'
+		
+		//Excel upload and download handling
+		+ '<script type="text/javascript" src="js/extensions/excel_handling/jszip.js"></script>'
+		+ '<script type="text/javascript" src="js/extensions/excel_handling/jszip-deflate.js"></script>'
+		+ '<script type="text/javascript" src="js/extensions/excel_handling/jszip-load.js"></script>'
+		+ '<script type="text/javascript" src="js/extensions/excel_handling/jszip-inflate.js"></script>'
+		+ '<script type="text/javascript" src="js/extensions/excel_handling/xlsx.js"></script>'			
+	+ '</head>';
+	
+	return header;
+}
+
+// Generate top banner
+Application.prototype.getTopBanner = function() {  
+	 
+	objApp.loadPermissions(); // Load user permissions
+	var obj_common = new Common();
+	var YAWS_PATH = config.yaws_file_path + 'yaws_session.yaws';
+	var request_data = '{"action":"GET_SESSION_INFO"}';
+	var response_data = obj_common.ajaxRequest(YAWS_PATH, request_data);
+	
+	var banner = ''
+		
+		+ '<div class="Log-header">'
+			+ '<div class="headlogo">'
+				+ '<div class="rightlogo_in">'
+					//+ '<div>&nbsp;&nbsp; <a href="#" onClick="objApp.mainPage()">Main Page</a></span>&nbsp;&nbsp; | &nbsp;&nbsp;' + response_data[0].session_data.name + ' &nbsp;&nbsp;<span class="green">|&nbsp;&nbsp; <a href="#" onClick="objApp.logout()">Logout</a></div>'
+					+ '<div class="log_Out">&nbsp;<a href="#" onClick="objApp.mainPage()">Main Page</a>&nbsp;&nbsp;|&nbsp;&nbsp;'+ response_data[0].session_data.name + '&nbsp;&nbsp;|&nbsp;&nbsp;<a href="#" onClick="objApp.logout()">logout</a></div>'
+				+ '</div>'
+			+ '</div>'
+		+ '</div>';
+
+	return banner;
+}
+
+// Generate left hand side main menu
+Application.prototype.getMainMenuSet = function(name, items) {
+	var has_permission = false;
+  	
+  	if(parseInt(checkVersion())<9 && parseInt(checkVersion())>0){
+		var menu_set = '<li><a class="text-2" href="'+items[0].url+'">' + name + '</a>';
+	}else{
+		var menu_set = '<li><a class="text-2" href="#">' + name + '</a>';
+	}
+
+	menu_set += '<ul>';
+	
+	for (var i in items) {
+		
+		if (this.checkPermission(items[i].permission_list)) {
+			menu_set += '<li><a href="' + items[i].url + '">' + items[i].name + '</a></li>';
+			has_permission = true;
+			
+		}
+	}
+	
+	menu_set += '</ul>';
+	menu_set += '</li>';
+	
+	// If there is only one item no sub menu is required then set to parent link
+	if (items.length == 1 && has_permission) {
+		menu_set = '<li><a class="text-2" href="' + items[0].url + '">' + items[0].name + '</a>'
+	}
+	
+	if (has_permission) {
+		return menu_set;
+	} else {
+		return '';
+	}
+}
+
+// Generate footer
+Application.prototype.checkPermission = function(permissionList) {
+	
+	//return true;
+	
+	var matched = false;	
+			
+	var allowed_permissions = gPermissions;
+	permissions = permissionList.split(",");		
+	
+	if ("" != permissions) {
+		for (var i in permissions) {
+			//if (eval('/\\|' + permissions[i] + '\\|/').test(allowed_permissions)) {
+			if(allowed_permissions.indexOf(permissions[i]) > 0 ) {
+				matched = true;
+			}
+		}
+	}
+		
+	return matched;
+}
+
+Application.prototype.getMainMenu = function() {
+	
+	var home_menu_items = [
+		{"name":"Dashboard", "url":"dashboard", "permission_list":"ivr_create_dashboard"},
+	];
+
+	 // var reports_logs_menu_items = [
+	 // 	{"name":"Live Circuit Utilization", "url":"live_circuit_util", "permission_list":"LOC_GGSN"},
+	 // 	{"name":"Concurrent Hits", "url":"concurrent_hits", "permission_list":"GEN_CONF"},
+	 // 	{"name":"Statistics", "url":"statistics", "permission_list":"SYS_CONF"},
+	 // 	{"name":"Access Codes Statistics", "url":"access_code_stat", "permission_list":"CON_CONF"},
+	 // 	{"name":"Log Search", "url":"log_search", "permission_list":"MCC_CONF"}
+	 // ];
+
+
+	 var reports_logs_menu_items = [
+	 	{"name":"Live Circuit Utilization", "url":"live_circuit_util", "permission_list":"ivr_edit_general_configs"},
+	 	{"name":"Concurrent Hits", "url":"concurrent_hits", "permission_list":"ivr_edit_general_configs"},
+	 	{"name":"Statistics", "url":"statistics", "permission_list":"ivr_edit_general_configs"},
+	 	{"name":"Access Codes Statistics", "url":"access_code_stat", "permission_list":"ivr_edit_general_configs"},
+	 	{"name":"Log Search", "url":"log_search", "permission_list":"ivr_edit_general_configs"}
+
+	 	{"name":"Hits Counter Report", "url":"log_search", "permission_list":"ivr_edit_general_configs"}
+	 	{"name":"Duration Cumulative Report", "url":"log_search", "permission_list":"ivr_edit_general_configs"}
+	 	{"name":"Chargable Duration Report", "url":"log_search", "permission_list":"ivr_edit_general_configs"}
+	 	{"name":"Failure Report", "url":"log_search", "permission_list":"ivr_edit_general_configs"}
+	 	{"name":"QoS/Performance Report", "url":"log_search", "permission_list":"ivr_edit_general_configs"}
+	 	
+	 ];
+	
+	var configuration_menu_items = [
+		{"name":"Other Settings", "url":"other_settings", "permission_list":"ivr_edit_general_configs,ivr_edit_http_configs,ivr_edit_digit_configs,ivr_edit_record_configs,ivr_edit_play_configs,ivr_edit_codec_configs,ivr_edit_silence_detection_configs,ivr_edit_rtcp_configs,ivr_edit_fax_configs,ivr_edit_amr_configs,ivr_edit_numberlist_configs,ivr_edit_ivrstatus_configs,ivr_edit_snmp_configs,ivr_edit_channelwise_app_logs,ivr_view_channelwise_app_logs,ivr_edit_channelwise_platform_logs,ivr_view_channelwise_platform_logs,ivr_edit_numberwise_app_logs,ivr_view_numberwise_app_logs,ivr_edit_numberwise_platform_logs,ivr_view_numberwise_platform_logs,ivr_edit_trace_numbers,ivr_view_trace_numbers"},
+//		{"name":"Create Access Code", "url":"", "permission_list":"GEN_CONF"},
+		{"name":"Manage Access Codes", "url":"create_access_code", "permission_list":"ivr_create_access_code,ivr_view_access_codes,ivr_view_access_code,ivr_edit_access_code,ivr_delete_access_code"}
+	];
+
+	var app_logs_menu_items = [
+		{"name":"Admin Log", "url":"admin_log_search", "permission_list":"ivr_create_access_code"},
+		{"name":"List Management Webservice Log", "url":"list_web_serv_log_search", "permission_list":"ivr_create_access_code"},		
+		{"name":"Statistics Webservice Log", "url":"stat_web_serv_log_search", "permission_list":"ivr_create_access_code"},
+		{"name":"Rejected Call Log", "url":"reject_call_log_search", "permission_list":"ivr_create_access_code"}	
+	];
+
+	// var options_menu_items = [
+	// 	{"name":"Log Levels", "url":"log_levels", "permission_list":"LOC_GGSN"}
+	// ];	
+
+	var main_menu = ''		
+		+ '<div class="leftManu">'
+			+ '<div id="dhtmlgoodies_slidedown_menu">'
+				+ '<ul id="mainContainer">'
+				+ '<br />'
+				+ this.getMainMenuSet('Dashboard', home_menu_items)
+				+ this.getMainMenuSet('Reports and Logs', reports_logs_menu_items)
+				+ this.getMainMenuSet('Configurations', configuration_menu_items) 
+				+ this.getMainMenuSet('App Log Search', app_logs_menu_items)
+//				+ this.getMainMenuSet('Options', options_menu_items)
+				+ '<br/>'
+				+ '</ul>'
+			  	+ '<script type="text/javascript">initSlideDownMenu();</script>'
+			+ '</div>'
+		+ '</div>';
+	
+	return main_menu; 
+}
+
+Application.prototype.getFooter = function() {
+	
+	var footer =  '<div class="copyright">' + config.copyright + '</div>';
+	
+	return footer;
+}
+
+// Setting flash messages
+// Possible type options - success, error, info
+Application.prototype.setFlash = function(type, message, scrollTop) { 
+	var flash_msg = '<div id="flash-inner" class="flash-' + type + '"><div class="in">' + message + '</div></div>';
+	jQuery('#flash-msg').html(flash_msg);
+	jQuery('#flash-inner').animate({opacity: 1.0}, 5000).fadeOut('slow');
+	
+	if (false != scrollTop) {
+		$('html, body').animate({scrollTop:0}, 'slow');
+	}
+}
+
+Application.prototype.isLogged = function() {
+	
+	var path = window.location.pathname;
+	var page = path.substring(path.lastIndexOf('/') + 1);
+	alert('dd');
+	if (page != 'login.html' && !$.cookie('is_logged')) {
+		location.href = 'login.html';
+	}
+}
+
+Application.prototype.logout = function() {  
+	$(location).attr('href', "logout");
+}
+
+/**
+ * Goto main page
+ */
+Application.prototype.mainPage = function() {
+	$(location).attr('href', "main_page");
+}
+
+var objApp = new Application();
+

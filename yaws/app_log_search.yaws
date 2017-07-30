@@ -1,0 +1,231 @@
+<erl module=log_search>
+-export([out/1, log/3]).
+
+-include("ivr_conf.hrl"). 
+
+out(Arg) ->
+   Method = method(Arg),
+   error_logger:info_msg("~p:~p ~p Request~n",[?MODULE, ?LINE, Method ]), 
+   handle(Method, Arg). 
+
+%get request method type
+method(Arg) ->
+   Rec = Arg#arg.req,
+   Rec#http_request.method.
+   
+handle('GET', Arg) ->
+   error_logger:info_msg("~p:~p Enter into GET method~n",[?MODULE, ?LINE]);   
+
+handle('POST', Arg) ->
+	%error_logger:info_msg("################# ~p",[rfc4627:decode(Arg#arg.clidata)]), 
+	{ok,[RequestData|[SessionData]],_} = rfc4627:decode(Arg#arg.clidata),   
+	Action = binary_to_list(rfc4627:get_field(RequestData, "action", <<>>)),
+  	error_logger:error_msg("action = ~p",[Action]),
+	RecSessionData = #session_data
+	{
+		username = ivr_common:toString(ivr_session:get_sess("name", Arg)),
+		uniqid   = ivr_common:toString(ivr_session:get_sess("uniqid", Arg))
+	},	
+	
+	% Logging request data
+	ivr_logger:debug(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Request:" ++ binary_to_list(Arg#arg.clidata)),
+	error_logger:error_msg("action = ~p",[Action]),
+	log(Action, RequestData, RecSessionData).
+
+	
+%% Create/Update user
+log("LOG_SEARCH", RequestData, RecSessionData) ->
+	FromDate 		= binary_to_list(rfc4627:get_field(RequestData, "from_date", <<>>)),	
+	ToDate		 	= binary_to_list(rfc4627:get_field(RequestData, "to_date", <<>>)),	
+	FromTime 		= binary_to_list(rfc4627:get_field(RequestData, "from_time", <<>>)),
+	ToTime 			= binary_to_list(rfc4627:get_field(RequestData, "to_time", <<>>)),	
+	CallingNumber 	= binary_to_list(rfc4627:get_field(RequestData, "calling_number", <<>>)),	
+	CalledNumber 	= binary_to_list(rfc4627:get_field(RequestData, "called_number", <<>>)),
+	LogType 		= binary_to_list(rfc4627:get_field(RequestData, "log_type", <<>>)),
+	Ret= ivr_mediator:call(?SEARCH_LOG_NODE, ?SEARCH_LOG_MOD ,call ,[LogType, FromDate, FromTime, ToDate, ToTime, CallingNumber, CalledNumber]),
+	error_logger:error_msg("~p",[Ret]),
+	Response = [{obj,[{status, <<"ok">>},{message, <<"">>}]}],
+	{ehtml, rfc4627:encode(Response)};
+
+%get all administrotors
+log("GET_ADMINS", RequestData, RecSessionData) ->
+error_logger:error_msg("here at get admins"),
+	Response=[
+				{obj,[{value, ivr_common:toBinary("sisila")},{description , ivr_common:toBinary("Sisila")}]},
+				{obj,[{value, ivr_common:toBinary("udara")},{description , ivr_common:toBinary("Udara")}]},
+				{obj,[{value, ivr_common:toBinary("praveena")},{description , ivr_common:toBinary("Praveena")}
+				]}],	
+
+	{ehtml, rfc4627:encode(Response)};
+	
+%% Create/Update user
+log("LOG_SEARCH_CSV", RequestData, RecSessionData) ->
+	
+	GetDate 	= binary_to_list(rfc4627:get_field(RequestData, "search_date", <<>>)),	
+	Keyword 	= binary_to_list(rfc4627:get_field(RequestData, "keyword", <<>>)),	
+	LogType 	= binary_to_list(rfc4627:get_field(RequestData, "log_type", <<>>)),
+
+	[Year,Month,Day] = string:tokens(GetDate, "/"),
+	Date = common_fun:toString(Year) ++ common_fun:toString(Month) ++ common_fun:toString(Day),
+
+    case LogType of
+		"admin_log" ->
+		
+			logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Admin log csv export , date [" ++ GetDate ++ "], keyword ['" ++ Keyword ++ "']"),
+		
+			LogPrefix 	= "admin_web_acton_",
+			LogPath 	= ?LOG_PATH ++ Date ++ ?LOG_FILE_PRIFIX,
+			LogTypeName = "Admin web action ",
+			Cmd = "awk '/" ++ Keyword ++ "/'  " ++ LogPath;
+	
+		"user_log" ->
+		
+			logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "User log csv export , date [" ++ GetDate ++ "], keyword ['" ++ Keyword ++ "']"),
+		
+			LogPrefix 	= "user_web_acton_",
+			LogPath 	= ?LOG_PATH ++ Date ++ ?USER_LOG_FILE_PRIFIX,
+			LogTypeName = "User web action ",
+			Cmd = "awk '/" ++ Keyword ++ "/'  " ++ LogPath;
+
+		_ ->
+			LogPrefix 	= "admin_web_acton_",
+			LogPath 	= ?LOG_PATH ++ Date ++ ?LOG_FILE_PRIFIX,
+			LogTypeName = "Admin web action ",
+			Cmd = "awk '/" ++ Keyword ++ "/'  " ++ LogPath			
+	end,
+	
+	FileStatus  = filelib:is_file(LogPath),
+	
+	if
+		FileStatus == true ->	
+
+			LogData 	= os:cmd(Cmd),
+			LogDataList = string:tokens(LogData, "\r\n"),	
+			
+			{_,_,Rand} = now(),
+			FileName 	= LogPrefix ++ integer_to_list(Rand) ++ ".csv",
+			CsvFile 	= ?TMP_PATH ++ FileName,
+			CsvUrl 		= ?TMP_URL ++ FileName,			
+			
+			case catch file:open(CsvFile, [read,write,append]) of
+				{ok, IoDevice}	->
+
+					case LogType of  
+						"admin_log" ->
+							Head = "Date/Time,User,Unique ID,Message\n";
+							
+						"user_log" ->
+							Head = "Date/Time,User,Unique ID,Message\n";
+
+						_ ->
+							Head = "Date/Time,User,Unique ID,Message\n"
+							
+					end,
+					
+					file:write(IoDevice, Head),
+					get_csv_records(LogType, LogDataList, IoDevice),
+
+					Response = [{obj,[{status, <<"ok">>},{message, <<"CSV File Created">>},{csv_url, list_to_binary(CsvUrl)}]}],
+					logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "CSV successfully generated"),
+					file:close(IoDevice);
+				_Else ->					
+					logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "CSV generate failed"),
+					Response = [{obj,[{status, <<"fail">>},{message, <<"CSV File Create Failed">>}]}]
+			end;
+		true ->
+			logger:info(RecSessionData#session_data.username, RecSessionData#session_data.uniqid, "Log file not exists"),
+			Response = [{obj,[{status, <<"error">>},{message, <<"Log file not exists">>}]}]
+	end,			
+	           
+	{ehtml, rfc4627:encode(Response)}.
+
+
+
+
+-spec get_all_records(LogType :: atom(), ResultSet :: [tuple()], RecordList :: [tuple()]) -> RecordList :: [tuple()].
+%% @doc Iterate user list return from API and prepare json formatted response list.
+%%
+get_all_records( LogType, [], RecordList) ->
+	RecordList;	
+get_all_records( LogType, [Row|Rest], RecordList) ->  
+
+	RowData = string:tokens(Row, "|"),	
+	
+    case LogType of
+		"admin_log" ->
+
+			Tup = {obj,[ 
+				  {date_time, common_fun:toBinary(lists:nth(1, RowData))},
+				  {user, common_fun:toBinary(lists:nth(2, RowData))}, 
+				  {unique_id, common_fun:toBinary(lists:nth(3, RowData))}, 
+				  {err_type, common_fun:toBinary(lists:nth(4, RowData))}, 
+				  {message, common_fun:toBinary(lists:nth(5, RowData))}
+				]};
+	
+		"user_log" ->
+		
+			Tup = {obj,[ 
+				  {date, common_fun:toBinary(lists:nth(1, RowData))},
+				  {time, common_fun:toBinary(lists:nth(2, RowData))}, 
+				  {unique_id, common_fun:toBinary(lists:nth(3, RowData))}, 
+				  {user, common_fun:toBinary(lists:nth(4, RowData))}, 
+				  {message, common_fun:toBinary(lists:nth(5, RowData))}
+				]};	
+
+		_ ->				
+			Tup = {obj,[ 
+				  {date_time, common_fun:toBinary(lists:nth(1, RowData))},
+				  {user, common_fun:toBinary(lists:nth(2, RowData))}, 
+				  {unique_id, common_fun:toBinary(lists:nth(3, RowData))}, 
+				  {err_type, common_fun:toBinary(lists:nth(4, RowData))}, 
+				  {message, common_fun:toBinary(lists:nth(5, RowData))}
+				]}				
+	end,	
+	
+	UpdatedList = lists:concat([RecordList, [Tup]]),
+	get_all_records( LogType, Rest, UpdatedList). 	
+
+-spec get_csv_records(LogType :: atom(), ResultSet :: [tuple()], RecordList :: [tuple()]) -> RecordList :: [tuple()].
+%% @doc Iterate user list return from API and prepare json formatted response list.
+%%
+get_csv_records(LogType, [], IoDevice) ->
+	ok; 
+get_csv_records(LogType, [Row|Rest], IoDevice) ->  
+
+	RowData = string:tokens(Row, "|"),	
+	
+    case LogType of  
+		"admin_log" ->
+		
+			Date_time 	= common_fun:toString(lists:nth(1, RowData)),
+			User 		= common_fun:toString(lists:nth(2, RowData)),
+			Uniq_id		= common_fun:toString(lists:nth(3, RowData)),
+			Message		= common_fun:toString(lists:nth(5, RowData)),
+			
+			Line = lists:concat([Date_time++","++User++","++Uniq_id++","++Message, "\n"]);	
+	
+		"user_log" ->
+		
+			Date 		= common_fun:toString(lists:nth(1, RowData)),
+			Time 		= common_fun:toString(lists:nth(2, RowData)),
+			User 		= common_fun:toString(lists:nth(3, RowData)),
+			Uniq_id		= common_fun:toString(lists:nth(4, RowData)),
+			Message		= common_fun:toString(lists:nth(5, RowData)),
+			
+			Line = lists:concat([Date++ " " ++time++","++User++","++Uniq_id++","++Message, "\n"]);
+		
+		_ ->
+		
+			Date_time 	= common_fun:toString(lists:nth(1, RowData)),
+			User 		= common_fun:toString(lists:nth(2, RowData)),
+			Uniq_id		= common_fun:toString(lists:nth(3, RowData)),
+			Message		= common_fun:toString(lists:nth(5, RowData)),
+			
+			Line = lists:concat([Date_time++","++User++","++Uniq_id++","++Message, "\n"])			
+	end,	
+	
+
+	file:write(IoDevice, Line),
+	get_csv_records(LogType, Rest, IoDevice). 	
+	
+</erl>	
